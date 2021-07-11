@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Any, Union
 
 import numpy as np
 
@@ -18,12 +18,12 @@ class Vec(np.ndarray):
     @property
     def x(self) -> int:
         """Get value of x as first co-ordinate"""
-        return self[0]
+        return int(self[0])
 
     @property
     def y(self) -> int:
         """Get value of y as first co-ordinate"""
-        return self[1]
+        return int(self[1])
 
     @x.setter
     def x(self, x: Union[int, float]) -> None:
@@ -34,3 +34,6 @@ class Vec(np.ndarray):
     def y(self, y: Union[int, float]) -> None:
         """Set value of y as first co-ordinate"""
         self[1] = int(y)
+
+    def __iter__(self) -> Any:
+        return map(int, (self.x, self.y))
