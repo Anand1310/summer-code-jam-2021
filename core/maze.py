@@ -2,7 +2,7 @@ import os
 import random
 # Easy to read representation for each cardinal direction.
 import sys
-from typing import List, Literal
+from typing import List
 
 import numpy as np
 
@@ -12,7 +12,7 @@ N, S, W, E = ("n", "s", "w", "e")
 class Cell(object):
     """Class for each individual cell. Knows only its position and which walls are still standing."""
 
-    def __init__(self, x: int, y: int, walls: Literal[N, S, W, E]):
+    def __init__(self, x: int, y: int, walls: list):
         self.x = x
         self.y = y
         self.walls = set(walls)
@@ -29,7 +29,7 @@ class Cell(object):
         """Returns True if all walls are still standing."""
         return len(self.walls) == 4
 
-    def _wall_to(self, other: object) -> Literal[N, S, W, E]:
+    def _wall_to(self, other: object) -> str:
         """
         Returns the direction to the given cell from the current one.
 
