@@ -1,6 +1,4 @@
-"""This file shows some examples to design levels"""
-
-
+"""Examples for designing levels."""
 from typing import Union
 
 import blessed
@@ -12,7 +10,7 @@ term = blessed.Terminal()
 
 
 class TitleScene(Scene):
-    """Example of a title scene"""
+    """Example of a title scene."""
 
     def __init__(self) -> None:
         super().__init__()
@@ -29,25 +27,25 @@ class TitleScene(Scene):
         self.current_frame += txt2
 
     def next_frame(self, val: Keystroke) -> Union[str, int]:
-        """Returns next frame to render"""
+        """Return next frame to render."""
         if str(val) == " " or val.name == "KEY_ENTER":
             return NEXT_SCENE
         return self.current_frame
 
     def reset(self) -> None:
-        """Reset has no use for title scene"""
+        """Reset has no use for title scene."""
         pass
 
 
 class Level_1(Scene):
-    """Example of a level"""
+    """Example of a level."""
 
     def __init__(self) -> None:
         super().__init__()
         self.current_frame = term.clear + "hit 'n' to end the game"
 
     def next_frame(self, val: Keystroke) -> Union[str, int]:
-        """Returns next frame to render"""
+        """Return next frame to render."""
         if not val:
             new_line = "It sure is quiet in here ..."
         elif val.is_sequence:
@@ -65,12 +63,12 @@ class Level_1(Scene):
         return self.current_frame
 
     def reset(self) -> None:
-        """Resets the current level"""
+        """Reset the current level."""
         self.current_frame = term.clear + "hit 'n' to end the game"
 
 
 class EndScene(Scene):
-    """Example of ending scene"""
+    """Example of ending scene."""
 
     def __init__(self):
         super().__init__()
@@ -82,11 +80,11 @@ class EndScene(Scene):
         self.current_frame += txt
 
     def next_frame(self, val: Keystroke) -> Union[str, int]:
-        """Returns next frame to render"""
+        """Return next frame to render."""
         if str(val) == " " or val.name == "KEY_ENTER":
             return NEXT_SCENE
         return self.current_frame
 
     def reset(self) -> None:
-        """No use"""
+        """No use."""
         pass
