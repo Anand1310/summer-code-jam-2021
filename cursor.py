@@ -5,7 +5,7 @@ DEFAULT_COLOUR = X11_COLORNAMES_TO_RGB["aqua"]
 
 
 class Point:
-    """"A 2D point class with the ability to iterate and add to it."""
+    """A 2D point class with the ability to iterate and add to it."""
     def __init__(self, x: int, y: int) -> None:
         self.x = x
         self.y = y
@@ -36,9 +36,9 @@ class Point:
 
 
 class Cursor:
-    def __init__(self, coords: Point, term: Terminal, fill: str="██",
-                colour: RGBColor=DEFAULT_COLOUR, speed: int=2) -> None:
-        """creates a Cursor Object that can be moved on command"""
+    """creates a Cursor Object that can be moved on command"""
+    def __init__(self, coords: Point, term: Terminal, fill: str = "██",
+                colour: RGBColor = DEFAULT_COLOUR, speed: int = 2) -> None:
         self.coords = coords
         self.fill = fill
         self.colour = colour
@@ -65,7 +65,7 @@ class Cursor:
         return "".join(render_string)
 
     def clear(self) -> str:
-        """"clears the rendered cursor"""
+        """clears the rendered cursor"""
         return f"{self.term.move_xy(*self.coords)}  "
 
     def render(self) -> str:
@@ -77,7 +77,8 @@ class Cursor:
         return "".join(render_string)
 
 
-def main():
+def main() -> None:
+    """A function to test the code"""
     from blessed import Terminal
     term = Terminal()
     Coords = Point(5, 10)
