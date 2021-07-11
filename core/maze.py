@@ -1,5 +1,7 @@
+import os
 import random
 # Easy to read representation for each cardinal direction.
+import sys
 from typing import List, Literal
 
 import numpy as np
@@ -78,6 +80,7 @@ class Maze(object):
         for y in range(self.height):
             for x in range(self.width):
                 self.cells.append(Cell(x, y, [N, S, E, W]))
+        self.matrix = self.to_list_matrix()
 
     def __getitem__(self, index: set):
         """Returns the cell at index = (x, y)."""
@@ -100,9 +103,8 @@ class Maze(object):
             if neighbor is not None:
                 yield neighbor
 
-    def to_list_matrix(self) -> list:
+    def to_list_matrix(self) -> np.ndarray:
         """Returns a matrix with a pretty printed visual representation of this maze."""
-        str_matrix = [["W"] * (self.width * 2 + 1) for i in range(self.height * 2 + 1)]
         str_matrix = np.array([["W"] * (self.width * 2 + 1) for i in range(self.height * 2 + 1)])
         for cell in self.cells:
             x = cell.x * 2 + 1
@@ -117,6 +119,7 @@ class Maze(object):
             if E not in cell and x + 1 < self.width:
                 str_matrix[y][x + 1] = " "
 
+        self.matrix = str_matrix
         return str_matrix
 
     def __repr__(self):
@@ -223,10 +226,25 @@ class Maze(object):
         m.randomize()
         return m
 
+    def save_to_file(self) -> str:
+        """Save maze in to file
+
+        :parm secure: True -> use pickle to store, False -> use normal method
+        """
+        maze_count = 0
+        if "maps" not in os.listdir():
+            os.mkdir("maps")
+        for i in os.listdir("maps"):
+            if i.startswith("maze"):
+                maze_count += 1
+        file_name = "maze" + str(maze_count + 1)
+        os.mkdir(f"maps/{file_name}")
+
+        np.save(f"maps/{file_name}/data", self.matrix)
+        return file_name
+
 
 if __name__ == "__main__":
-    import sys
-
     if len(sys.argv) > 1:
         width = int(sys.argv[1])
         if len(sys.argv) > 2:
@@ -238,7 +256,6 @@ if __name__ == "__main__":
         height = 10
 
     maze = Maze.generate(width, height)
-    q = maze.to_list_matrix()
-    for i in q:
-        print(i)
     print(maze)
+    # maze.save_to_file()
+    # print(np.load("maps/maze1/data.npy", allow_pickle=False))
