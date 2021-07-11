@@ -45,7 +45,7 @@ class Game:
     def run(self) -> None:
         """Main game loop"""
         with term.cbreak():
-            val = val = term.inkey(timeout=0.01)
+            val = term.inkey(timeout=0.01)
             while (val.lower() != "q") or (val.lower != "x"):
                 # user input
                 try:
