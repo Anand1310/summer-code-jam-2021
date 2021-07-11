@@ -62,6 +62,7 @@ class Game:
                     continue
                 elif command == RESET:
                     self.current_scene.reset()
+                    val = Keystroke()
                     continue
 
                 val = term.inkey(timeout=3)
