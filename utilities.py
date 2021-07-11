@@ -1,3 +1,4 @@
+# type: ignore
 """Collection of utilities."""
 from typing import Union
 
