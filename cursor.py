@@ -3,16 +3,17 @@ from blessed.colorspace import RGBColor, X11_COLORNAMES_TO_RGB
 
 DEFAULT_COLOUR = X11_COLORNAMES_TO_RGB["aqua"]
 
+
 class Point:
     """"A 2D point class with the ability to iterate and add to it."""
     def __init__(self, x: int, y: int) -> None:
         self.x = x
         self.y = y
-    
+
     def __iter__(self):
         self.n = 0
         return self
-    
+
     def __next__(self):
         if self.n < 2:
             result = [self.x, self.y][self.n]
@@ -20,7 +21,7 @@ class Point:
             return result
         else:
             raise StopIteration
-    
+
     def __add__(self, other: any):
         if type(other).__name__ == "Point":
             x = self.x + other.x
@@ -46,7 +47,7 @@ class Cursor:
         self.commands = {"r": self.render, "c": self.clear}
 
     directions = {
-        "KEY_UP": Point(0,-1),
+        "KEY_UP": Point(0, -1),
         "KEY_DOWN": Point(0, 1),
         "KEY_LEFT": Point(-1, 0),
         "KEY_RIGHT": Point(1, 0)
