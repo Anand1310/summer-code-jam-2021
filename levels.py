@@ -1,6 +1,4 @@
-"""This file shows some examples to design levels"""
-
-
+"""Examples for designing levels."""
 from typing import Union
 
 import blessed
@@ -12,7 +10,7 @@ term = blessed.Terminal()
 
 
 class TitleScene(Scene):
-    """Example of a title scene"""
+    """Example of a title scene."""
 
     def __init__(self) -> None:
         super().__init__()
@@ -40,12 +38,12 @@ class TitleScene(Scene):
         return ""
 
     def reset(self) -> None:
-        """Reset has no use for title scene"""
+        """Reset has no use for title scene."""
         pass
 
 
 class Level_1(Scene):
-    """Example of a level"""
+    """Example of a level."""
 
     def __init__(self) -> None:
         super().__init__()
@@ -53,7 +51,7 @@ class Level_1(Scene):
         self.first_frame = True
 
     def next_frame(self, val: Keystroke) -> Union[str, int]:
-        """Returns next frame to render"""
+        """Return next frame to render"""
         if self.first_frame:
             self.first_frame = False
             print(self.first_line)
@@ -73,12 +71,12 @@ class Level_1(Scene):
         return new_line
 
     def reset(self) -> None:
-        """Resets the current level"""
+        """Reset the current level"""
         self.first_frame = True
 
 
 class EndScene(Scene):
-    """Example of ending scene"""
+    """Example of ending scene."""
 
     def __init__(self):
         super().__init__()
@@ -90,7 +88,7 @@ class EndScene(Scene):
         self.first_frame = True
 
     def next_frame(self, val: Keystroke) -> Union[str, int]:
-        """Returns next frame to render"""
+        """Return next frame to render"""
         # no need to update each frame
         if self.first_frame:
             self.first_frame = False
@@ -100,5 +98,5 @@ class EndScene(Scene):
         return ""
 
     def reset(self) -> None:
-        """No use"""
+        """No use."""
         pass

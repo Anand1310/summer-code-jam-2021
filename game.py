@@ -1,3 +1,4 @@
+"""Game components."""
 import logging
 import os
 from typing import Iterable, Iterator, Union
@@ -29,10 +30,10 @@ class Scene:
         self.current_frame = ""
 
     def reset(self) -> None:
-        """This function should reset the current scene/level to its initial state"""
+        """Reset the current scene/level to its initial state."""
 
     def next_frame(self, val: Keystroke) -> Union[str, int]:
-        """Function to draw next frame in the scene"""
+        """Draw next frame in the scene."""
 
 
 class Game:
@@ -43,7 +44,7 @@ class Game:
         self.current_scene: Scene = next(self.scenes)
 
     def run(self) -> None:
-        """Main game loop"""
+        """Run the main game loop."""
         with term.cbreak():
             val = Keystroke()
             while (val.lower() != "q") or (val.lower != "x"):
