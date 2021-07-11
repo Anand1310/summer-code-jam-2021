@@ -1,4 +1,3 @@
-from collections import namedtuple
 from blessed import Terminal
 from blessed.colorspace import X11_COLORNAMES_TO_RGB
 
