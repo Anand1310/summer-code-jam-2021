@@ -4,6 +4,7 @@ from blessed.colorspace import X11_COLORNAMES_TO_RGB
 DEFAULT_COLOUR = X11_COLORNAMES_TO_RGB["aqua"]
 
 class Point:
+    """"A 2D point class with the ability to iterate and add to it."""
     def __init__(self, x: int, y: int) -> None:
         self.x = x
         self.y = y
@@ -49,9 +50,10 @@ class Cursor:
         "KEY_DOWN": Point(0, 1),
         "KEY_LEFT": Point(-1, 0),
         "KEY_RIGHT": Point(1, 0)
-        }
-    
-    def move(self, direction: str):
+    }
+
+    def move(self, direction: str) -> str:
+        """Moves the cursor to a new position based on direction and speed"""
         render_string = []
         render_string.append(self.clear())
         directions = Cursor.directions[direction]
@@ -60,11 +62,13 @@ class Cursor:
         # self.coords += Avatar.directions[direction]
         render_string.append(self.render())
         return "".join(render_string)
-    
-    def clear(self):
+
+    def clear(self) -> str:
+        """"clears the rendered cursor"""
         return f"{self.term.move_xy(*self.coords)}  "
-    
-    def render(self):
+
+    def render(self) -> str:
+        """Renders the cursor"""
         render_string = []
         render_string.append(f"{self.term.move_xy(*self.coords)}")
         render_string.append(f"{self.term.color_rgb(*self.colour)}")
