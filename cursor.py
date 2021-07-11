@@ -41,6 +41,7 @@ class Cursor:
 
     def __init__(self, coords: Point, term: Terminal, fill: str = "██",
                 colour: RGBColor = DEFAULT_COLOUR, speed: int = 2) -> None:
+
         self.coords = coords
         self.fill = fill
         self.colour = colour
@@ -57,7 +58,6 @@ class Cursor:
 
     def move(self, direction: str) -> str:
         """Moves the cursor to a new position based on direction and speed"""
-
         render_string = []
         render_string.append(self.clear())
         directions = Cursor.directions[direction]
@@ -69,12 +69,10 @@ class Cursor:
 
     def clear(self) -> str:
         """Clears the rendered cursor"""
-
         return f"{self.term.move_xy(*self.coords)}  "
 
     def render(self) -> str:
         """Renders the cursor"""
-
         render_string = []
         render_string.append(f"{self.term.move_xy(*self.coords)}")
         render_string.append(f"{self.term.color_rgb(*self.colour)}")
@@ -84,7 +82,6 @@ class Cursor:
 
 def main() -> None:
     """A function to test the code"""
-
     from blessed import Terminal
     term = Terminal()
     Coords = Point(5, 10)
