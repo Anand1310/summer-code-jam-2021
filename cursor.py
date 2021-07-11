@@ -1,5 +1,5 @@
 from blessed import Terminal
-from blessed.colorspace import X11_COLORNAMES_TO_RGB
+from blessed.colorspace import RGBColor, X11_COLORNAMES_TO_RGB
 
 DEFAULT_COLOUR = X11_COLORNAMES_TO_RGB["aqua"]
 
@@ -35,8 +35,8 @@ class Point:
 
 
 class Cursor:
-    def __init__(self, coords: Point, term: Terminal, fill="██",
-                colour=DEFAULT_COLOUR, speed=2) -> None:
+    def __init__(self, coords: Point, term: Terminal, fill: str="██",
+                colour: RGBColor=DEFAULT_COLOUR, speed: int=2) -> None:
         """creates a Cursor Object that can be moved on command"""
         self.coords = coords
         self.fill = fill
