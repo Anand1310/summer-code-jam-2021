@@ -26,7 +26,7 @@ class Scene:
     def __init__(self):
         self.height = term.height
         self.width = term.width
-        self.current_frame = term.clear + term.on_peachpuff2
+        self.current_frame = ""
 
     def reset(self) -> None:
         """This function should reset the current scene/level to its initial state"""
@@ -45,7 +45,7 @@ class Game:
     def run(self) -> None:
         """Main game loop"""
         with term.cbreak():
-            val = term.inkey(timeout=0.01)
+            val = Keystroke()
             while (val.lower() != "q") or (val.lower != "x"):
                 # user input
                 try:
@@ -56,7 +56,9 @@ class Game:
                     break
 
                 if isinstance(command, str):
-                    print(command)
+                    # do not need to print anything if '' is returned
+                    if len(command) != 0:
+                        print(command)
                 elif command == NEXT_SCENE:
                     self.current_scene = next(self.scenes, None)
                     continue
@@ -64,5 +66,7 @@ class Game:
                     self.current_scene.reset()
                     val = Keystroke()
                     continue
+                elif command == QUIT:
+                    break
 
-                val = term.inkey(timeout=3)
+                val = term.inkey(timeout=0.05)  # 20fps

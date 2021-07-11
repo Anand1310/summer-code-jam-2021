@@ -18,7 +18,7 @@ class TitleScene(Scene):
         super().__init__()
         txt1 = "welcome to 'Game name' :)"
         txt2 = "hit space to start"
-        self.current_frame = term.clear
+        self.current_frame = term.black_on_peachpuff2 + term.clear
         self.current_frame += term.move_xy(
             x=(self.width - len(txt1)) // 2, y=self.height // 2
         )
@@ -27,12 +27,17 @@ class TitleScene(Scene):
             x=(self.width - len(txt1)) // 2, y=self.height // 2 + 1
         )
         self.current_frame += txt2
+        self.first_frame = True
 
     def next_frame(self, val: Keystroke) -> Union[str, int]:
         """Returns next frame to render"""
-        if str(val) == " " or val.name == "KEY_ENTER":
+        # no need to update the frame anymore
+        if self.first_frame:
+            self.first_frame = False
+            return self.current_frame
+        elif str(val) == " " or val.name == "KEY_ENTER":
             return NEXT_SCENE
-        return self.current_frame
+        return ""
 
     def reset(self) -> None:
         """Reset has no use for title scene"""
@@ -44,12 +49,16 @@ class Level_1(Scene):
 
     def __init__(self) -> None:
         super().__init__()
-        self.current_frame = term.clear + "hit 'n' to end the game"
+        self.first_line = term.clear + "hit 'n' to end the game\n" + term.home
+        self.first_frame = True
 
     def next_frame(self, val: Keystroke) -> Union[str, int]:
         """Returns next frame to render"""
+        if self.first_frame:
+            self.first_frame = False
+            print(self.first_line)
         if not val:
-            new_line = "It sure is quiet in here ..."
+            new_line = ""
         elif val.is_sequence:
             new_line = "got sequence: {0}.".format((str(val), val.name, val.code))
         elif val.lower() == "n":
@@ -61,12 +70,11 @@ class Level_1(Scene):
         elif val:
             new_line = "got {0}.".format(val)
 
-        self.current_frame += "\n" + new_line
-        return self.current_frame
+        return new_line
 
     def reset(self) -> None:
         """Resets the current level"""
-        self.current_frame = term.clear + "hit 'n' to end the game"
+        self.first_frame = True
 
 
 class EndScene(Scene):
@@ -75,17 +83,21 @@ class EndScene(Scene):
     def __init__(self):
         super().__init__()
         txt = "You won :o"
-        self.current_frame = term.clear
-        self.current_frame += term.move_xy(
+        self.current_frame = term.move_xy(
             x=(self.width - len(txt)) // 2, y=self.height // 2
         )
         self.current_frame += txt
+        self.first_frame = True
 
     def next_frame(self, val: Keystroke) -> Union[str, int]:
         """Returns next frame to render"""
-        if str(val) == " " or val.name == "KEY_ENTER":
+        # no need to update each frame
+        if self.first_frame:
+            self.first_frame = False
+            return self.current_frame
+        elif str(val) == " " or val.name == "KEY_ENTER":
             return NEXT_SCENE
-        return self.current_frame
+        return ""
 
     def reset(self) -> None:
         """No use"""
