@@ -2,6 +2,8 @@ import random
 # Easy to read representation for each cardinal direction.
 from typing import List, Literal
 
+import numpy as np
+
 N, S, W, E = ("n", "s", "w", "e")
 
 
@@ -101,7 +103,7 @@ class Maze(object):
     def to_list_matrix(self) -> list:
         """Returns a matrix with a pretty printed visual representation of this maze."""
         str_matrix = [["W"] * (self.width * 2 + 1) for i in range(self.height * 2 + 1)]
-
+        str_matrix = np.array([["W"] * (self.width * 2 + 1) for i in range(self.height * 2 + 1)])
         for cell in self.cells:
             x = cell.x * 2 + 1
             y = cell.y * 2 + 1
