@@ -22,11 +22,33 @@ term = blessed.Terminal()
 
 
 class Box:
-    """Box class himi is supposed to make"""
+    """Box where parts of maze become visible."""
 
-    def __init__(self, location: Vec, maze: np.ndarray) -> None:
-        self.location = location
+    def __init__(self, location: Vec, maze: np.ndarray):
         self.maze = maze
+
+        self.a = location
+        self.b = location + Vec(3, 0)
+        self.c = self.b + Vec(0, 3)
+
+    def show_maze(self, player_location: Vec) -> str:
+        """Return a string that draws the box and associated maze based on player location."""
+        AB = self.b - self.a
+        BC = self.c - self.b
+
+        proj_AB = np.dot(AB, player_location - self.a)
+        proj_BC = np.dot(BC, player_location - self.b)
+
+        # https://stackoverflow.com/a/2763387
+        if (
+            0 <= proj_AB
+            and proj_AB <= np.dot(AB, AB)
+            and 0 <= proj_BC
+            and proj_BC <= np.dot(BC, BC)
+        ):
+            return self.maze
+        else:
+            return ""
 
 
 class Scene:
