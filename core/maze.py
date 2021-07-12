@@ -1,4 +1,4 @@
-# from __future__ import annotations
+from __future__ import annotations
 
 # Easy to read representation for each cardinal direction.
 import json
@@ -11,7 +11,6 @@ from typing import Dict, Iterator, List, Tuple
 import numpy as np
 
 from utils import Vec  # type: ignore
-from utils import calc_distance
 
 # from pprint import pprint
 
@@ -42,7 +41,7 @@ class Cell(object):
         """Returns True if all walls are still standing."""
         return len(self.walls) == 4
 
-    def _wall_to(self, other: object) -> str:
+    def _wall_to(self, other: Cell) -> str:
         """
         Returns the direction to the given cell from the current one.
 
@@ -59,7 +58,7 @@ class Cell(object):
         else:
             return None
 
-    def connect(self, other: object) -> None:
+    def connect(self, other: Cell) -> None:
         """Removes the wall between two adjacent cells."""
         other.walls.remove(other._wall_to(self))
         self.walls.remove(self._wall_to(other))
@@ -97,8 +96,9 @@ class Maze(object):
                 self.cells.append(Cell(x, y, [N, S, E, W]))
         self.matrix = self.to_list_matrix()
         self.boxes: List[Box] = []
-        self.player, self.target = None, None
-        self.min_distance = calc_distance((self.height, 0), (self.width, 0))
+        self.start: Vec = None
+        self.end: Vec = None
+        self.min_distance = np.sqrt(self.height ^ 2 + self.width ^ 2)
 
     def __getitem__(self, index: Tuple[int, int]):
         """Returns the cell at index = (x, y)."""
@@ -244,37 +244,32 @@ class Maze(object):
 
     def _get_random_position(self) -> Tuple[int, int]:
         """Returns a random position on the maze."""
-        return (random.randrange(0, self.width),
-                random.randrange(0, self.height))
+        return Vec(random.randrange(0, self.width), random.randrange(0, self.height))
 
-    def get_matrix_with_start_end_position(self, random_pos: bool = False) -> np.ndarray:
+    def get_random_start_end_position(self, random_pos: bool = False) -> None:
         """Return a array with start and end position"""
 
         def check() -> bool:
             """Return whether the player and target location are valid"""
-            if self.player is None and self.player == self.target and self.target is None:
+            if self.start is None and all(self.start == self.end) and self.end is None:
                 return False
             else:
-                distance = calc_distance(self.player, self.target)
+                distance = sum(np.sqrt(self.start ^ 2 + self.end ^ 2))
                 if distance < self.min_distance:
                     return False
                 return True
 
         if random_pos:
             while not check():
-                self.player = self._get_random_position()
-                self.target = self._get_random_position()
+                self.start = self._get_random_position()
+                self.end = self._get_random_position()
         else:
-            while self.player is None or self.matrix[self.player[0]][self.player[1]] != AIR:
-                self.player = (random.randrange(0, self.height), 1)
-            while self.target is None or self.matrix[self.target[0]][self.target[1]] != AIR:
-                self.target = (random.randrange(0, self.height), self.width * 2 - 1)
-
-        matrix = self.matrix
-        matrix[self.target] = TARGET
-        matrix[self.player] = PLAYER
-
-        return matrix
+            while (
+                self.start is None or self.matrix[self.start[0]][self.start[1]] != AIR
+            ):
+                self.start = Vec(random.randrange(0, self.height), 1)
+            while self.end is None or self.matrix[self.end[0]][self.end[1]] != AIR:
+                self.end = Vec(random.randrange(0, self.height), self.width * 2 - 1)
 
     @classmethod
     def generate(cls, width: int = 20, height: int = 10):
@@ -321,7 +316,7 @@ class Maze(object):
 
         np.save(str(file_path.joinpath("data")), self.matrix)
 
-        self.get_matrix_with_start_end_position()
+        self.get_random_start_end_position()
 
         # data = {"start": [self.player], "end": [self.target]}
 
@@ -332,11 +327,11 @@ class Box:
     """Box where parts of maze become visible."""
 
     def __init__(
-            self,
-            location: Vec,
-            maze: Maze,
-            shape: Tuple[int, int] = (3, 3),
-            col: str = "black",
+        self,
+        location: Vec,
+        maze: Maze,
+        shape: Tuple[int, int] = (3, 3),
+        col: str = "black",
     ):
         self.maze = maze
 
@@ -353,10 +348,7 @@ class Box:
         proj_BC = np.dot(BC, player_location - self.b)
 
         # https://stackoverflow.com/a/2763387
-        if (
-                0 <= proj_AB <= np.dot(AB, AB)
-                and 0 <= proj_BC <= np.dot(BC, BC)
-        ):
+        if 0 <= proj_AB <= np.dot(AB, AB) and 0 <= proj_BC <= np.dot(BC, BC):
             return str(self.maze)
         else:
             return ""
