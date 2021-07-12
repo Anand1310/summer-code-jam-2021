@@ -37,7 +37,7 @@ class Cursor:
         self,
         coords: Vec,
         fill: str = "██",
-        colour: RGBColor = Vec(X11_COLORNAMES_TO_RGB["aqua"]),
+        colour: RGBColor = X11_COLORNAMES_TO_RGB["aqua"],
         speed: Vec = Vec(2, 1),
     ) -> None:
 
