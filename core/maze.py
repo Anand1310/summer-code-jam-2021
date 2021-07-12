@@ -1,54 +1,25 @@
-from __future__ import annotations
+# from __future__ import annotations
 
 # Easy to read representation for each cardinal direction.
 import json
 import os
 import random
 import sys
+from pathlib import Path
 from typing import Dict, Iterator, List, Tuple
 
 import numpy as np
 
 from utils import Vec  # type: ignore
+from utils import calc_distance
 
 # from pprint import pprint
 
 
 N, S, W, E = ("n", "s", "w", "e")
-
-
-class Box:
-    """Box where parts of maze become visible."""
-
-    def __init__(
-            self,
-            location: Vec,
-            maze: Maze,
-            shape: Tuple[int, int] = (3, 3),
-            col: str = "black",
-    ):
-        self.maze = maze
-
-        self.a = location
-        self.b = location + (shape[0], 0)
-        self.c = self.b + (0, shape[1])
-
-    def show_maze(self, player_location: Vec) -> str:
-        """Return a string that draws the box and associated maze based on player location."""
-        AB = self.b - self.a
-        BC = self.c - self.b
-
-        proj_AB = np.dot(AB, player_location - self.a)
-        proj_BC = np.dot(BC, player_location - self.b)
-
-        # https://stackoverflow.com/a/2763387
-        if (
-                0 <= proj_AB <= np.dot(AB, AB)
-                and 0 <= proj_BC <= np.dot(BC, BC)
-        ):
-            return str(self.maze)
-        else:
-            return ""
+TARGET = 4
+PLAYER = 3
+AIR = 0
 
 
 class Cell(object):
@@ -71,7 +42,7 @@ class Cell(object):
         """Returns True if all walls are still standing."""
         return len(self.walls) == 4
 
-    def _wall_to(self, other: Cell) -> str:
+    def _wall_to(self, other: object) -> str:
         """
         Returns the direction to the given cell from the current one.
 
@@ -85,9 +56,10 @@ class Cell(object):
             return W
         elif other.x > self.x:
             return E
-        return None
+        else:
+            return None
 
-    def connect(self, other: Cell) -> None:
+    def connect(self, other: object) -> None:
         """Removes the wall between two adjacent cells."""
         other.walls.remove(other._wall_to(self))
         self.walls.remove(self._wall_to(other))
@@ -125,6 +97,8 @@ class Maze(object):
                 self.cells.append(Cell(x, y, [N, S, E, W]))
         self.matrix = self.to_list_matrix()
         self.boxes: List[Box] = []
+        self.player, self.target = None, None
+        self.min_distance = calc_distance((self.height, 0), (self.width, 0))
 
     def __getitem__(self, index: Tuple[int, int]):
         """Returns the cell at index = (x, y)."""
@@ -268,6 +242,40 @@ class Maze(object):
                 cell = cell_stack.pop()
         self.matrix = self.to_list_matrix()
 
+    def _get_random_position(self) -> Tuple[int, int]:
+        """Returns a random position on the maze."""
+        return (random.randrange(0, self.width),
+                random.randrange(0, self.height))
+
+    def get_matrix_with_start_end_position(self, random_pos: bool = False) -> np.ndarray:
+        """Return a array with start and end position"""
+
+        def check() -> bool:
+            """Return whether the player and target location are valid"""
+            if self.player is None and self.player == self.target and self.target is None:
+                return False
+            else:
+                distance = calc_distance(self.player, self.target)
+                if distance < self.min_distance:
+                    return False
+                return True
+
+        if random_pos:
+            while not check():
+                self.player = self._get_random_position()
+                self.target = self._get_random_position()
+        else:
+            while self.player is None or self.matrix[self.player[0]][self.player[1]] != AIR:
+                self.player = (random.randrange(0, self.height), 1)
+            while self.target is None or self.matrix[self.target[0]][self.target[1]] != AIR:
+                self.target = (random.randrange(0, self.height), self.width * 2 - 1)
+
+        matrix = self.matrix
+        matrix[self.target] = TARGET
+        matrix[self.player] = PLAYER
+
+        return matrix
+
     @classmethod
     def generate(cls, width: int = 20, height: int = 10):
         """Returns a new random perfect maze with the given sizes."""
@@ -301,16 +309,57 @@ class Maze(object):
         :parm secure: True -> use pickle to store, False -> use normal method
         """
         maze_count = 0
-        if "maps" not in os.listdir():
+        map_dir = Path("maps")
+        if map_dir not in os.listdir():
             os.mkdir("maps")
         for i in os.listdir("maps"):
             if i.startswith("maze"):
                 maze_count += 1
-        file_name = "maze" + str(maze_count + 1)
-        os.mkdir(f"maps/{file_name}")
+        map_name = "maze" + str(maze_count + 1)
+        file_path = map_dir.joinpath(map_name)
+        os.mkdir(file_path)
 
-        np.save(f"maps/{file_name}/data", self.matrix)
-        return file_name
+        np.save(str(file_path.joinpath("data")), self.matrix)
+
+        self.get_matrix_with_start_end_position()
+
+        # data = {"start": [self.player], "end": [self.target]}
+
+        return map_name
+
+
+class Box:
+    """Box where parts of maze become visible."""
+
+    def __init__(
+            self,
+            location: Vec,
+            maze: Maze,
+            shape: Tuple[int, int] = (3, 3),
+            col: str = "black",
+    ):
+        self.maze = maze
+
+        self.a = location
+        self.b = location + (shape[0], 0)
+        self.c = self.b + (0, shape[1])
+
+    def show_maze(self, player_location: Vec) -> str:
+        """Return a string that draws the box and associated maze based on player location."""
+        AB = self.b - self.a
+        BC = self.c - self.b
+
+        proj_AB = np.dot(AB, player_location - self.a)
+        proj_BC = np.dot(BC, player_location - self.b)
+
+        # https://stackoverflow.com/a/2763387
+        if (
+                0 <= proj_AB <= np.dot(AB, AB)
+                and 0 <= proj_BC <= np.dot(BC, BC)
+        ):
+            return str(self.maze)
+        else:
+            return ""
 
 
 if __name__ == "__main__":
@@ -326,5 +375,9 @@ if __name__ == "__main__":
 
     maze = Maze.generate(width, height)
     print(maze)
+    for i in maze.get_matrix_with_start_end_position():
+        for q in i:
+            print(q, end="")
+        print()
     # maze.save_to_file()
     # print(np.load("maps/maze1/data.npy", allow_pickle=False))

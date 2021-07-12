@@ -5,7 +5,8 @@ import blessed
 from blessed.keyboard import Keystroke
 
 from core.maze import Maze
-from game import NEXT_SCENE, QUIT, RESET, Scene
+from game import NEXT_SCENE, QUIT, RESET, Cursor, Scene
+from utils import Vec  # type: ignore
 
 term = blessed.Terminal()
 
@@ -48,7 +49,6 @@ class Level_1(Scene):
 
     def __init__(self) -> None:
         super().__init__()
-        self.maze = Maze.load("1")
         self.first_line = term.clear + "hit 'n' to end the game\n" + term.home
         self.first_frame = True
 
@@ -75,6 +75,15 @@ class Level_1(Scene):
     def reset(self) -> None:
         """Reset the current level"""
         self.first_frame = True
+
+
+class Level_2(Scene):
+    """pepeHands"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.maze = Maze.load("1")
+        self.avi = Cursor(Vec(1, 2))
 
 
 class EndScene(Scene):
