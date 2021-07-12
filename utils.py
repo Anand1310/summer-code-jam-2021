@@ -1,6 +1,7 @@
-
 # type: ignore
-from typing import Any, Union
+"""Collection of utilities."""
+from cmath import sqrt
+from typing import Iterable, Tuple, Union
 
 import numpy as np
 
@@ -37,5 +38,10 @@ class Vec(np.ndarray):
         """Set value of y as first co-ordinate."""
         self[1] = int(y)
 
-    def __iter__(self) -> Any:
+    def __iter__(self) -> Iterable:
         return map(int, (self.x, self.y))
+
+
+def calc_distance(p1: Tuple[int, int], p2: Tuple[int, int]) -> float:
+    """Return the distance between two point"""
+    return abs(sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2))
