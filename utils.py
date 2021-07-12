@@ -1,6 +1,7 @@
 # type: ignore
 """Collection of utilities."""
-from typing import Union
+from cmath import sqrt
+from typing import Tuple, Union
 
 import numpy as np
 
@@ -36,3 +37,8 @@ class Vec(np.ndarray):
     def y(self, y: Union[int, float]) -> None:
         """Set value of y as first co-ordinate."""
         self[1] = int(y)
+
+
+def calc_distance(p1: Tuple[int, int], p2: Tuple[int, int]) -> float:
+    """Return the distance between two point"""
+    return abs(sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2))

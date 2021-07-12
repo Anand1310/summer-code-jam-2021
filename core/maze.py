@@ -1,12 +1,16 @@
 import os
 import random
-# Easy to read representation for each cardinal direction.
 import sys
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 
+from utils import calc_distance
+
 N, S, W, E = ("n", "s", "w", "e")
+TARGET = '$'
+PLAYER = 'ጿ'
+WALL = 'W'
 
 
 class Cell(object):
@@ -81,6 +85,8 @@ class Maze(object):
             for x in range(self.width):
                 self.cells.append(Cell(x, y, [N, S, E, W]))
         self.matrix = self.to_list_matrix()
+        self.player, self.target = None, None
+        self.min_distance = calc_distance((self.height, 0), (self.width, 0))
 
     def __getitem__(self, index: set):
         """Returns the cell at index = (x, y)."""
@@ -105,7 +111,7 @@ class Maze(object):
 
     def to_list_matrix(self) -> np.ndarray:
         """Returns a matrix with a pretty printed visual representation of this maze."""
-        str_matrix = np.array([["W"] * (self.width * 2 + 1) for i in range(self.height * 2 + 1)])
+        str_matrix = np.array([[WALL] * (self.width * 2 + 1) for i in range(self.height * 2 + 1)])
         for cell in self.cells:
             x = cell.x * 2 + 1
             y = cell.y * 2 + 1
@@ -219,6 +225,34 @@ class Maze(object):
             else:
                 cell = cell_stack.pop()
 
+    def _get_random_position(self) -> Tuple[int, int]:
+        """Returns a random position on the maze."""
+        return (random.randrange(0, self.width),
+                random.randrange(0, self.height))
+
+    def get_matrix_with_start_end_position(self) -> np.ndarray:
+        """Return a array with start and end position"""
+
+        def check() -> bool:
+            """Return whether the player and target location are valid"""
+            if self.player is None and self.player == self.target and self.target is None:
+                return False
+            else:
+                distance = calc_distance(self.player, self.target)
+                if distance < self.min_distance:
+                    return False
+                return True
+
+        while not check():
+            self.player = self._get_random_position()
+            self.target = self._get_random_position()
+
+        matrix = self.matrix
+        matrix[self.target] = TARGET
+        matrix[self.player] = PLAYER
+
+        return matrix
+
     @classmethod
     def generate(cls, width: int = 20, height: int = 10):
         """Returns a new random perfect maze with the given sizes."""
@@ -257,5 +291,9 @@ if __name__ == "__main__":
 
     maze = Maze.generate(width, height)
     print(maze)
+    for i in maze.get_matrix_with_start_end_position():
+        for q in i:
+            print(q, end="")
+        print()
     # maze.save_to_file()
     # print(np.load("maps/maze1/data.npy", allow_pickle=False))
