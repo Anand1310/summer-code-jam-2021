@@ -7,7 +7,7 @@ import blessed
 import numpy as np
 from blessed.keyboard import Keystroke
 
-from utilities import Vec
+from utils import Vec
 
 if "logs" not in os.listdir():
     os.mkdir("logs")

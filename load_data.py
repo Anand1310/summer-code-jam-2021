@@ -5,7 +5,7 @@ from typing import Dict, List, Tuple
 import numpy as np
 
 from game import Box
-from utilities import Vec
+from utils import Vec
 
 
 def load_map(file: Path) -> np.ndarray:
