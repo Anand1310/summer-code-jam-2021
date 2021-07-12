@@ -244,32 +244,15 @@ class Maze(object):
                     return False
                 return True
 
-        def check_player() -> bool:
-            """Return whether the player location are valid"""
-            if self.player is None:
-                return False
-            for i in self.neighbors(Cell(*self.player, [])):
-                if "e" in i.walls:
-                    return False
-            return True
-
-        def check_target() -> bool:
-            """Return whether the target location are valid"""
-            if self.target is None:
-                return False
-            for i in self.neighbors(Cell(*self.player, [])):
-                if "w" in i.walls:
-                    return False
-            return True
-
         if random_pos:
             while not check():
                 self.player = self._get_random_position()
                 self.target = self._get_random_position()
         else:
-            while not check_player() and not check_target():
-                self.player = (random.randrange(0, self.height), 0)
-                self.target = (random.randrange(0, self.height), self.width * 2)
+            while self.player is None or self.matrix[self.player[0]][self.player[1]] != " ":
+                self.player = (random.randrange(0, self.height), 1)
+            while self.target is None or self.matrix[self.target[0]][self.target[1]] != " ":
+                self.target = (random.randrange(0, self.height), self.width * 2 - 1)
 
         matrix = self.matrix
         matrix[self.target] = TARGET
