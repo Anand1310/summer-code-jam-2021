@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import os
 import random
 # Easy to read representation for each cardinal direction.
 import sys
-from typing import List
+from typing import Iterator, Tuple
 
 import numpy as np
 
@@ -29,7 +31,7 @@ class Cell(object):
         """Returns True if all walls are still standing."""
         return len(self.walls) == 4
 
-    def _wall_to(self, other: object) -> str:
+    def _wall_to(self, other: Cell) -> str:
         """
         Returns the direction to the given cell from the current one.
 
@@ -43,8 +45,9 @@ class Cell(object):
             return W
         elif other.x > self.x:
             return E
+        return None
 
-    def connect(self, other: List[object]) -> None:
+    def connect(self, other: Cell) -> None:
         """Removes the wall between two adjacent cells."""
         other.walls.remove(other._wall_to(self))
         self.walls.remove(self._wall_to(other))
@@ -82,7 +85,7 @@ class Maze(object):
                 self.cells.append(Cell(x, y, [N, S, E, W]))
         self.matrix = self.to_list_matrix()
 
-    def __getitem__(self, index: set):
+    def __getitem__(self, index: Tuple[int, int]):
         """Returns the cell at index = (x, y)."""
         x, y = index
         if 0 <= x < self.width and 0 <= y < self.height:
@@ -90,7 +93,7 @@ class Maze(object):
         else:
             return None
 
-    def neighbors(self, cell: Cell) -> list:
+    def neighbors(self, cell: Cell) -> Iterator[Cell]:
         """
         Returns the list of neighboring cells, not counting diagonals.
 
@@ -105,7 +108,7 @@ class Maze(object):
 
     def to_list_matrix(self) -> np.ndarray:
         """Returns a matrix with a pretty printed visual representation of this maze."""
-        str_matrix = np.array([["W"] * (self.width * 2 + 1) for i in range(self.height * 2 + 1)])
+        str_matrix = np.array([["O"] * (self.width * 2 + 1) for i in range(self.height * 2 + 1)])
         for cell in self.cells:
             x = cell.x * 2 + 1
             y = cell.y * 2 + 1
@@ -156,7 +159,7 @@ class Maze(object):
         # So we remove the last char of each line.
         matrix = [line[:-1] for line in double_wide_matrix]
 
-        def g(x: int, y: int) -> bool:
+        def wall_at(x: int, y: int) -> bool:
             """Returns True if there is a wall at (x, y). Values outside the valid range always return false."""
             if 0 <= x < len(matrix[0]) and 0 <= y < len(matrix):
                 return matrix[y][x] != " "
@@ -167,7 +170,7 @@ class Maze(object):
         # maze.
         for y, line in enumerate(matrix):
             for x, char in enumerate(line):
-                if not g(x, y) and g(x - 1, y):
+                if not wall_at(x, y) and wall_at(x - 1, y):
                     matrix[y][x - 1] = " "
 
         # Right now the maze has the correct aspect ratio, but is still using
@@ -177,17 +180,17 @@ class Maze(object):
         # their context.
         for y, line in enumerate(matrix):
             for x, char in enumerate(line):
-                if not g(x, y):
+                if not wall_at(x, y):
                     continue
 
                 connections = {N, S, E, W}
-                if not g(x, y + 1):
+                if not wall_at(x, y + 1):
                     connections.remove(S)
-                if not g(x, y - 1):
+                if not wall_at(x, y - 1):
                     connections.remove(N)
-                if not g(x + 1, y):
+                if not wall_at(x + 1, y):
                     connections.remove(E)
-                if not g(x - 1, y):
+                if not wall_at(x - 1, y):
                     connections.remove(W)
 
                 str_connections = "".join(sorted(connections))
@@ -203,6 +206,7 @@ class Maze(object):
         Knocks down random walls to build a random perfect maze.
 
         Algorithm from http://mazeworks.com/mazegen/mazetut/index.htm
+        (The website is currently down)
         """
         cell_stack = []
         cell = random.choice(self.cells)
