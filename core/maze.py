@@ -1,6 +1,7 @@
 import os
 import random
 import sys
+from pathlib import Path
 from typing import List, Tuple
 
 import numpy as np
@@ -230,7 +231,7 @@ class Maze(object):
         return (random.randrange(0, self.width),
                 random.randrange(0, self.height))
 
-    def get_matrix_with_start_end_position(self) -> np.ndarray:
+    def get_matrix_with_start_end_position(self, random_pos: bool = False) -> np.ndarray:
         """Return a array with start and end position"""
 
         def check() -> bool:
@@ -243,9 +244,31 @@ class Maze(object):
                     return False
                 return True
 
-        while not check():
-            self.player = self._get_random_position()
-            self.target = self._get_random_position()
+        def checkplayer() -> bool:
+            """Return whether the player and target location are valid"""
+            if self.player is None:
+                return False
+            for i in self.neighbors(Cell(*self.player, [])):
+                if "e" in i.walls:
+                    return False
+            return True
+
+        def checktarget() -> bool:
+            if self.target is None:
+                return False
+            for i in self.neighbors(Cell(*self.player, [])):
+                if "w" in i.walls:
+                    return False
+            return True
+
+        if random_pos:
+            while not check():
+                self.player = self._get_random_position()
+                self.target = self._get_random_position()
+        else:
+            while not checkplayer() and not checktarget():
+                self.player = (random.randrange(0, self.height), 0)
+                self.target = (random.randrange(0, self.height), self.width * 2)
 
         matrix = self.matrix
         matrix[self.target] = TARGET
@@ -266,16 +289,23 @@ class Maze(object):
         :parm secure: True -> use pickle to store, False -> use normal method
         """
         maze_count = 0
-        if "maps" not in os.listdir():
+        map_dir = Path("maps")
+        if map_dir not in os.listdir():
             os.mkdir("maps")
         for i in os.listdir("maps"):
             if i.startswith("maze"):
                 maze_count += 1
-        file_name = "maze" + str(maze_count + 1)
-        os.mkdir(f"maps/{file_name}")
+        map_name = "maze" + str(maze_count + 1)
+        file_path = map_dir.joinpath(map_name)
+        os.mkdir(file_path)
 
-        np.save(f"maps/{file_name}/data", self.matrix)
-        return file_name
+        np.save(str(file_path.joinpath("data")), self.matrix)
+
+        self.get_matrix_with_start_end_position()
+
+        # data = {"start": [self.player], "end": [self.target]}
+
+        return map_name
 
 
 if __name__ == "__main__":
