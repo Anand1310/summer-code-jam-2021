@@ -1,13 +1,10 @@
 """Game components."""
 import logging
 import os
-from typing import Iterable, Iterator, Tuple, Union
+from typing import Iterable, Iterator, Union
 
 import blessed
-import numpy as np
 from blessed.keyboard import Keystroke
-
-from utils import Vec
 
 if "logs" not in os.listdir():
     os.mkdir("logs")
@@ -19,38 +16,6 @@ RESET = 2
 QUIT = 3
 
 term = blessed.Terminal()
-
-
-class Box:
-    """Box where parts of maze become visible."""
-
-    def __init__(
-        self, location: Vec, maze: np.ndarray, shape: Tuple[int, int] = (3, 3)
-    ):
-        self.maze = maze
-
-        self.a = location
-        self.b = location + (shape[0], 0)
-        self.c = self.b + (0, shape[1])
-
-    def show_maze(self, player_location: Vec) -> Union[str, np.ndarray]:
-        """Return a string that draws the box and associated maze based on player location."""
-        AB = self.b - self.a
-        BC = self.c - self.b
-
-        proj_AB = np.dot(AB, player_location - self.a)
-        proj_BC = np.dot(BC, player_location - self.b)
-
-        # https://stackoverflow.com/a/2763387
-        if (
-            0 <= proj_AB
-            and proj_AB <= np.dot(AB, AB)
-            and 0 <= proj_BC
-            and proj_BC <= np.dot(BC, BC)
-        ):
-            return self.maze
-        else:
-            return ""
 
 
 class Scene:

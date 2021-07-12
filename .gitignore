@@ -12,6 +12,7 @@ env
 .coverage*
 
 # Logs
+logs/
 *.log
 
 # PyEnv version selector

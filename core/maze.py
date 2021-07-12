@@ -1,17 +1,56 @@
 from __future__ import annotations
 
+# Easy to read representation for each cardinal direction.
+import json
 import os
 import random
-# Easy to read representation for each cardinal direction.
 import sys
-from typing import Iterator, Tuple
+from typing import Dict, Iterator, List, Tuple
 
 import numpy as np
+
+from utils import Vec  # type: ignore
 
 # from pprint import pprint
 
 
 N, S, W, E = ("n", "s", "w", "e")
+
+
+class Box:
+    """Box where parts of maze become visible."""
+
+    def __init__(
+        self,
+        location: Vec,
+        maze: Maze,
+        shape: Tuple[int, int] = (3, 3),
+        col: str = "black",
+    ):
+        self.maze = maze
+
+        self.a = location
+        self.b = location + (shape[0], 0)
+        self.c = self.b + (0, shape[1])
+
+    def show_maze(self, player_location: Vec) -> str:
+        """Return a string that draws the box and associated maze based on player location."""
+        AB = self.b - self.a
+        BC = self.c - self.b
+
+        proj_AB = np.dot(AB, player_location - self.a)
+        proj_BC = np.dot(BC, player_location - self.b)
+
+        # https://stackoverflow.com/a/2763387
+        if (
+            0 <= proj_AB
+            and proj_AB <= np.dot(AB, AB)
+            and 0 <= proj_BC
+            and proj_BC <= np.dot(BC, BC)
+        ):
+            return str(self.maze)
+        else:
+            return ""
 
 
 class Cell(object):
@@ -87,6 +126,7 @@ class Maze(object):
             for x in range(self.width):
                 self.cells.append(Cell(x, y, [N, S, E, W]))
         self.matrix = self.to_list_matrix()
+        self.boxes: List[Box] = []
 
     def __getitem__(self, index: Tuple[int, int]):
         """Returns the cell at index = (x, y)."""
@@ -237,11 +277,25 @@ class Maze(object):
         m.randomize()
         return m
 
-    def set_map(self, m: np.ndarray) -> None:
-        """Set the map of the maze according to the given array"""
-        self.matrix = m
+    def set_map(self, m: List[List[int]]) -> None:
+        """Set map for the maze"""
+        self.matrix = np.array(m)
         self.width = self.matrix.shape[0] // 2
         self.height = self.matrix.shape[1] // 2
+
+    @classmethod
+    def load(cls, fname: str) -> None:
+        """Load everything from json file"""
+        obj = cls(width=20, height=10)
+        with open(f"levels/{fname}.json", "r") as f:
+            data: Dict = json.load(f)
+        obj.set_map(data.pop("map"))
+        for color, box_dict in data.items():
+            box_location = Vec(*box_dict["location"])
+            box_map = box_dict["map"]
+            box_maze = cls(width=20, height=10)
+            box_maze.set_map(box_map)
+            obj.boxes.append(Box(location=box_location, maze=box_maze, col=color))
 
     def save_to_file(self) -> str:
         """Save maze in to file
