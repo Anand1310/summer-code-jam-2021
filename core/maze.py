@@ -21,11 +21,11 @@ class Box:
     """Box where parts of maze become visible."""
 
     def __init__(
-        self,
-        location: Vec,
-        maze: Maze,
-        shape: Tuple[int, int] = (3, 3),
-        col: str = "black",
+            self,
+            location: Vec,
+            maze: Maze,
+            shape: Tuple[int, int] = (3, 3),
+            col: str = "black",
     ):
         self.maze = maze
 
@@ -43,10 +43,8 @@ class Box:
 
         # https://stackoverflow.com/a/2763387
         if (
-            0 <= proj_AB
-            and proj_AB <= np.dot(AB, AB)
-            and 0 <= proj_BC
-            and proj_BC <= np.dot(BC, BC)
+                0 <= proj_AB <= np.dot(AB, AB)
+                and 0 <= proj_BC <= np.dot(BC, BC)
         ):
             return str(self.maze)
         else:
