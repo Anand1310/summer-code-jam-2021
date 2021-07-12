@@ -48,7 +48,7 @@ class Cursor:
         self.term = term
         self.commands = {"r": self.render, "c": self.clear}
 
-    def move(self, direction: str) -> str:
+    def next_location(self, direction: str) -> str:
         """Moves the cursor to a new position based on direction and speed"""
         render_string = ""
         render_string += self.clear()
@@ -71,7 +71,7 @@ class Cursor:
         render_string = ""
         render_string += f"{self.term.move_xy(*self.coords)}"
         render_string += f"{self.term.color_rgb(*self.colour)}"
-        render_string += f"{self.fill}{self.term.normal}"
+        render_string += f"{self.fill}"
         return render_string
 
 
@@ -123,6 +123,8 @@ class Game:
                     self.current_scene.reset()
                     val = Keystroke()
                     continue
+                elif command == QUIT:
+                    break
                 val = term.inkey(timeout=0.05)  # 20 fps
 
 

@@ -285,18 +285,22 @@ class Maze(object):
         self.height = self.matrix.shape[1] // 2
 
     @classmethod
-    def load(cls, fname: str) -> None:
+    def load(cls, fname: str) -> Maze:
         """Load everything from json file"""
         obj = cls(width=20, height=10)
         with open(f"levels/{fname}.json", "r") as f:
             data: Dict = json.load(f)
         obj.set_map(data.pop("map"))
+        obj.start = Vec(*reversed(data.pop("start")))
+        obj.end = Vec(*reversed(data.pop("end")))
         for color, box_dict in data.items():
             box_location = Vec(*box_dict["location"])
             box_map = box_dict["map"]
             box_maze = cls(width=20, height=10)
             box_maze.set_map(box_map)
             obj.boxes.append(Box(location=box_location, maze=box_maze, col=color))
+
+        return obj
 
     def save_to_file(self) -> str:
         """Save maze in to file
@@ -330,7 +334,7 @@ class Box:
         self,
         location: Vec,
         maze: Maze,
-        shape: Tuple[int, int] = (3, 3),
+        shape: Tuple[int, int] = (2, 2),
         col: str = "black",
     ):
         self.maze = maze
@@ -338,6 +342,9 @@ class Box:
         self.a = location
         self.b = location + (shape[0], 0)
         self.c = self.b + (0, shape[1])
+
+    def _draw_box(self) -> str:
+        pass
 
     def show_maze(self, player_location: Vec) -> str:
         """Return a string that draws the box and associated maze based on player location."""
