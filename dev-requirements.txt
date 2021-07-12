@@ -15,4 +15,4 @@ flake8-isort~=4.0
 
 # project
 blessed ~= 1.8
-numpy ~= 1.12.0
+numpy ~= 1.21.0
