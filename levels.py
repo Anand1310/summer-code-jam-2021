@@ -2,6 +2,10 @@
 from typing import Union
 
 import blessed
+from asciimatics.effects import Cycle, Stars
+from asciimatics.renderers import FigletText, SpeechBubble
+from asciimatics.scene import Scene as Sc
+from asciimatics.screen import Screen
 from blessed.keyboard import Keystroke
 
 from game import NEXT_SCENE, QUIT, RESET, Scene
@@ -15,6 +19,7 @@ class TitleScene(Scene):
 
     def __init__(self) -> None:
         super().__init__()
+        Screen.wrapper(TitleScene.demo)
         txt1 = "welcome to 'Game name' :)"
         txt2 = "hit space to start"
         self.current_frame = term.black_on_peachpuff2 + term.clear
@@ -27,6 +32,24 @@ class TitleScene(Scene):
         )
         self.current_frame += txt2
         self.first_frame = True
+
+    def demo(screen) -> None:
+        """Welcome scene"""
+        effects = [
+            Cycle(
+                screen,
+                SpeechBubble("Press q to continue", tail="L"),
+                screen.height // 2 - 10,
+            ),
+            Cycle(screen, FigletText("GAME NAME", font="big"), screen.height // 2 - 5),
+            Cycle(
+                screen,
+                SpeechBubble("DEVELOPED BY BENEVOLENT_BONOBOS"),
+                screen.height // 2 + 8,
+            ),
+            Stars(screen, (screen.width + screen.height) // 2),
+        ]
+        screen.play([Sc(effects, 500)])
 
     def next_frame(self, val: Keystroke) -> Union[str, int]:
         """Returns next frame to render"""
