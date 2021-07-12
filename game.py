@@ -93,7 +93,7 @@ class Camera:
         self._cam_y = cam_y
         self.quickness = quickness
 
-    @property 
+    @property
     def cam_x(self) -> int:
         """:return: camera's x coordinate"""
         return self._cam_x
