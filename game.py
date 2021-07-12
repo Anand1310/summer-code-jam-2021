@@ -1,15 +1,17 @@
 """Game components."""
 import logging
 import os
+import time
 from typing import Iterable, Iterator, Union
 
 import blessed
+import numpy as np
+import pytweening as pt
 from blessed.keyboard import Keystroke
 
 if "logs" not in os.listdir():
     os.mkdir("logs")
 logging.basicConfig(filename="logs/debug.log", level=logging.DEBUG)
-
 
 NEXT_SCENE = 1
 RESET = 2
@@ -55,7 +57,6 @@ class Game:
                     logging.info(f"game ended with {e}")
                     print("Game ended.")
                     break
-
                 if isinstance(command, str):
                     # do not need to print anything if '' is returned
                     if len(command) != 0:
@@ -67,7 +68,53 @@ class Game:
                     self.current_scene.reset()
                     val = Keystroke()
                     continue
-                elif command == QUIT:
-                    break
+                val = term.inkey(timeout=3)
 
-                val = term.inkey(timeout=0.05)  # 20fps
+
+class Camera:
+    """Main Camera Class. Can Have Multiple Cameras in multiplayer"""
+
+    def __init__(
+        self,
+        game_map: np.ndarray,
+        cam_x: int = 0,
+        cam_y: int = 0,
+        quickness: float = 0.0,
+    ) -> None:
+        """Initialization of the Camera
+
+        :param cam_x: initial position of camera's x coordinates
+        :param cam_y: initial position of camera's y coordinates
+        :param game_map: The whole game map
+        :param quickness: how fast camera should transition from one point to another
+        """
+        self.game_map = game_map
+        self._cam_x = cam_x
+        self._cam_y = cam_y
+        self.quickness = quickness
+
+    @property 
+    def cam_x(self) -> int:
+        """:return: camera's x coordinate"""
+        return self._cam_x
+
+    @property
+    def cam_y(self) -> int:
+        """:return: camera's y coordinate"""
+        return self._cam_y
+
+    @cam_x.setter  # type: ignore
+    def cam_x(self, value: int) -> None:
+        pass
+
+    def _set_pos(self, x: int, y: int) -> None:
+        interval = 1 * (1 - self.quickness)
+        transtion_lenght = int(1 / interval)
+        for i in range(transtion_lenght):
+            time.sleep(interval)
+            self._cam_x *= pt.easeInOutSine(interval * i)
+            self._cam_y *= pt.easeInOutSine(interval * i)
+
+    def _render(self, x: int, y: int) -> None:
+        # Todo: create the render func and handle errors
+        pass
