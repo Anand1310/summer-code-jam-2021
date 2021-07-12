@@ -1,17 +1,25 @@
+# from __future__ import annotations
+
+# Easy to read representation for each cardinal direction.
+import json
 import os
 import random
 import sys
 from pathlib import Path
-from typing import List, Tuple
+from typing import Dict, Iterator, List, Tuple
 
 import numpy as np
 
+from utils import Vec  # type: ignore
 from utils import calc_distance
 
+# from pprint import pprint
+
+
 N, S, W, E = ("n", "s", "w", "e")
-TARGET = '$'
-PLAYER = 'ጿ'
-WALL = 'W'
+TARGET = 4
+PLAYER = 3
+AIR = 0
 
 
 class Cell(object):
@@ -48,8 +56,10 @@ class Cell(object):
             return W
         elif other.x > self.x:
             return E
+        else:
+            return None
 
-    def connect(self, other: List[object]) -> None:
+    def connect(self, other: object) -> None:
         """Removes the wall between two adjacent cells."""
         other.walls.remove(other._wall_to(self))
         self.walls.remove(self._wall_to(other))
@@ -86,10 +96,11 @@ class Maze(object):
             for x in range(self.width):
                 self.cells.append(Cell(x, y, [N, S, E, W]))
         self.matrix = self.to_list_matrix()
+        self.boxes: List[Box] = []
         self.player, self.target = None, None
         self.min_distance = calc_distance((self.height, 0), (self.width, 0))
 
-    def __getitem__(self, index: set):
+    def __getitem__(self, index: Tuple[int, int]):
         """Returns the cell at index = (x, y)."""
         x, y = index
         if 0 <= x < self.width and 0 <= y < self.height:
@@ -97,7 +108,7 @@ class Maze(object):
         else:
             return None
 
-    def neighbors(self, cell: Cell) -> list:
+    def neighbors(self, cell: Cell) -> Iterator[Cell]:
         """
         Returns the list of neighboring cells, not counting diagonals.
 
@@ -112,19 +123,21 @@ class Maze(object):
 
     def to_list_matrix(self) -> np.ndarray:
         """Returns a matrix with a pretty printed visual representation of this maze."""
-        str_matrix = np.array([[WALL] * (self.width * 2 + 1) for i in range(self.height * 2 + 1)])
+        str_matrix = np.array(
+            [[1] * (self.width * 2 + 1) for i in range(self.height * 2 + 1)]
+        )
         for cell in self.cells:
             x = cell.x * 2 + 1
             y = cell.y * 2 + 1
-            str_matrix[y][x] = " "
+            str_matrix[y][x] = 0
             if N not in cell and y > 0:
-                str_matrix[y - 1][x + 0] = " "
+                str_matrix[y - 1][x + 0] = 0
             if S not in cell and y + 1 < self.width:
-                str_matrix[y + 1][x + 0] = " "
+                str_matrix[y + 1][x + 0] = 0
             if W not in cell and x > 0:
-                str_matrix[y][x - 1] = " "
+                str_matrix[y][x - 1] = 0
             if E not in cell and x + 1 < self.width:
-                str_matrix[y][x + 1] = " "
+                str_matrix[y][x + 1] = 0
 
         self.matrix = str_matrix
         return str_matrix
@@ -149,13 +162,14 @@ class Maze(object):
         # Starts with regular representation. Looks stretched because chars are
         # twice as high as they are wide (look at docs example in
         # `Maze._to_str_matrix`).
-        skinny_matrix = self.to_list_matrix()
+        skinny_matrix = self.matrix
 
         # Simply duplicate each character in each line.
         double_wide_matrix = []
         for line in skinny_matrix:
             double_wide_matrix.append([])
-            for char in line:
+            for item in line:
+                char = "O" if item == 1 else " "
                 double_wide_matrix[-1].append(char)
                 double_wide_matrix[-1].append(char)
 
@@ -163,7 +177,7 @@ class Maze(object):
         # So we remove the last char of each line.
         matrix = [line[:-1] for line in double_wide_matrix]
 
-        def g(x: int, y: int) -> bool:
+        def wall_at(x: int, y: int) -> bool:
             """Returns True if there is a wall at (x, y). Values outside the valid range always return false."""
             if 0 <= x < len(matrix[0]) and 0 <= y < len(matrix):
                 return matrix[y][x] != " "
@@ -174,7 +188,7 @@ class Maze(object):
         # maze.
         for y, line in enumerate(matrix):
             for x, char in enumerate(line):
-                if not g(x, y) and g(x - 1, y):
+                if not wall_at(x, y) and wall_at(x - 1, y):
                     matrix[y][x - 1] = " "
 
         # Right now the maze has the correct aspect ratio, but is still using
@@ -184,17 +198,17 @@ class Maze(object):
         # their context.
         for y, line in enumerate(matrix):
             for x, char in enumerate(line):
-                if not g(x, y):
+                if not wall_at(x, y):
                     continue
 
                 connections = {N, S, E, W}
-                if not g(x, y + 1):
+                if not wall_at(x, y + 1):
                     connections.remove(S)
-                if not g(x, y - 1):
+                if not wall_at(x, y - 1):
                     connections.remove(N)
-                if not g(x + 1, y):
+                if not wall_at(x + 1, y):
                     connections.remove(E)
-                if not g(x - 1, y):
+                if not wall_at(x - 1, y):
                     connections.remove(W)
 
                 str_connections = "".join(sorted(connections))
@@ -210,6 +224,7 @@ class Maze(object):
         Knocks down random walls to build a random perfect maze.
 
         Algorithm from http://mazeworks.com/mazegen/mazetut/index.htm
+        (The website is currently down)
         """
         cell_stack = []
         cell = random.choice(self.cells)
@@ -225,6 +240,7 @@ class Maze(object):
                 n_visited_cells += 1
             else:
                 cell = cell_stack.pop()
+        self.matrix = self.to_list_matrix()
 
     def _get_random_position(self) -> Tuple[int, int]:
         """Returns a random position on the maze."""
@@ -249,9 +265,9 @@ class Maze(object):
                 self.player = self._get_random_position()
                 self.target = self._get_random_position()
         else:
-            while self.player is None or self.matrix[self.player[0]][self.player[1]] != " ":
+            while self.player is None or self.matrix[self.player[0]][self.player[1]] != AIR:
                 self.player = (random.randrange(0, self.height), 1)
-            while self.target is None or self.matrix[self.target[0]][self.target[1]] != " ":
+            while self.target is None or self.matrix[self.target[0]][self.target[1]] != AIR:
                 self.target = (random.randrange(0, self.height), self.width * 2 - 1)
 
         matrix = self.matrix
@@ -266,6 +282,26 @@ class Maze(object):
         m = cls(width, height)
         m.randomize()
         return m
+
+    def set_map(self, m: List[List[int]]) -> None:
+        """Set map for the maze"""
+        self.matrix = np.array(m)
+        self.width = self.matrix.shape[0] // 2
+        self.height = self.matrix.shape[1] // 2
+
+    @classmethod
+    def load(cls, fname: str) -> None:
+        """Load everything from json file"""
+        obj = cls(width=20, height=10)
+        with open(f"levels/{fname}.json", "r") as f:
+            data: Dict = json.load(f)
+        obj.set_map(data.pop("map"))
+        for color, box_dict in data.items():
+            box_location = Vec(*box_dict["location"])
+            box_map = box_dict["map"]
+            box_maze = cls(width=20, height=10)
+            box_maze.set_map(box_map)
+            obj.boxes.append(Box(location=box_location, maze=box_maze, col=color))
 
     def save_to_file(self) -> str:
         """Save maze in to file
@@ -290,6 +326,40 @@ class Maze(object):
         # data = {"start": [self.player], "end": [self.target]}
 
         return map_name
+
+
+class Box:
+    """Box where parts of maze become visible."""
+
+    def __init__(
+            self,
+            location: Vec,
+            maze: Maze,
+            shape: Tuple[int, int] = (3, 3),
+            col: str = "black",
+    ):
+        self.maze = maze
+
+        self.a = location
+        self.b = location + (shape[0], 0)
+        self.c = self.b + (0, shape[1])
+
+    def show_maze(self, player_location: Vec) -> str:
+        """Return a string that draws the box and associated maze based on player location."""
+        AB = self.b - self.a
+        BC = self.c - self.b
+
+        proj_AB = np.dot(AB, player_location - self.a)
+        proj_BC = np.dot(BC, player_location - self.b)
+
+        # https://stackoverflow.com/a/2763387
+        if (
+                0 <= proj_AB <= np.dot(AB, AB)
+                and 0 <= proj_BC <= np.dot(BC, BC)
+        ):
+            return str(self.maze)
+        else:
+            return ""
 
 
 if __name__ == "__main__":

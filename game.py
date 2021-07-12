@@ -4,10 +4,7 @@ import os
 from typing import Iterable, Iterator, Union
 
 import blessed
-import numpy as np
 from blessed.keyboard import Keystroke
-
-from utils import Vec
 
 if "logs" not in os.listdir():
     os.mkdir("logs")
@@ -19,14 +16,6 @@ RESET = 2
 QUIT = 3
 
 term = blessed.Terminal()
-
-
-class Box:
-    """Box class himi is supposed to make"""
-
-    def __init__(self, location: Vec, maze: np.ndarray) -> None:
-        self.location = location
-        self.maze = maze
 
 
 class Scene:

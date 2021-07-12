@@ -4,8 +4,8 @@ from typing import Union
 import blessed
 from blessed.keyboard import Keystroke
 
+from core.maze import Maze
 from game import NEXT_SCENE, QUIT, RESET, Scene
-from load_data import load_level
 
 term = blessed.Terminal()
 
@@ -48,7 +48,7 @@ class Level_1(Scene):
 
     def __init__(self) -> None:
         super().__init__()
-        self.maze, self.start, self.end, self.boxes = load_level(1)
+        self.maze = Maze.load("1")
         self.first_line = term.clear + "hit 'n' to end the game\n" + term.home
         self.first_frame = True
 
