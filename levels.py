@@ -1,10 +1,12 @@
 """Examples for designing levels."""
-import copy
+import logging
 import time
 from threading import Thread
 from typing import Union
+from copy import copy
 
 import blessed
+from blessed.colorspace import X11_COLORNAMES_TO_RGB
 from blessed.keyboard import Keystroke
 
 from core.maze import Maze
@@ -86,9 +88,23 @@ class Level_2(Scene):
     def __init__(self) -> None:
         super().__init__()
         self.maze = Maze.load("1")
-        self.avi = Cursor(copy.copy(self.maze.start), colour=(0, 0, 0))
+
+        self.avi = Cursor(copy(self.maze.start), render=self.render, fill="Q")
         self.first_frame = True
+
+        maze = str(self.maze).split("\n")
+        self.maze_shape = Vec(len(maze[0]), len(maze))
         self.terminal_shape = Vec(term.width, term.height)
+        self.top_left_corner = (self.terminal_shape - self.maze_shape) // 2
+        for box in self.maze.boxes:
+            # move to top-left corner of maze + scale and extend width
+            # + move to top-left corner of box
+            box.loc = self.top_left_corner + box.loc * (2, 1) + (1, 0) - (1, 1)
+            box.scene_render = self.render
+            box.top_left_corner = copy(self.top_left_corner)
+        
+        logging.info(f"maze-top-left: {self.top_left_corner}")
+        logging.info(f"main-maze-shape: {len(self.maze.draw())}")
 
     def next_frame(self, val: Keystroke) -> Union[str, int]:
         """Draw next frame"""
@@ -96,9 +112,20 @@ class Level_2(Scene):
             self.first_frame = False
             # removes the main maze after 2 sec
             Thread(target=self.remove_maze, daemon=True).start()
-            return term.clear + self.draw_maze(str(self.maze)) + self.avi.render()
+            frame = term.clear
+            frame += self.draw_maze(self.maze.draw()) + self.avi.render() # type: ignore 
+            for box in self.maze.boxes:
+                frame += box.render(self.avi)
+                logging.info(f'first frame loc: {box.loc}')
+            return frame
+            
         elif val.is_sequence and (257 < val.code < 262):
-            return self.avi.next_location(val.name)
+            frame = '' # type: ignore
+            for box in self.maze.boxes:
+                frame += box.render(self.avi)
+            frame += self.avi.next_location(val.name)  # type: ignore
+            return self.render(frame)
+        
         elif val.lower() == "q":
             return QUIT
         elif val.lower() == "r":
@@ -107,29 +134,31 @@ class Level_2(Scene):
 
     def draw_maze(self, maze: str, update_cursor: bool = True) -> str:
         """Draw main maze"""
-        maze = maze.split("\n")  # type: ignore
-        maze_shape = Vec(len(maze[0]), len(maze))
-        start_location = (self.terminal_shape - maze_shape) // 2
-        new_line = term.move_left(maze_shape.x) + term.move_down(1)
-        maze = new_line.join(maze)
+        # maze = maze.split("\n")  # type: ignore
+        # new_line = term.move_left(self.maze_shape.x) + term.move_down(1)
+        # maze = new_line.join(maze)
+        # maze = self.maze.draw()
         if update_cursor:
-            self.avi.coords += start_location
-        return term.move_xy(*start_location) + maze
+            self.avi.coords += self.top_left_corner
+        return term.move_xy(*self.top_left_corner) + self.render(maze)
 
-    def remove_maze(self) -> str:
+    def remove_maze(self) -> None:
         """Erase main maze"""
         time.sleep(2)
-        maze = str(self.maze)
+        logging.info("cowcow")
+        maze = self.maze.draw()
         for chr in "┼├┴┬┌└─╶┤│┘┐╷╵╴":
             if chr in maze:
                 maze = maze.replace(chr, " ")
-        erase_maze = self.draw_maze(maze, update_cursor=False)
-        draw_avi = self.avi.render()
-        print(erase_maze + draw_avi)
+        frame = self.draw_maze(maze, update_cursor=False) # erase maze
+        frame += self.avi.render() # draw avi
+        for box in self.maze.boxes:
+            frame += box.render(self.avi)
+        print(frame)
 
     def reset(self) -> None:
         """Reset this level"""
-        self.avi.coords = copy.copy(self.maze.start)
+        self.avi.coords = copy(self.maze.start)
         self.first_frame = True
 
 

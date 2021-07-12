@@ -2,7 +2,7 @@
 import logging
 import os
 import time
-from typing import Iterable, Iterator, Union
+from typing import Callable, Iterable, Iterator, Union
 
 import blessed
 import numpy as np
@@ -23,6 +23,36 @@ QUIT = 3
 term = blessed.Terminal()
 
 
+class Scene:
+    """This should be subclassed to create each new level.
+
+    The subclass should implement the functions `rest` and `next_frame`
+    """
+
+    def __init__(self, col:str="black", bg_col:str="peachpuff2"):
+        self.height = term.height
+        self.width = term.width
+        self.current_frame = ""
+        self.col = col
+        self.bg_col = bg_col
+
+    def reset(self) -> None:
+        """Reset the current scene/level to its initial state."""
+
+    def next_frame(self, val: Keystroke) -> Union[str, int]:
+        """Draw next frame in the scene."""
+
+    def render(self, frame:str, col:str=None, bg_col:str=None) -> str:
+        if col is None:
+            col = self.col
+        if bg_col is None:
+            bg_col = self.bg_col
+        
+        paint = getattr(term, f"{col}_on_{bg_col}")
+        bg = getattr(term, f"on_{bg_col}")
+        return paint(frame) + bg
+
+
 class Cursor:
     """Creates a Cursor Object that can be moved on command"""
 
@@ -37,13 +67,13 @@ class Cursor:
         self,
         coords: Vec,
         fill: str = "██",
-        colour: RGBColor = X11_COLORNAMES_TO_RGB["aqua"],
+        render:Callable = Scene().render,
         speed: Vec = Vec(2, 1),
     ) -> None:
 
         self.coords = coords
         self.fill = fill
-        self.colour = colour
+        self.scene_render = render
         self.speed = speed
         self.term = term
         self.commands = {"r": self.render, "c": self.clear}
@@ -69,28 +99,18 @@ class Cursor:
     def render(self) -> str:
         """Renders the cursor"""
         render_string = ""
-        render_string += f"{self.term.move_xy(*self.coords)}"
-        render_string += f"{self.term.color_rgb(*self.colour)}"
-        render_string += f"{self.fill}"
+        render_string += self.term.move_xy(*self.coords)
+        render_string += self.scene_render(self.fill)
         return render_string
-
-
-class Scene:
-    """This should be subclassed to create each new level.
-
-    The subclass should implement the functions `rest` and `next_frame`
-    """
-
-    def __init__(self):
-        self.height = term.height
-        self.width = term.width
-        self.current_frame = ""
-
-    def reset(self) -> None:
-        """Reset the current scene/level to its initial state."""
-
-    def next_frame(self, val: Keystroke) -> Union[str, int]:
-        """Draw next frame in the scene."""
+    
+    def dialogue(self):
+        loc = self.coords - (1,1)
+        txt = term.move_xy(*loc) + "pow!"
+        print(txt)
+        time.sleep(1)
+        txt = term.move_xy(*loc) + "    "
+        print(txt)
+        
 
 
 class Game:

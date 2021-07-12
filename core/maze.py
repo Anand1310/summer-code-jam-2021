@@ -1,12 +1,15 @@
 from __future__ import annotations
+import logging
 
-# Easy to read representation for each cardinal direction.
+import blessed
 import json
 import os
 import random
 import sys
+from game import Cursor
 from pathlib import Path
-from typing import Dict, Iterator, List, Tuple
+from typing import Callable, Dict, Iterator, List, Tuple
+from threading import Thread
 
 import numpy as np
 
@@ -15,10 +18,13 @@ from utils import Vec  # type: ignore
 # from pprint import pprint
 
 
+# Easy to read representation for each cardinal direction.
 N, S, W, E = ("n", "s", "w", "e")
 TARGET = 4
 PLAYER = 3
 AIR = 0
+
+term = blessed.Terminal()
 
 
 class Cell(object):
@@ -271,6 +277,14 @@ class Maze(object):
             while self.end is None or self.matrix[self.end[0]][self.end[1]] != AIR:
                 self.end = Vec(random.randrange(0, self.height), self.width * 2 - 1)
 
+    def draw(self) -> str:
+        """Draw maze on screen"""
+        maze = str(self).split("\n")  # type: ignore
+        maze_shape = Vec(len(maze[0]), len(maze))
+        new_line = term.move_left(maze_shape.x) + term.move_down(1)
+        maze = new_line.join(maze)  # type: ignore
+        return maze  # type: ignore
+
     @classmethod
     def generate(cls, width: int = 20, height: int = 10):
         """Returns a new random perfect maze with the given sizes."""
@@ -294,7 +308,7 @@ class Maze(object):
         obj.start = Vec(*reversed(data.pop("start")))
         obj.end = Vec(*reversed(data.pop("end")))
         for color, box_dict in data.items():
-            box_location = Vec(*box_dict["location"])
+            box_location = Vec(*reversed(box_dict["location"]))
             box_map = box_dict["map"]
             box_maze = cls(width=20, height=10)
             box_maze.set_map(box_map)
@@ -334,29 +348,74 @@ class Box:
         self,
         location: Vec,
         maze: Maze,
-        shape: Tuple[int, int] = (2, 2),
+        shape: Vec = Vec(4, 2),
         col: str = "black",
+        render: Callable = None,
     ):
         self.maze = maze
+        self.shape = shape
+        self.col = col
+        self.scene_render = render
+        self.top_left_corner = None
+        self.needs_cleaning:bool = False
 
-        self.a = location
-        self.b = location + (shape[0], 0)
-        self.c = self.b + (0, shape[1])
+        self._loc = location
+        self.b = (self._loc + (shape.x, 0)) - (1,0)
+        self.c = self.b + (0, shape.y)
 
-    def _draw_box(self) -> str:
-        pass
+    @property
+    def loc(self):
+        return self._loc
 
-    def show_maze(self, player_location: Vec) -> str:
+    @loc.setter
+    def loc(self, val: Vec) -> None:
+        self._loc = val
+        self.b = self._loc + (self.shape.x, 0)
+        self.c = self.b + (0, self.shape.y)
+
+    def render(self, avi: Cursor) -> str:
+        """Draw self"""
+        move = term.move_xy(*self.loc)
+        # frame = "┌" + "─" * (self.shape.x - 2) + "┐"
+        frame = move + "┌" + " " * (self.shape.x - 2) + "┐"
+        frame += term.move_down(self.shape.y)
+        frame += term.move_left(self.shape.x)
+        # frame += "└" + "─" * (self.shape.x - 2) + "┘"
+        frame += "└" + " " * (self.shape.x - 2) + "┘"  # box drawing
+        frame += term.move_xy(*self.top_left_corner)
+        logging.info(f"box-top-left: {self._loc}")
+        logging.info(f"box-maze-shape: {len(self.maze.draw())}")
+        frame += self.show_maze(avi)
+        return self.scene_render(frame, col=self.col)
+
+    def show_maze(self, avi: Cursor) -> str:
         """Return a string that draws the box and associated maze based on player location."""
-        AB = self.b - self.a
+        player_inside_box = False
+        player_location = avi.coords
+        
+        for i in range(self.shape.x):
+            for j in range(self.shape.y):
+                pass
+                
+        AB = self.b - self.loc
         BC = self.c - self.b
 
-        proj_AB = np.dot(AB, player_location - self.a)
+        proj_AB = np.dot(AB, player_location - self.loc)
         proj_BC = np.dot(BC, player_location - self.b)
 
         # https://stackoverflow.com/a/2763387
-        if 0 <= proj_AB <= np.dot(AB, AB) and 0 <= proj_BC <= np.dot(BC, BC):
-            return str(self.maze)
+        if (0 <= proj_AB <= np.dot(AB, AB)) and (0 <= proj_BC <= np.dot(BC, BC)):
+            Thread(target = avi.dialogue, daemon=True)
+            self.needs_cleaning = True
+            frame = self.maze.draw()
+            return frame
+        elif self.needs_cleaning:
+            self.needs_cleaning = False
+            maze = self.maze.draw()
+            for chr in "┼├┴┬┌└─╶┤│┘┐╷╵╴":
+                if chr in maze:
+                    maze = maze.replace(chr, " ")
+            return maze
         else:
             return ""
 
