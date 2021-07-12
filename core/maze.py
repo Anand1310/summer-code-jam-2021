@@ -8,6 +8,9 @@ from typing import Iterator, Tuple
 
 import numpy as np
 
+# from pprint import pprint
+
+
 N, S, W, E = ("n", "s", "w", "e")
 
 
@@ -108,19 +111,21 @@ class Maze(object):
 
     def to_list_matrix(self) -> np.ndarray:
         """Returns a matrix with a pretty printed visual representation of this maze."""
-        str_matrix = np.array([["O"] * (self.width * 2 + 1) for i in range(self.height * 2 + 1)])
+        str_matrix = np.array(
+            [[1] * (self.width * 2 + 1) for i in range(self.height * 2 + 1)]
+        )
         for cell in self.cells:
             x = cell.x * 2 + 1
             y = cell.y * 2 + 1
-            str_matrix[y][x] = " "
+            str_matrix[y][x] = 0
             if N not in cell and y > 0:
-                str_matrix[y - 1][x + 0] = " "
+                str_matrix[y - 1][x + 0] = 0
             if S not in cell and y + 1 < self.width:
-                str_matrix[y + 1][x + 0] = " "
+                str_matrix[y + 1][x + 0] = 0
             if W not in cell and x > 0:
-                str_matrix[y][x - 1] = " "
+                str_matrix[y][x - 1] = 0
             if E not in cell and x + 1 < self.width:
-                str_matrix[y][x + 1] = " "
+                str_matrix[y][x + 1] = 0
 
         self.matrix = str_matrix
         return str_matrix
@@ -145,13 +150,14 @@ class Maze(object):
         # Starts with regular representation. Looks stretched because chars are
         # twice as high as they are wide (look at docs example in
         # `Maze._to_str_matrix`).
-        skinny_matrix = self.to_list_matrix()
+        skinny_matrix = self.matrix
 
         # Simply duplicate each character in each line.
         double_wide_matrix = []
         for line in skinny_matrix:
             double_wide_matrix.append([])
-            for char in line:
+            for item in line:
+                char = "O" if item == 1 else " "
                 double_wide_matrix[-1].append(char)
                 double_wide_matrix[-1].append(char)
 
@@ -222,6 +228,7 @@ class Maze(object):
                 n_visited_cells += 1
             else:
                 cell = cell_stack.pop()
+        self.matrix = self.to_list_matrix()
 
     @classmethod
     def generate(cls, width: int = 20, height: int = 10):
@@ -229,6 +236,12 @@ class Maze(object):
         m = cls(width, height)
         m.randomize()
         return m
+
+    def set_map(self, m: np.ndarray) -> None:
+        """Set the map of the maze according to the given array"""
+        self.matrix = m
+        self.width = self.matrix.shape[0] // 2
+        self.height = self.matrix.shape[1] // 2
 
     def save_to_file(self) -> str:
         """Save maze in to file

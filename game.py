@@ -1,7 +1,7 @@
 """Game components."""
 import logging
 import os
-from typing import Iterable, Iterator, Union
+from typing import Iterable, Iterator, Tuple, Union
 
 import blessed
 import numpy as np
@@ -24,14 +24,16 @@ term = blessed.Terminal()
 class Box:
     """Box where parts of maze become visible."""
 
-    def __init__(self, location: Vec, maze: np.ndarray):
+    def __init__(
+        self, location: Vec, maze: np.ndarray, shape: Tuple[int, int] = (3, 3)
+    ):
         self.maze = maze
 
         self.a = location
-        self.b = location + Vec(3, 0)
-        self.c = self.b + Vec(0, 3)
+        self.b = location + (shape[0], 0)
+        self.c = self.b + (0, shape[1])
 
-    def show_maze(self, player_location: Vec) -> str:
+    def show_maze(self, player_location: Vec) -> Union[str, np.ndarray]:
         """Return a string that draws the box and associated maze based on player location."""
         AB = self.b - self.a
         BC = self.c - self.b

@@ -4,6 +4,7 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 
+from core.maze import Maze
 from game import Box
 from utils import Vec
 
@@ -38,3 +39,12 @@ def load_level(level: int) -> Tuple[np.ndarray, Vec, Vec, List[Box]]:
         boxes.append(Box(loc, maze))
 
     return main_maze, start_loc, end_locs, boxes
+
+
+if __name__ == "__main__":
+    with open("levels/1/maptrix.json", "r") as f:
+        data: Dict = json.load(f)
+    m = data["map"]
+    maze = Maze()
+    maze.set_map(np.array(m))
+    print(maze)
