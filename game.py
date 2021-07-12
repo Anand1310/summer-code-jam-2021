@@ -7,7 +7,10 @@ from typing import Iterable, Iterator, Union
 import blessed
 import numpy as np
 import pytweening as pt
+from blessed.colorspace import X11_COLORNAMES_TO_RGB, RGBColor
 from blessed.keyboard import Keystroke
+
+from utils import Vec  # type: ignore
 
 if "logs" not in os.listdir():
     os.mkdir("logs")
@@ -18,6 +21,58 @@ RESET = 2
 QUIT = 3
 
 term = blessed.Terminal()
+
+
+class Cursor:
+    """Creates a Cursor Object that can be moved on command"""
+
+    directions = {
+        "KEY_UP": Vec(0, -1),
+        "KEY_DOWN": Vec(0, 1),
+        "KEY_LEFT": Vec(-1, 0),
+        "KEY_RIGHT": Vec(1, 0),
+    }
+
+    def __init__(
+        self,
+        coords: Vec,
+        fill: str = "██",
+        colour: RGBColor = Vec(X11_COLORNAMES_TO_RGB["aqua"]),
+        speed: Vec = Vec(2, 1),
+    ) -> None:
+
+        self.coords = coords
+        self.fill = fill
+        self.colour = colour
+        self.speed = speed
+        self.term = term
+        self.commands = {"r": self.render, "c": self.clear}
+
+    def move(self, direction: str) -> str:
+        """Moves the cursor to a new position based on direction and speed"""
+        render_string = ""
+        render_string += self.clear()
+        directions = self.directions[direction]
+        self.coords.x = min(
+            max(self.coords.x + directions.x * self.speed.x, 0), self.term.width - 2
+        )
+        self.coords.y = min(
+            max(self.coords.y + directions.y * self.speed.y, 0), self.term.height - 2
+        )
+        render_string += self.render()
+        return render_string
+
+    def clear(self) -> str:
+        """Clears the rendered cursor"""
+        return f"{self.term.move_xy(*self.coords)}" + " " * len(self.fill)
+
+    def render(self) -> str:
+        """Renders the cursor"""
+        render_string = ""
+        render_string += f"{self.term.move_xy(*self.coords)}"
+        render_string += f"{self.term.color_rgb(*self.colour)}"
+        render_string += f"{self.fill}{self.term.normal}"
+        return render_string
 
 
 class Scene:
@@ -68,7 +123,7 @@ class Game:
                     self.current_scene.reset()
                     val = Keystroke()
                     continue
-                val = term.inkey(timeout=3)
+                val = term.inkey(timeout=0.05)  # 20 fps
 
 
 class Camera:
