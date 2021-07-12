@@ -1,7 +1,7 @@
 """Game components."""
 import logging
 import os
-from typing import Iterable, Iterator, Union, List
+from typing import Iterable, Iterator, List, Union
 
 import blessed
 import numpy as np
