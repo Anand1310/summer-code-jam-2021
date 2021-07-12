@@ -15,10 +15,5 @@ flake8-isort~=4.0
 
 # project
 blessed ~= 1.8
-<<<<<<< HEAD
-numpy ~= 1.21.0
-pyperclip~=1.8.2
-=======
 numpy==1.21.0
 PyTweening==1.0.3
->>>>>>> 6b13aebd0b4b673dec3bb557acc6fd86c6c2f6d6
