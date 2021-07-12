@@ -2,7 +2,7 @@
 import logging
 import os
 import time
-from typing import Iterable, Iterator, Union
+from typing import Iterable, Iterator, Union, List
 
 import blessed
 import numpy as np
