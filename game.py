@@ -109,10 +109,9 @@ class Cursor:
     def hit(self) -> None:
         """Called when player hits something"""
         txt = term.home + "pow!"
-        print(txt)
+        print(term.black(txt))
         time.sleep(1)
         txt = term.home + "    "
-        print(term.normal)
 
 
 class Game:
