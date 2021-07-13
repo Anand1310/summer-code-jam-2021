@@ -1,7 +1,6 @@
 """Game components."""
 import logging
 import os
-import time
 from copy import copy
 from typing import Callable, Iterable, Iterator, List, Union
 
@@ -118,7 +117,6 @@ class Cursor:
         txt = term.home + "pow!"
         play_enter_box_sound()
         print(txt)
-        time.sleep(1)
         txt = term.home + "    "
         print(term.normal)
 
@@ -127,7 +125,6 @@ class Cursor:
         txt = term.home + "ouch!"
         play_hit_wall_sound(self.last_move)
         print(txt)
-        time.sleep(1)
         txt = term.home + "    "
         print(term.normal)
 
