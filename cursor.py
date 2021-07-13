@@ -16,6 +16,7 @@ class Cursor:
         "KEY_LEFT": Vec(-1, 0),
         "KEY_RIGHT": Vec(1, 0),
     }
+
     def __init__(
         self,
         coords: Vec,
@@ -30,7 +31,6 @@ class Cursor:
         self.speed = speed
         self.term = term
         self.commands = {"r": self.show, "c": self.clear}
-
 
     def move(self, direction: str) -> str:
         """Moves the cursor to a new position based on direction and speed"""
@@ -74,7 +74,7 @@ def main() -> None:
             val = term.inkey(timeout=0.05)
             if val.is_sequence:
                 if 257 < val.code < 262:
-                    print(term.home + term.move_down(i) + f'{val.code}')
+                    print(term.home + term.move_down(i) + f"{val.code}")
                     i += 1
                     print(avi.move(val.name))
             else:
@@ -85,7 +85,7 @@ def main() -> None:
                 elif val.lower() == "c":
                     print(avi.clear())
         print(f"bye!{term.normal}{term.clear}")
-    print(max(Coords)) # its a mutable object(!!)
+    print(max(Coords))  # its a mutable object(!!)
 
 
 if __name__ == "__main__":

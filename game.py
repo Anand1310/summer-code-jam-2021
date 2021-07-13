@@ -7,7 +7,6 @@ from typing import Callable, Iterable, Iterator, Union
 import blessed
 import numpy as np
 import pytweening as pt
-from blessed.colorspace import X11_COLORNAMES_TO_RGB, RGBColor
 from blessed.keyboard import Keystroke
 
 from utils import Vec  # type: ignore
@@ -29,7 +28,7 @@ class Scene:
     The subclass should implement the functions `rest` and `next_frame`
     """
 
-    def __init__(self, col:str="black", bg_col:str="peachpuff2"):
+    def __init__(self, col: str = "black", bg_col: str = "peachpuff2"):
         self.height = term.height
         self.width = term.width
         self.current_frame = ""
@@ -42,12 +41,13 @@ class Scene:
     def next_frame(self, val: Keystroke) -> Union[str, int]:
         """Draw next frame in the scene."""
 
-    def render(self, frame:str, col:str=None, bg_col:str=None) -> str:
+    def render(self, frame: str, col: str = None, bg_col: str = None) -> str:
+        """Adds font color and background color on text"""
         if col is None:
             col = self.col
         if bg_col is None:
             bg_col = self.bg_col
-        
+
         paint = getattr(term, f"{col}_on_{bg_col}")
         bg = getattr(term, f"on_{bg_col}")
         return paint(frame) + bg
@@ -67,7 +67,7 @@ class Cursor:
         self,
         coords: Vec,
         fill: str = "██",
-        render:Callable = Scene().render,
+        render: Callable = Scene().render,
         speed: Vec = Vec(2, 1),
     ) -> None:
 
@@ -102,15 +102,15 @@ class Cursor:
         render_string += self.term.move_xy(*self.coords)
         render_string += self.scene_render(self.fill)
         return render_string
-    
-    def dialogue(self):
-        loc = self.coords - (1,1)
+
+    def hit(self) -> None:
+        """Called when player hits something"""
+        loc = self.coords - (1, 1)
         txt = term.move_xy(*loc) + "pow!"
         print(txt)
         time.sleep(1)
         txt = term.move_xy(*loc) + "    "
         print(txt)
-        
 
 
 class Game:

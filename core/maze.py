@@ -1,18 +1,18 @@
 from __future__ import annotations
-import logging
 
-import blessed
 import json
+import logging
 import os
 import random
 import sys
-from game import Cursor
 from pathlib import Path
-from typing import Callable, Dict, Iterator, List, Tuple
 from threading import Thread
+from typing import Callable, Dict, Iterator, List, Tuple
 
+import blessed
 import numpy as np
 
+from game import Cursor
 from utils import Vec  # type: ignore
 
 # from pprint import pprint
@@ -357,14 +357,15 @@ class Box:
         self.col = col
         self.scene_render = render
         self.top_left_corner = None
-        self.needs_cleaning:bool = False
+        self.needs_cleaning: bool = False
 
         self._loc = location
-        self.b = (self._loc + (shape.x, 0)) - (1,0)
+        self.b = (self._loc + (shape.x, 0)) - (1, 0)
         self.c = self.b + (0, shape.y)
 
     @property
-    def loc(self):
+    def loc(self) -> Vec:
+        """Return self location"""
         return self._loc
 
     @loc.setter
@@ -390,13 +391,13 @@ class Box:
 
     def show_maze(self, avi: Cursor) -> str:
         """Return a string that draws the box and associated maze based on player location."""
-        player_inside_box = False
+        # player_inside_box = False
         player_location = avi.coords
-        
+
         for i in range(self.shape.x):
             for j in range(self.shape.y):
                 pass
-                
+
         AB = self.b - self.loc
         BC = self.c - self.b
 
@@ -405,7 +406,7 @@ class Box:
 
         # https://stackoverflow.com/a/2763387
         if (0 <= proj_AB <= np.dot(AB, AB)) and (0 <= proj_BC <= np.dot(BC, BC)):
-            Thread(target = avi.dialogue, daemon=True)
+            Thread(target=avi.hit, daemon=True)
             self.needs_cleaning = True
             frame = self.maze.draw()
             return frame

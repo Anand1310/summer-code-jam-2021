@@ -12,7 +12,6 @@ xxxxxx   x          │
 └───────────────────┘
 """
 
-from pprint import pprint
 from typing import List
 
 from pyperclip import paste

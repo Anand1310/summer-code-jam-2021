@@ -1,12 +1,11 @@
 """Examples for designing levels."""
 import logging
 import time
+from copy import copy
 from threading import Thread
 from typing import Union
-from copy import copy
 
 import blessed
-from blessed.colorspace import X11_COLORNAMES_TO_RGB
 from blessed.keyboard import Keystroke
 
 from core.maze import Maze
@@ -102,7 +101,7 @@ class Level_2(Scene):
             box.loc = self.top_left_corner + box.loc * (2, 1) + (1, 0) - (1, 1)
             box.scene_render = self.render
             box.top_left_corner = copy(self.top_left_corner)
-        
+
         logging.info(f"maze-top-left: {self.top_left_corner}")
         logging.info(f"main-maze-shape: {len(self.maze.draw())}")
 
@@ -113,19 +112,19 @@ class Level_2(Scene):
             # removes the main maze after 2 sec
             Thread(target=self.remove_maze, daemon=True).start()
             frame = term.clear
-            frame += self.draw_maze(self.maze.draw()) + self.avi.render() # type: ignore 
+            frame += self.draw_maze(self.maze.draw()) + self.avi.render()  # type: ignore
             for box in self.maze.boxes:
                 frame += box.render(self.avi)
-                logging.info(f'first frame loc: {box.loc}')
+                logging.info(f"first frame loc: {box.loc}")
             return frame
-            
+
         elif val.is_sequence and (257 < val.code < 262):
-            frame = '' # type: ignore
+            frame = ""  # type: ignore
             for box in self.maze.boxes:
                 frame += box.render(self.avi)
             frame += self.avi.next_location(val.name)  # type: ignore
             return self.render(frame)
-        
+
         elif val.lower() == "q":
             return QUIT
         elif val.lower() == "r":
@@ -150,8 +149,8 @@ class Level_2(Scene):
         for chr in "┼├┴┬┌└─╶┤│┘┐╷╵╴":
             if chr in maze:
                 maze = maze.replace(chr, " ")
-        frame = self.draw_maze(maze, update_cursor=False) # erase maze
-        frame += self.avi.render() # draw avi
+        frame = self.draw_maze(maze, update_cursor=False)  # erase maze
+        frame += self.avi.render()  # draw avi
         for box in self.maze.boxes:
             frame += box.render(self.avi)
         print(frame)
