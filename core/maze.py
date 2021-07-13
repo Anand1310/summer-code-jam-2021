@@ -147,6 +147,31 @@ class Maze(object):
         self.matrix = str_matrix
         return str_matrix
 
+    def wall_at(self, x: int, y: int) -> bool:
+        """Return True if there is a wall at (x, y). Values outside the valid range always return False."""
+        # Starts with regular representation. Looks stretched because chars are
+        # twice as high as they are wide (look at docs example in
+        # `Maze._to_str_matrix`).
+        skinny_matrix = self.matrix
+
+        # Simply duplicate each character in each line.
+        double_wide_matrix = []
+        for line in skinny_matrix:
+            double_wide_matrix.append([])
+            for item in line:
+                char = "O" if item == 1 else " "
+                double_wide_matrix[-1].append(char)
+                double_wide_matrix[-1].append(char)
+
+        # The last two chars of each line are walls, and we will need only one.
+        # So we remove the last char of each line.
+        matrix = [line[:-1] for line in double_wide_matrix]
+
+        if 0 <= x < len(matrix[0]) and 0 <= y < len(matrix):
+            return matrix[y][x] != " "
+        else:
+            return False
+
     def __repr__(self):
         """
         Returns an Unicode representation of the maze. Size is doubled horizontally to avoid a stretched look.
@@ -183,7 +208,7 @@ class Maze(object):
         matrix = [line[:-1] for line in double_wide_matrix]
 
         def wall_at(x: int, y: int) -> bool:
-            """Returns True if there is a wall at (x, y). Values outside the valid range always return false."""
+            """Return True if there is a wall at (x, y). Values outside the valid range always return False."""
             if 0 <= x < len(matrix[0]) and 0 <= y < len(matrix):
                 return matrix[y][x] != " "
             else:
