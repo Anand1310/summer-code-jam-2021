@@ -5,7 +5,6 @@ import os
 import random
 import sys
 from pathlib import Path
-from threading import Thread
 from typing import Callable, Dict, Iterator, List, Tuple
 
 import blessed
@@ -13,9 +12,6 @@ import numpy as np
 
 from game import Cursor
 from utils import Vec  # type: ignore
-
-# from pprint import pprint
-
 
 # Easy to read representation for each cardinal direction.
 N, S, W, E = ("n", "s", "w", "e")
@@ -155,7 +151,7 @@ class Maze(object):
         skinny_matrix = self.matrix
 
         # Simply duplicate each character in each line.
-        double_wide_matrix = []
+        double_wide_matrix: List[List[str]] = []
         for line in skinny_matrix:
             double_wide_matrix.append([])
             for item in line:
@@ -434,7 +430,7 @@ class Box:
         # https://stackoverflow.com/a/2763387
         # if (0 <= proj_AB <= np.dot(AB, AB)) and (0 <= proj_BC <= np.dot(BC, BC)):
         if player_inside_box:
-            Thread(target=avi.enter_box, daemon=True).start()
+            avi.enter_box()
             self.needs_cleaning = True
             frame = self.maze.draw()
             return frame

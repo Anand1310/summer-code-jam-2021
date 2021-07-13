@@ -221,8 +221,10 @@ class Camera:
         :param y: y coordinate to move to
         :return: player vision
         """
+
         def clip(x: int, p: int, u: int) -> int:
             return p if x < p else u if x > u else x
+
         shape = np.shape(self.game_map)
         y_min = clip(0, y, shape[0] - 1)
         y_max = clip(0, y + self.camera_size, shape[0] - 1)
