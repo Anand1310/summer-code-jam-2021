@@ -434,7 +434,7 @@ class Box:
         # https://stackoverflow.com/a/2763387
         # if (0 <= proj_AB <= np.dot(AB, AB)) and (0 <= proj_BC <= np.dot(BC, BC)):
         if player_inside_box:
-            Thread(target=avi.hit, daemon=True).start()
+            Thread(target=avi.enter_box, daemon=True).start()
             self.needs_cleaning = True
             frame = self.maze.draw()
             return frame

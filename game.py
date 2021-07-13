@@ -10,6 +10,7 @@ import numpy as np
 import pytweening as pt
 from blessed.keyboard import Keystroke
 
+from core.sound import play_enter_box_sound, play_hit_wall_sound
 from utils import Vec  # type: ignore
 
 if "logs" not in os.listdir():
@@ -83,6 +84,7 @@ class Cursor:
     def loc_on_move(self, direction: str) -> Vec:
         """Find location of cursor on move in direction."""
         directions = self.directions[direction]
+        self.last_move = directions
         x = min(
             max(self.prev_coords.x + directions.x * self.speed.x, 0),
             self.term.width - 2,
@@ -111,9 +113,19 @@ class Cursor:
         frame += self.scene_render(self.fill)
         return frame
 
-    def hit(self) -> None:
-        """Called when player hits something"""
+    def enter_box(self) -> None:
+        """Called when player enter a box"""
         txt = term.home + "pow!"
+        play_enter_box_sound()
+        print(txt)
+        time.sleep(1)
+        txt = term.home + "    "
+        print(term.normal)
+
+    def hit_wall(self) -> None:
+        """Called when player hits a wall"""
+        txt = term.home + "ouch!"
+        play_hit_wall_sound(self.last_move)
         print(txt)
         time.sleep(1)
         txt = term.home + "    "
