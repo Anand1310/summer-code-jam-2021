@@ -125,7 +125,6 @@ class Level_2(Scene):
                 self.avi.hit_wall()
                 # collision count goes here
                 logging.info(f"hit maze @ {self.avi.loc_on_move(val.name)}")
-                val = term.inkey()
             elif all(self.avi.coords == self.end_loc):
                 return NEXT_SCENE
             else:
