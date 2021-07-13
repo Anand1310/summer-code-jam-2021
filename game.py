@@ -15,6 +15,7 @@ from utils import Vec  # type: ignore
 if "logs" not in os.listdir():
     os.mkdir("logs")
 logging.basicConfig(filename="logs/debug.log", level=logging.DEBUG)
+logging.info("=" * 15)
 
 NEXT_SCENE = 1
 RESET = 2
@@ -49,7 +50,7 @@ class Scene:
         if bg_col is None:
             bg_col = self.bg_col
 
-        paint = getattr(term, f"{col}_on_{bg_col}")
+        paint: Callable[[str], str] = getattr(term, f"{col}_on_{bg_col}")
         bg = getattr(term, f"on_{bg_col}")
         return paint(frame) + bg
 
@@ -78,16 +79,17 @@ class Cursor:
         self.scene_render = render
         self.speed = speed
         self.term = term
-        self.commands = {"r": self.render, "c": self.clear}
 
     def move(self, direction: str) -> str:
         """Moves the cursor to a new position based on direction and speed"""
         directions = self.directions[direction]
         self.coords.x = min(
-            max(self.prev_coords.x + directions.x * self.speed.x, 0), self.term.width - 2
+            max(self.prev_coords.x + directions.x * self.speed.x, 0),
+            self.term.width - 2,
         )
         self.coords.y = min(
-            max(self.prev_coords.y + directions.y * self.speed.y, 0), self.term.height - 2
+            max(self.prev_coords.y + directions.y * self.speed.y, 0),
+            self.term.height - 2,
         )
         return self.clear()
 
@@ -106,12 +108,11 @@ class Cursor:
 
     def hit(self) -> None:
         """Called when player hits something"""
-        loc = self.coords - (1, 1)
-        txt = term.move_xy(*loc) + "pow!"
+        txt = term.home + "pow!"
         print(txt)
         time.sleep(1)
-        txt = term.move_xy(*loc) + "    "
-        print(txt)
+        txt = term.home + "    "
+        print(term.normal)
 
 
 class Game:

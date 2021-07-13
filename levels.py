@@ -113,7 +113,6 @@ class Level_2(Scene):
             frame += self.draw_maze(self.maze.draw()) + self.avi.render()  # type: ignore
             for box in self.maze.boxes:
                 frame += box.render(self.avi)
-                logging.info(f"first frame loc: {box.loc}")
             return frame
 
         elif val.is_sequence and (257 < val.code < 262):
@@ -128,28 +127,28 @@ class Level_2(Scene):
             return QUIT
         elif val.lower() == "r":
             return RESET
-        elif val.lower() == "c":
+        elif val.lower() == "h":
             if not self.maze_is_visible:
-                return self.draw_maze(self.maze.draw())
+                self.maze_is_visible = True
+                frame = self.draw_maze(self.maze.draw(), update_cursor=False)  # type: ignore
+                frame += self.avi.render()  # type: ignore
+                return frame
             else:
-                self.remove_maze()
+                self.maze_is_visible = False
+                self.remove_maze(0)
                 return ""
         return ""
 
     def draw_maze(self, maze: str, update_cursor: bool = True) -> str:
         """Draw main maze"""
-        # maze = maze.split("\n")  # type: ignore
-        # new_line = term.move_left(self.maze_shape.x) + term.move_down(1)
-        # maze = new_line.join(maze)
-        # maze = self.maze.draw()
+        logging.info(f"{update_cursor=}")
         if update_cursor:
             self.avi.coords = self.top_left_corner + self.maze.start * (2, 1)
         return term.move_xy(*self.top_left_corner) + self.render(maze)
 
-    def remove_maze(self) -> None:
+    def remove_maze(self, sleep: float = 2) -> None:
         """Erase main maze"""
-        time.sleep(2)
-        logging.info("cowcow")
+        time.sleep(sleep)
         maze = self.maze.draw()
         for chr in "┼├┴┬┌└─╶┤│┘┐╷╵╴":
             if chr in maze:

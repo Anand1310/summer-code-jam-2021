@@ -390,12 +390,11 @@ class Box:
     def show_maze(self, avi: Cursor) -> str:
         """Return a string that draws the box and associated maze based on player location."""
         player_inside_box = False
-        player_location = avi.coords
 
         for i in range(1, self.shape.x - 1):
             for j in range(1, self.shape.y - 1):
                 p = self._loc + (i, j)
-                player_inside_box = all(player_location == p)
+                player_inside_box = all(avi.coords == p)
                 if player_inside_box:
                     break
             if player_inside_box:
@@ -410,7 +409,7 @@ class Box:
         # https://stackoverflow.com/a/2763387
         # if (0 <= proj_AB <= np.dot(AB, AB)) and (0 <= proj_BC <= np.dot(BC, BC)):
         if player_inside_box:
-            Thread(target=avi.hit, daemon=True)
+            Thread(target=avi.hit, daemon=True).start()
             self.needs_cleaning = True
             frame = self.maze.draw()
             return frame
