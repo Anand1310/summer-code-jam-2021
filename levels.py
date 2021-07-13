@@ -117,7 +117,11 @@ class Level_2(Scene):
 
         elif val.is_sequence and (257 < val.code < 262):
             frame = ""  # type: ignore
-            frame += self.avi.move(val.name)  # type: ignore
+            loc_in_maze = self.avi.loc_on_move(val.name) - self.top_left_corner
+            if self.maze.wall_at(*loc_in_maze):
+                logging.info(f"hit maze @ {self.avi.loc_on_move(val.name)}")
+            else:
+                frame += self.avi.move(val.name)  # type: ignore
             for box in self.maze.boxes:
                 frame += box.render(self.avi)
             frame += self.avi.render()  # type: ignore

@@ -80,17 +80,22 @@ class Cursor:
         self.speed = speed
         self.term = term
 
-    def move(self, direction: str) -> str:
-        """Moves the cursor to a new position based on direction and speed"""
+    def loc_on_move(self, direction: str) -> Vec:
+        """Find location of cursor on move in direction."""
         directions = self.directions[direction]
-        self.coords.x = min(
+        x = min(
             max(self.prev_coords.x + directions.x * self.speed.x, 0),
             self.term.width - 2,
         )
-        self.coords.y = min(
+        y = min(
             max(self.prev_coords.y + directions.y * self.speed.y, 0),
             self.term.height - 2,
         )
+        return Vec(x, y)
+
+    def move(self, direction: str) -> str:
+        """Move the cursor to a new position based on direction and speed."""
+        self.coords = self.loc_on_move(direction)
         return self.clear()
 
     def clear(self) -> str:
