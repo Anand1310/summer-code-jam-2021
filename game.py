@@ -1,7 +1,6 @@
 """Game components."""
 import logging
 import os
-import time
 from copy import copy
 from typing import Callable, Iterable, Iterator, List, Union
 
@@ -111,13 +110,6 @@ class Cursor:
         frame += self.scene_render(self.fill)
         return frame
 
-    def hit(self) -> None:
-        """Called when player hits something"""
-        txt = term.home + "pow!"
-        print(term.black(txt))
-        time.sleep(1)
-        txt = term.home + "    "
-
 
 class Game:
     """Main game class. Should be initiated with a list of scenes."""
@@ -208,8 +200,10 @@ class Camera:
         :param y: y coordinate to move to
         :return: player vision
         """
+
         def clip(x: int, p: int, u: int) -> int:
             return p if x < p else u if x > u else x
+
         shape = np.shape(self.game_map)
         y_min = clip(0, y, shape[0] - 1)
         y_max = clip(0, y + self.camera_size, shape[0] - 1)

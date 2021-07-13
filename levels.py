@@ -84,9 +84,9 @@ class Level_1(Scene):
 class Level_2(Scene):
     """First basic game"""
 
-    def __init__(self) -> None:
+    def __init__(self, level: str = "1") -> None:
         super().__init__()
-        self.maze = Maze.load("1")
+        self.maze = Maze.load(level)
 
         self.avi = Cursor(Vec(1, 1), render=self.render, fill="█", speed=Vec(1, 1))
         self.first_frame = True
@@ -96,6 +96,7 @@ class Level_2(Scene):
         self.maze_shape = Vec(len(maze[0]), len(maze))
         self.terminal_shape = Vec(term.width, term.height)
         self.top_left_corner = (self.terminal_shape - self.maze_shape) // 2
+        self.end_loc = self.maze.end * (2, 1) + self.top_left_corner
         for box in self.maze.boxes:
             # move to top-left corner of maze + scale and extend width
             # + move to top-left corner of box
@@ -113,13 +114,18 @@ class Level_2(Scene):
             frame += self.draw_maze(self.maze.draw()) + self.avi.render()  # type: ignore
             for box in self.maze.boxes:
                 frame += box.render(self.avi)
-            return frame
+            frame += term.move_xy(*self.end_loc) + "&"  # type: ignore
+            return self.render(frame)
 
         elif val.is_sequence and (257 < val.code < 262):
-            frame = ""  # type: ignore
             loc_in_maze = self.avi.loc_on_move(val.name) - self.top_left_corner
+
+            frame = ""  # type: ignore
             if self.maze.wall_at(*loc_in_maze):
+                # collision count and music code goes here
                 logging.info(f"hit maze @ {self.avi.loc_on_move(val.name)}")
+            elif all(self.avi.coords == self.end_loc):
+                return NEXT_SCENE
             else:
                 frame += self.avi.move(val.name)  # type: ignore
             for box in self.maze.boxes:
@@ -188,7 +194,7 @@ class EndScene(Scene):
         # no need to update each frame
         if self.first_frame:
             self.first_frame = False
-            return self.current_frame
+            return self.render(self.current_frame)
         elif str(val) == " " or val.name == "KEY_ENTER":
             return NEXT_SCENE
         return ""
