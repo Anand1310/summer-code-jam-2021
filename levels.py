@@ -88,8 +88,9 @@ class Level_2(Scene):
         super().__init__()
         self.maze = Maze.load("1")
 
-        self.avi = Cursor(copy(self.maze.start), render=self.render, fill="Q")
+        self.avi = Cursor(Vec(1, 1), render=self.render, fill="█", speed=Vec(1, 1))
         self.first_frame = True
+        self.maze_is_visible = False
 
         maze = str(self.maze).split("\n")
         self.maze_shape = Vec(len(maze[0]), len(maze))
@@ -98,12 +99,9 @@ class Level_2(Scene):
         for box in self.maze.boxes:
             # move to top-left corner of maze + scale and extend width
             # + move to top-left corner of box
-            box.loc = self.top_left_corner + box.loc * (2, 1) + (1, 0) - (1, 1)
+            box.loc = self.top_left_corner + box.loc * (2, 1) - (1, 1)
             box.scene_render = self.render
             box.top_left_corner = copy(self.top_left_corner)
-
-        logging.info(f"maze-top-left: {self.top_left_corner}")
-        logging.info(f"main-maze-shape: {len(self.maze.draw())}")
 
     def next_frame(self, val: Keystroke) -> Union[str, int]:
         """Draw next frame"""
@@ -120,15 +118,22 @@ class Level_2(Scene):
 
         elif val.is_sequence and (257 < val.code < 262):
             frame = ""  # type: ignore
+            frame += self.avi.move(val.name)  # type: ignore
             for box in self.maze.boxes:
                 frame += box.render(self.avi)
-            frame += self.avi.next_location(val.name)  # type: ignore
+            frame += self.avi.render()  # type: ignore
             return self.render(frame)
 
         elif val.lower() == "q":
             return QUIT
         elif val.lower() == "r":
             return RESET
+        elif val.lower() == "c":
+            if not self.maze_is_visible:
+                return self.draw_maze(self.maze.draw())
+            else:
+                self.remove_maze()
+                return ""
         return ""
 
     def draw_maze(self, maze: str, update_cursor: bool = True) -> str:
@@ -138,7 +143,7 @@ class Level_2(Scene):
         # maze = new_line.join(maze)
         # maze = self.maze.draw()
         if update_cursor:
-            self.avi.coords += self.top_left_corner
+            self.avi.coords = self.top_left_corner + self.maze.start * (2, 1)
         return term.move_xy(*self.top_left_corner) + self.render(maze)
 
     def remove_maze(self) -> None:
@@ -157,6 +162,8 @@ class Level_2(Scene):
 
     def reset(self) -> None:
         """Reset this level"""
+        for box in self.maze.boxes:
+            box.needs_cleaning = False
         self.avi.coords = copy(self.maze.start)
         self.first_frame = True
 

@@ -2,6 +2,7 @@
 import logging
 import os
 import time
+from copy import copy
 from typing import Callable, Iterable, Iterator, Union
 
 import blessed
@@ -71,6 +72,7 @@ class Cursor:
         speed: Vec = Vec(2, 1),
     ) -> None:
 
+        self.prev_coords = coords
         self.coords = coords
         self.fill = fill
         self.scene_render = render
@@ -78,30 +80,29 @@ class Cursor:
         self.term = term
         self.commands = {"r": self.render, "c": self.clear}
 
-    def next_location(self, direction: str) -> str:
+    def move(self, direction: str) -> str:
         """Moves the cursor to a new position based on direction and speed"""
-        render_string = ""
-        render_string += self.clear()
         directions = self.directions[direction]
         self.coords.x = min(
-            max(self.coords.x + directions.x * self.speed.x, 0), self.term.width - 2
+            max(self.prev_coords.x + directions.x * self.speed.x, 0), self.term.width - 2
         )
         self.coords.y = min(
-            max(self.coords.y + directions.y * self.speed.y, 0), self.term.height - 2
+            max(self.prev_coords.y + directions.y * self.speed.y, 0), self.term.height - 2
         )
-        render_string += self.render()
-        return render_string
+        return self.clear()
 
     def clear(self) -> str:
         """Clears the rendered cursor"""
-        return f"{self.term.move_xy(*self.coords)}" + " " * len(self.fill)
+        frame = f"{self.term.move_xy(*self.prev_coords)}" + " " * len(self.fill)
+        return frame
 
     def render(self) -> str:
         """Renders the cursor"""
-        render_string = ""
-        render_string += self.term.move_xy(*self.coords)
-        render_string += self.scene_render(self.fill)
-        return render_string
+        self.prev_coords = copy(self.coords)
+        frame = ""
+        frame += self.term.move_xy(*self.coords)
+        frame += self.scene_render(self.fill)
+        return frame
 
     def hit(self) -> None:
         """Called when player hits something"""

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import logging
 import os
 import random
 import sys
@@ -283,6 +282,7 @@ class Maze(object):
         maze_shape = Vec(len(maze[0]), len(maze))
         new_line = term.move_left(maze_shape.x) + term.move_down(1)
         maze = new_line.join(maze)  # type: ignore
+        maze = maze.replace(" ", term.move_right(1))  # type: ignore
         return maze  # type: ignore
 
     @classmethod
@@ -348,7 +348,7 @@ class Box:
         self,
         location: Vec,
         maze: Maze,
-        shape: Vec = Vec(4, 2),
+        shape: Vec = Vec(3, 3),
         col: str = "black",
         render: Callable = None,
     ):
@@ -356,7 +356,7 @@ class Box:
         self.shape = shape
         self.col = col
         self.scene_render = render
-        self.top_left_corner = None
+        self.top_left_corner: Vec = None
         self.needs_cleaning: bool = False
 
         self._loc = location
@@ -379,44 +379,48 @@ class Box:
         move = term.move_xy(*self.loc)
         # frame = "┌" + "─" * (self.shape.x - 2) + "┐"
         frame = move + "┌" + " " * (self.shape.x - 2) + "┐"
-        frame += term.move_down(self.shape.y)
+        frame += term.move_down(self.shape.y - 1)
         frame += term.move_left(self.shape.x)
         # frame += "└" + "─" * (self.shape.x - 2) + "┘"
         frame += "└" + " " * (self.shape.x - 2) + "┘"  # box drawing
         frame += term.move_xy(*self.top_left_corner)
-        logging.info(f"box-top-left: {self._loc}")
-        logging.info(f"box-maze-shape: {len(self.maze.draw())}")
         frame += self.show_maze(avi)
         return self.scene_render(frame, col=self.col)
 
     def show_maze(self, avi: Cursor) -> str:
         """Return a string that draws the box and associated maze based on player location."""
-        # player_inside_box = False
+        player_inside_box = False
         player_location = avi.coords
 
-        for i in range(self.shape.x):
-            for j in range(self.shape.y):
-                pass
+        for i in range(1, self.shape.x - 1):
+            for j in range(1, self.shape.y - 1):
+                p = self._loc + (i, j)
+                player_inside_box = all(player_location == p)
+                if player_inside_box:
+                    break
+            if player_inside_box:
+                break
 
-        AB = self.b - self.loc
-        BC = self.c - self.b
+        # AB = self.b - self.loc
+        # BC = self.c - self.b
 
-        proj_AB = np.dot(AB, player_location - self.loc)
-        proj_BC = np.dot(BC, player_location - self.b)
+        # proj_AB = np.dot(AB, player_location - self.loc)
+        # proj_BC = np.dot(BC, player_location - self.b)
 
         # https://stackoverflow.com/a/2763387
-        if (0 <= proj_AB <= np.dot(AB, AB)) and (0 <= proj_BC <= np.dot(BC, BC)):
+        # if (0 <= proj_AB <= np.dot(AB, AB)) and (0 <= proj_BC <= np.dot(BC, BC)):
+        if player_inside_box:
             Thread(target=avi.hit, daemon=True)
             self.needs_cleaning = True
             frame = self.maze.draw()
             return frame
         elif self.needs_cleaning:
             self.needs_cleaning = False
-            maze = self.maze.draw()
+            frame = self.maze.draw()
             for chr in "┼├┴┬┌└─╶┤│┘┐╷╵╴":
-                if chr in maze:
-                    maze = maze.replace(chr, " ")
-            return maze
+                if chr in frame:
+                    frame = frame.replace(chr, " ")
+            return frame
         else:
             return ""
 
