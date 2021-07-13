@@ -119,11 +119,12 @@ class Level_2(Scene):
             self.avi.render()
 
         elif val.is_sequence and (257 < val.code < 262):
-            loc_in_mat = self.screen2mat(self.avi.loc_on_move(val.name))
+            avi_loc = self.avi.loc_on_move(val.name)
 
-            if self.maze.wall_at(*loc_in_mat):
+            if self.wall_at(avi_loc):
                 # collision count and music code goes here
-                logging.info(f"hit maze @ {loc_in_mat}")
+                pass
+                # logging.info(f"hit maze @ {avi_loc}")
             elif all(self.avi.coords == self.end_loc):
                 return NEXT_SCENE
             else:
@@ -171,6 +172,23 @@ class Level_2(Scene):
         self.avi.render()  # draw avi
         for box in self.maze.boxes:
             box.render(self.avi.coords)
+
+    def wall_at(self, screen: Vec) -> bool:
+        """Return True if there is a wall at (x, y). Values outside the valid range always return False."""
+        x, y = self.screen2mat(screen)
+        screen = screen - self.maze.top_left_corner
+        logging.info(
+            f"{x=}\t{screen.x=}\t{self.maze.matrix[y][x]}, {self.maze.matrix[y][x-1]}, {self.maze.matrix[y][x+1]}"
+        )
+        if 0 <= x < len(self.maze.matrix[0]) and 0 <= y < len(self.maze.matrix):
+            is_wall = self.maze.matrix[y][x] == 1
+            # if is_wall and screen.x == 2 * x + 1:
+            #     return False
+            # else:
+            #     return True
+            return is_wall 
+        else:
+            return False
 
     def screen2mat(self, screen: Vec) -> Vec:
         """Convert screen location of a point to matrix location"""
