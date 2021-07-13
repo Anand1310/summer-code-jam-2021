@@ -17,4 +17,5 @@ flake8-isort~=4.0
 blessed ~= 1.8
 numpy ~= 1.21.0
 pyperclip~=1.8.2
+
 PyTweening==1.0.3
