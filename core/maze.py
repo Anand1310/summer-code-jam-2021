@@ -5,13 +5,15 @@ import os
 import random
 import sys
 from pathlib import Path
-from typing import Callable, Dict, Iterator, List, Tuple
+from typing import Iterator, List, Tuple
 
 import blessed
 import numpy as np
 
-from game import Cursor
+from core.render import Render
 from utils import Vec  # type: ignore
+
+render = Render()
 
 # Easy to read representation for each cardinal direction.
 N, S, W, E = ("n", "s", "w", "e")
@@ -95,11 +97,15 @@ class Maze(object):
         for y in range(self.height):
             for x in range(self.width):
                 self.cells.append(Cell(x, y, [N, S, E, W]))
-        self.matrix = self.to_list_matrix()
+        self.matrix = self.to_np_matrix()
         self.boxes: List[Box] = []
         self.start: Vec = None
         self.end: Vec = None
-        self.min_distance = np.sqrt(self.height ^ 2 + self.width ^ 2)
+        self.min_distance = np.linalg.norm(self.height - self.width)
+
+        self.map: str = None
+        self.erase_map: str = None
+        self.top_left_corner: Vec = None
 
     def __getitem__(self, index: Tuple[int, int]):
         """Returns the cell at index = (x, y)."""
@@ -122,7 +128,7 @@ class Maze(object):
             if neighbor is not None:
                 yield neighbor
 
-    def to_list_matrix(self) -> np.ndarray:
+    def to_np_matrix(self) -> np.ndarray:
         """Returns a matrix with a pretty printed visual representation of this maze."""
         str_matrix = np.array(
             [[1] * (self.width * 2 + 1) for i in range(self.height * 2 + 1)]
@@ -145,26 +151,8 @@ class Maze(object):
 
     def wall_at(self, x: int, y: int) -> bool:
         """Return True if there is a wall at (x, y). Values outside the valid range always return False."""
-        # Starts with regular representation. Looks stretched because chars are
-        # twice as high as they are wide (look at docs example in
-        # `Maze._to_str_matrix`).
-        skinny_matrix = self.matrix
-
-        # Simply duplicate each character in each line.
-        double_wide_matrix: List[List[str]] = []
-        for line in skinny_matrix:
-            double_wide_matrix.append([])
-            for item in line:
-                char = "O" if item == 1 else " "
-                double_wide_matrix[-1].append(char)
-                double_wide_matrix[-1].append(char)
-
-        # The last two chars of each line are walls, and we will need only one.
-        # So we remove the last char of each line.
-        matrix = [line[:-1] for line in double_wide_matrix]
-
-        if 0 <= x < len(matrix[0]) and 0 <= y < len(matrix):
-            return matrix[y][x] != " "
+        if 0 <= x < len(self.matrix[0]) and 0 <= y < len(self.matrix):
+            return self.matrix[y][x] == 1
         else:
             return False
 
@@ -266,7 +254,7 @@ class Maze(object):
                 n_visited_cells += 1
             else:
                 cell = cell_stack.pop()
-        self.matrix = self.to_list_matrix()
+        self.matrix = self.to_np_matrix()
 
     def _get_random_position(self) -> Tuple[int, int]:
         """Returns a random position on the maze."""
@@ -280,7 +268,7 @@ class Maze(object):
             if self.start is None and all(self.start == self.end) and self.end is None:
                 return False
             else:
-                distance = sum(np.sqrt(self.start ^ 2 + self.end ^ 2))
+                distance = np.linalg.norm(self.start - self.end)
                 if distance < self.min_distance:
                     return False
                 return True
@@ -297,15 +285,6 @@ class Maze(object):
             while self.end is None or self.matrix[self.end[0]][self.end[1]] != AIR:
                 self.end = Vec(random.randrange(0, self.height), self.width * 2 - 1)
 
-    def draw(self) -> str:
-        """Draw maze on screen"""
-        maze = str(self).split("\n")  # type: ignore
-        maze_shape = Vec(len(maze[0]), len(maze))
-        new_line = term.move_left(maze_shape.x) + term.move_down(1)
-        maze = new_line.join(maze)  # type: ignore
-        maze = maze.replace(" ", term.move_right(1))  # type: ignore
-        return maze  # type: ignore
-
     @classmethod
     def generate(cls, width: int = 20, height: int = 10):
         """Returns a new random perfect maze with the given sizes."""
@@ -320,20 +299,38 @@ class Maze(object):
         self.height = self.matrix.shape[1] // 2
 
     @classmethod
-    def load(cls, fname: str) -> Maze:
+    def load(cls, fname: str, data: dict = None) -> Maze:
         """Load everything from json file"""
         obj = cls(width=20, height=10)
-        with open(f"levels/{fname}.json", "r") as f:
-            data: Dict = json.load(f)
+        if data is None:
+            with open(f"levels/{fname}.json", "r") as f:
+                data = json.load(f)
+
         obj.set_map(data.pop("map"))
-        obj.start = Vec(*reversed(data.pop("start")))
-        obj.end = Vec(*reversed(data.pop("end")))
+
+        start = data.pop("start", None)
+        if start:
+            obj.start = Vec(*reversed(start))
+        end = data.pop("end", None)
+        if end:
+            obj.end = Vec(*reversed(end))
+
+        maze = str(obj).split("\n")
+        maze_shape = Vec(len(maze[0]), len(maze))
+        new_line = term.move_left(maze_shape.x) + term.move_down(1)
+        maze = new_line.join(maze)  # type: ignore
+        maze = maze.replace(" ", term.move_right(1))  # type: ignore
+        terminal_shape = Vec(term.width, term.height)
+        obj.top_left_corner = (terminal_shape - maze_shape) // 2
+        obj.map = term.move_xy(*obj.top_left_corner) + maze  # type: ignore
+
+        erase_map = obj.map
+        for chr in "┼├┴┬┌└─╶┤│┘┐╷╵╴":
+            if chr in erase_map:
+                erase_map = erase_map.replace(chr, " ")
+        obj.erase_map = erase_map
         for color, box_dict in data.items():
-            box_location = Vec(*reversed(box_dict["location"]))
-            box_map = box_dict["map"]
-            box_maze = cls(width=20, height=10)
-            box_maze.set_map(box_map)
-            obj.boxes.append(Box(location=box_location, maze=box_maze, col=color))
+            obj.boxes.append(Box.load(data=box_dict, col=color))
 
         return obj
 
@@ -367,81 +364,62 @@ class Box:
 
     def __init__(
         self,
-        location: Vec,
-        maze: Maze,
+        location: Vec = Vec(1, 1),
+        maze: Maze = None,
         shape: Vec = Vec(3, 3),
         col: str = "black",
-        render: Callable = None,
     ):
         self.maze = maze
         self.shape = shape
         self.col = col
         self.scene_render = render
-        self.top_left_corner: Vec = None
         self.needs_cleaning: bool = False
 
-        self._loc = location
-        self.b = (self._loc + (shape.x, 0)) - (1, 0)
-        self.c = self.b + (0, shape.y)
+        self.loc = location
 
-    @property
-    def loc(self) -> Vec:
-        """Return self location"""
-        return self._loc
-
-    @loc.setter
-    def loc(self, val: Vec) -> None:
-        self._loc = val
-        self.b = self._loc + (self.shape.x, 0)
-        self.c = self.b + (0, self.shape.y)
-
-    def render(self, avi: Cursor) -> str:
+    def render(self, avi: Vec) -> None:
         """Draw self"""
+        # box drawing
         move = term.move_xy(*self.loc)
-        # frame = "┌" + "─" * (self.shape.x - 2) + "┐"
         frame = move + "┌" + " " * (self.shape.x - 2) + "┐"
         frame += term.move_down(self.shape.y - 1)
         frame += term.move_left(self.shape.x)
-        # frame += "└" + "─" * (self.shape.x - 2) + "┘"
-        frame += "└" + " " * (self.shape.x - 2) + "┘"  # box drawing
-        frame += term.move_xy(*self.top_left_corner)
+        frame += "└" + " " * (self.shape.x - 2) + "┘"
+        frame += term.move_xy(*self.maze.top_left_corner)
+        # show maze if necessary
         frame += self.show_maze(avi)
-        return self.scene_render(frame, col=self.col)
+        render(frame, col=self.col)
 
-    def show_maze(self, avi: Cursor) -> str:
-        """Return a string that draws the box and associated maze based on player location."""
+    def show_maze(self, avi: Vec) -> str:
+        """Return associated maze if it should be shown"""
         player_inside_box = False
 
         for i in range(1, self.shape.x - 1):
             for j in range(1, self.shape.y - 1):
-                p = self._loc + (i, j)
-                player_inside_box = all(avi.coords == p)
+                p = self.loc + (i, j)
+                player_inside_box = all(avi == p)
                 if player_inside_box:
                     break
             if player_inside_box:
                 break
 
-        # AB = self.b - self.loc
-        # BC = self.c - self.b
-
-        # proj_AB = np.dot(AB, player_location - self.loc)
-        # proj_BC = np.dot(BC, player_location - self.b)
-
-        # https://stackoverflow.com/a/2763387
-        # if (0 <= proj_AB <= np.dot(AB, AB)) and (0 <= proj_BC <= np.dot(BC, BC)):
         if player_inside_box:
             self.needs_cleaning = True
-            frame = self.maze.draw()
-            return frame
+            return self.maze.map
         elif self.needs_cleaning:
             self.needs_cleaning = False
-            frame = self.maze.draw()
-            for chr in "┼├┴┬┌└─╶┤│┘┐╷╵╴":
-                if chr in frame:
-                    frame = frame.replace(chr, " ")
-            return frame
+            return self.maze.erase_map
         else:
             return ""
+
+    @classmethod
+    def load(cls, data: dict, col: str) -> Box:
+        """Load box data from dictionary"""
+        obj = cls()
+        obj.col = col
+        obj.loc = Vec(*reversed(data.pop("location")))
+        obj.maze = Maze.load("", data)
+        return obj
 
 
 if __name__ == "__main__":

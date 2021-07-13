@@ -8,11 +8,14 @@ from typing import Union
 import blessed
 from blessed.keyboard import Keystroke
 
+from core.cursor import Cursor
 from core.maze import Maze
-from game import NEXT_SCENE, QUIT, RESET, Cursor, Scene
+from core.render import Render
+from game import NEXT_SCENE, QUIT, RESET, Scene
 from utils import Vec  # type: ignore
 
 term = blessed.Terminal()
+render = Render()
 
 
 class TitleScene(Scene):
@@ -33,15 +36,17 @@ class TitleScene(Scene):
         self.current_frame += txt2
         self.first_frame = True
 
-    def next_frame(self, val: Keystroke) -> Union[str, int]:
+    def next_frame(self, val: Keystroke) -> Union[None, int]:
         """Returns next frame to render"""
         # no need to update the frame anymore
         if self.first_frame:
             self.first_frame = False
-            return self.current_frame
+            render(self.current_frame)
+            # return self.current_frame
         elif str(val) == " " or val.name == "KEY_ENTER":
             return NEXT_SCENE
-        return ""
+        return None
+        # return ""
 
     def reset(self) -> None:
         """Reset has no use for title scene."""
@@ -88,21 +93,16 @@ class Level_2(Scene):
         super().__init__()
         self.maze = Maze.load(level)
 
-        self.avi = Cursor(Vec(1, 1), render=self.render, fill="█", speed=Vec(1, 1))
+        self.avi = Cursor(
+            self.mat2screen(mat=self.maze.start), fill="█", speed=Vec(1, 1)
+        )
+        self.end_loc = self.mat2screen(self.maze.end)
         self.first_frame = True
         self.maze_is_visible = False
-
-        maze = str(self.maze).split("\n")
-        self.maze_shape = Vec(len(maze[0]), len(maze))
-        self.terminal_shape = Vec(term.width, term.height)
-        self.top_left_corner = (self.terminal_shape - self.maze_shape) // 2
-        self.end_loc = self.maze.end * (2, 1) + self.top_left_corner
         for box in self.maze.boxes:
             # move to top-left corner of maze + scale and extend width
             # + move to top-left corner of box
-            box.loc = self.top_left_corner + box.loc * (2, 1) - (1, 1)
-            box.scene_render = self.render
-            box.top_left_corner = copy(self.top_left_corner)
+            box.loc = self.maze.top_left_corner + box.loc * (2, 1) - (1, 1)
 
     def next_frame(self, val: Keystroke) -> Union[str, int]:
         """Draw next frame"""
@@ -111,27 +111,26 @@ class Level_2(Scene):
             # removes the main maze after 2 sec
             Thread(target=self.remove_maze, daemon=True).start()
             frame = term.clear
-            frame += self.draw_maze(self.maze.draw()) + self.avi.render()  # type: ignore
-            for box in self.maze.boxes:
-                frame += box.render(self.avi)
+            frame += self.maze.map
             frame += term.move_xy(*self.end_loc) + "&"  # type: ignore
-            return self.render(frame)
+            render(frame)
+            for box in self.maze.boxes:
+                box.render(self.avi.coords)
+            self.avi.render()
 
         elif val.is_sequence and (257 < val.code < 262):
-            loc_in_maze = self.avi.loc_on_move(val.name) - self.top_left_corner
+            loc_in_mat = self.screen2mat(self.avi.loc_on_move(val.name))
 
-            frame = ""  # type: ignore
-            if self.maze.wall_at(*loc_in_maze):
+            if self.maze.wall_at(*loc_in_mat):
                 # collision count and music code goes here
-                logging.info(f"hit maze @ {self.avi.loc_on_move(val.name)}")
+                logging.info(f"hit maze @ {loc_in_mat}")
             elif all(self.avi.coords == self.end_loc):
                 return NEXT_SCENE
             else:
-                frame += self.avi.move(val.name)  # type: ignore
+                self.avi.move(val.name)
             for box in self.maze.boxes:
-                frame += box.render(self.avi)
-            frame += self.avi.render()  # type: ignore
-            return self.render(frame)
+                box.render(self.avi.coords)
+            self.avi.render()
 
         elif val.lower() == "q":
             return QUIT
@@ -140,34 +139,46 @@ class Level_2(Scene):
         elif val.lower() == "h":
             if not self.maze_is_visible:
                 self.maze_is_visible = True
-                frame = self.draw_maze(self.maze.draw(), update_cursor=False)  # type: ignore
-                frame += self.avi.render()  # type: ignore
-                return frame
+                # frame = self.draw_maze(self.maze.draw(), update_cursor=False)  # type: ignore
+                # frame += self.avi.render()  # type: ignore
+                self.draw_maze(self.maze.map, update_cursor=False)  # type: ignore
+                self.avi.render()  # type: ignore
+                # return frame
             else:
                 self.maze_is_visible = False
                 self.remove_maze(0)
                 return ""
         return ""
 
-    def draw_maze(self, maze: str, update_cursor: bool = True) -> str:
+    def draw_maze(self, maze: str, update_cursor: bool = True) -> None:
         """Draw main maze"""
-        logging.info(f"{update_cursor=}")
         if update_cursor:
-            self.avi.coords = self.top_left_corner + self.maze.start * (2, 1)
-        return term.move_xy(*self.top_left_corner) + self.render(maze)
+            self.avi.coords = self.maze.top_left_corner + self.maze.start * (2, 1)
+        frame = term.move_xy(*self.maze.top_left_corner) + maze
+        render(frame)
+        # return
 
     def remove_maze(self, sleep: float = 2) -> None:
         """Erase main maze"""
         time.sleep(sleep)
-        maze = self.maze.draw()
+        maze = self.maze.map
         for chr in "┼├┴┬┌└─╶┤│┘┐╷╵╴":
             if chr in maze:
                 maze = maze.replace(chr, " ")
-        frame = self.draw_maze(maze, update_cursor=False)  # erase maze
-        frame += self.avi.render()  # draw avi
+        self.draw_maze(maze, update_cursor=False)  # erase maze
+        # frame = self.draw_maze(maze, update_cursor=False)  # erase maze
+        # frame += self.avi.render()  # draw avi
+        self.avi.render()  # draw avi
         for box in self.maze.boxes:
-            frame += box.render(self.avi)
-        print(frame)
+            box.render(self.avi.coords)
+
+    def screen2mat(self, screen: Vec) -> Vec:
+        """Convert screen location of a point to matrix location"""
+        return (screen - self.maze.top_left_corner) // (2, 1)
+
+    def mat2screen(self, mat: Vec) -> Vec:
+        """Convert matrix location of a point to screen location"""
+        return self.maze.top_left_corner + mat * (2, 1)
 
     def reset(self) -> None:
         """Reset this level"""
@@ -189,15 +200,16 @@ class EndScene(Scene):
         self.current_frame += txt
         self.first_frame = True
 
-    def next_frame(self, val: Keystroke) -> Union[str, int]:
+    def next_frame(self, val: Keystroke) -> Union[None, int]:
         """Return next frame to render"""
         # no need to update each frame
         if self.first_frame:
             self.first_frame = False
-            return self.render(self.current_frame)
+            render(self.current_frame)
+            # return self.render(self.current_frame)
         elif str(val) == " " or val.name == "KEY_ENTER":
             return NEXT_SCENE
-        return ""
+        return None
 
     def reset(self) -> None:
         """No use."""
