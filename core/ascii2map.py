@@ -12,7 +12,6 @@ xxxxxx   x          │
 └───────────────────┘
 """
 
-from pprint import pprint
 from typing import List
 
 from pyperclip import paste
@@ -25,4 +24,4 @@ for i, line in enumerate(ascii.split("\n")):
     for char in line.strip():
         map[i].append(int(char != "x"))
 
-pprint(map[1:])
+print(map[1:])

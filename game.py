@@ -6,14 +6,14 @@ from typing import Iterable, Iterator, List, Union
 import blessed
 import numpy as np
 import pytweening as pt
-from blessed.colorspace import X11_COLORNAMES_TO_RGB, RGBColor
 from blessed.keyboard import Keystroke
 
-from utils import Vec  # type: ignore
+from core.render import Render
 
 if "logs" not in os.listdir():
     os.mkdir("logs")
 logging.basicConfig(filename="logs/debug.log", level=logging.DEBUG)
+logging.info("=" * 15)
 
 NEXT_SCENE = 1
 RESET = 2
@@ -21,57 +21,7 @@ QUIT = 3
 
 term = blessed.Terminal()
 
-
-class Cursor:
-    """Creates a Cursor Object that can be moved on command"""
-
-    directions = {
-        "KEY_UP": Vec(0, -1),
-        "KEY_DOWN": Vec(0, 1),
-        "KEY_LEFT": Vec(-1, 0),
-        "KEY_RIGHT": Vec(1, 0),
-    }
-
-    def __init__(
-        self,
-        coords: Vec,
-        fill: str = "██",
-        colour: RGBColor = X11_COLORNAMES_TO_RGB["aqua"],
-        speed: Vec = Vec(2, 1),
-    ) -> None:
-
-        self.coords = coords
-        self.fill = fill
-        self.colour = colour
-        self.speed = speed
-        self.term = term
-        self.commands = {"r": self.render, "c": self.clear}
-
-    def move(self, direction: str) -> str:
-        """Moves the cursor to a new position based on direction and speed"""
-        render_string = ""
-        render_string += self.clear()
-        directions = self.directions[direction]
-        self.coords.x = min(
-            max(self.coords.x + directions.x * self.speed.x, 0), self.term.width - 2
-        )
-        self.coords.y = min(
-            max(self.coords.y + directions.y * self.speed.y, 0), self.term.height - 2
-        )
-        render_string += self.render()
-        return render_string
-
-    def clear(self) -> str:
-        """Clears the rendered cursor"""
-        return f"{self.term.move_xy(*self.coords)}" + " " * len(self.fill)
-
-    def render(self) -> str:
-        """Renders the cursor"""
-        render_string = ""
-        render_string += f"{self.term.move_xy(*self.coords)}"
-        render_string += f"{self.term.color_rgb(*self.colour)}"
-        render_string += f"{self.fill}{self.term.normal}"
-        return render_string
+render = Render()
 
 
 class Scene:
@@ -80,10 +30,12 @@ class Scene:
     The subclass should implement the functions `rest` and `next_frame`
     """
 
-    def __init__(self):
+    def __init__(self, col: str = "black", bg_col: str = "peachpuff2"):
         self.height = term.height
         self.width = term.width
         self.current_frame = ""
+        self.col = col
+        self.bg_col = bg_col
 
     def reset(self) -> None:
         """Reset the current scene/level to its initial state."""
@@ -111,17 +63,18 @@ class Game:
                     logging.info(f"game ended with {e}")
                     print("Game ended.")
                     break
-                if isinstance(command, str):
-                    # do not need to print anything if '' is returned
-                    if len(command) != 0:
-                        print(command)
-                elif command == NEXT_SCENE:
+                # get all the frames and print
+                print(render.screen())
+
+                if command == NEXT_SCENE:
                     self.current_scene = next(self.scenes, None)
                     continue
                 elif command == RESET:
                     self.current_scene.reset()
                     val = Keystroke()
                     continue
+                elif command == QUIT:
+                    break
                 val = term.inkey(timeout=0.05)  # 20 fps
 
 
@@ -179,8 +132,10 @@ class Camera:
         :param y: y coordinate to move to
         :return: player vision
         """
+
         def clip(x: int, p: int, u: int) -> int:
             return p if x < p else u if x > u else x
+
         shape = np.shape(self.game_map)
         y_min = clip(0, y, shape[0] - 1)
         y_max = clip(0, y + self.camera_size, shape[0] - 1)
