@@ -11,6 +11,7 @@ from core.maze import Maze
 from core.render import Render
 from core.sound import play_level_up_sound
 from game import NEXT_SCENE, QUIT, RESET, Scene
+from utils import Boundary
 
 term = blessed.Terminal()
 render = Render()
@@ -57,7 +58,7 @@ class Level(Scene):
     def __init__(self, level: str = "1") -> None:
         super().__init__()
         self.maze = Maze.load(level)
-
+        self.level_boundary = Boundary(self.maze.width, self.maze.height, self.maze.top_left_corner, term)
         self.player = Player(self.maze.mat2screen(mat=self.maze.start))
 
         self.end_loc = self.maze.mat2screen(self.maze.end)
@@ -76,6 +77,9 @@ class Level(Scene):
             # removes the main maze after 2 sec
             Thread(target=self.remove_maze, daemon=True).start()
             frame = term.clear
+            # debugging feature
+            frame += f"{self.maze.width} {self.level_boundary.width}, {self.maze.height} {self.level_boundary.height}, {self.maze.top_left_corner}"
+            frame += self.level_boundary.map
             frame += self.maze.map
             frame += term.move_xy(*self.end_loc) + "&"  # type: ignore
             render(frame)
@@ -91,9 +95,11 @@ class Level(Scene):
             if all(self.player.avi.coords == self.end_loc):
                 return NEXT_SCENE
             # render boxes and mazes
+            render(self.level_boundary.map)
             for box in self.maze.boxes:
                 box.render(self.player)
             # render player
+            render(term.move_xy(*self.end_loc) + "&")
             self.player.render()
 
         elif val.lower() == "q":
