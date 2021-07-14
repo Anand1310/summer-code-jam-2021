@@ -118,15 +118,13 @@ class Player:
         # )
         if 0 <= x < len(maze.matrix[0]) and 0 <= y < len(maze.matrix):
             is_wall = maze.matrix[y][x] == 1
-            odd_place = screen.x == 2 * x + 1
-            if is_wall and odd_place and direction == "KEY_LEFT":
-                return False
-            if is_wall and odd_place and direction == "KEY_DOWN" and maze.matrix[y][x+1] == 0:
-                return False
-            if is_wall and odd_place and direction == "KEY_UP" and maze.matrix[y][x+1] == 0:
-                return False
-            # else:
-            #     return True
+            if is_wall and screen.x == 2 * x + 1:
+                if direction == "KEY_LEFT":
+                    return False
+                if direction == "KEY_DOWN" and maze.matrix[y][x+1] == 0:
+                    return False
+                if direction == "KEY_UP" and maze.matrix[y][x+1] == 0:
+                    return False
             return is_wall
         else:
             return False
