@@ -93,8 +93,6 @@ class Player:
         if self.wall_at(avi_loc, maze):
             # collision count and music code goes here
             play_hit_wall_sound(avi_loc - self.avi.coords)
-            pass
-            # logging.info(f"hit maze @ {avi_loc}")
         else:
             self.avi.move(val.name)
 
