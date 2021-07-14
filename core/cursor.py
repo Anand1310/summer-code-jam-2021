@@ -90,13 +90,13 @@ class Player:
         """Handle player movement"""
         avi_loc = self.avi.loc_on_move(val.name)
 
-        if self.wall_at(avi_loc, maze):
+        if self.wall_at(avi_loc, maze, val.name):
             # collision count and music code goes here
             play_hit_wall_sound(avi_loc - self.avi.coords)
         else:
             self.avi.move(val.name)
 
-    def wall_at(self, screen: Vec, maze: Maze) -> bool:
+    def wall_at(self, screen: Vec, maze: Maze, direction: str) -> bool:
         """Return True if there is a wall at (x, y). Values outside the valid range always return False."""
         x, y = maze.screen2mat(screen)
         screen = screen - maze.top_left_corner
@@ -105,8 +105,13 @@ class Player:
         # )
         if 0 <= x < len(maze.matrix[0]) and 0 <= y < len(maze.matrix):
             is_wall = maze.matrix[y][x] == 1
-            # if is_wall and screen.x == 2 * x + 1:
-            #     return False
+            odd_place = screen.x == 2 * x + 1
+            if is_wall and odd_place and direction == "KEY_LEFT":
+                return False
+            if is_wall and odd_place and direction == "KEY_DOWN" and maze.matrix[y][x+1] == 0:
+                return False
+            if is_wall and odd_place and direction == "KEY_UP" and maze.matrix[y][x+1] == 0:
+                return False
             # else:
             #     return True
             return is_wall
