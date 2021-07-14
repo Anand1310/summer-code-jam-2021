@@ -2,6 +2,7 @@ from copy import copy
 
 from blessed import Terminal
 
+from core.sound import play_enter_box_sound, play_hit_wall_sound
 from game import Render
 from utils import Vec  # type: ignore
 
@@ -36,6 +37,7 @@ class Cursor:
     def loc_on_move(self, direction: str) -> Vec:
         """Find location of cursor on move in direction."""
         directions = self.directions[direction]
+        self.last_move = directions
         x = min(
             max(self.prev_coords.x + directions.x * self.speed.x, 0),
             self.term.width - 2,
@@ -62,3 +64,19 @@ class Cursor:
         self.prev_coords = copy(self.coords)
         frame = self.term.move_xy(*self.coords) + self.fill
         render(frame, col="black", bg_col="white")
+
+    def enter_box(self) -> None:
+        """Called when player enter a box"""
+        txt = term.home + "pow!"
+        play_enter_box_sound()
+        print(txt)
+        txt = term.home + "    "
+        print(term.normal)
+
+    def hit_wall(self) -> None:
+        """Called when player hits a wall"""
+        txt = term.home + "ouch!"
+        play_hit_wall_sound(self.last_move)
+        print(txt)
+        txt = term.home + "    "
+        print(term.normal)

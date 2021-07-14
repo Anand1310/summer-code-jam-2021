@@ -11,6 +11,7 @@ import blessed
 import numpy as np
 
 from core.render import Render
+from core.sound import play_enter_box_sound
 from utils import Vec  # type: ignore
 
 render = Render()
@@ -397,7 +398,7 @@ class Box:
                 break
 
         if player_inside_box:
-            avi.enter_box()
+            play_enter_box_sound()
             self.needs_cleaning = True
             return self.maze.map
         elif self.needs_cleaning:
