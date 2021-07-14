@@ -424,9 +424,6 @@ class Box:
             player.enter_box()
             self.needs_cleaning = True
             return self.maze.map
-        elif self.needs_cleaning:
-            self.needs_cleaning = False
-            return self.maze.erase_map + self.image
         else:
             return ""
 
