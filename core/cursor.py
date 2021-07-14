@@ -1,7 +1,15 @@
+from __future__ import annotations
+
 from copy import copy
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from core.maze import Maze
 
 from blessed import Terminal
+from blessed.keyboard import Keystroke
 
+from core.sound import play_enter_box_sound, play_hit_wall_sound
 from game import Render
 from utils import Vec  # type: ignore
 
@@ -62,3 +70,56 @@ class Cursor:
         self.prev_coords = copy(self.coords)
         frame = self.term.move_xy(*self.coords) + self.fill
         render(frame, col="black", bg_col="white")
+
+
+class Player:
+    """Player class, controls player movement and scores"""
+
+    def __init__(self, start: Vec):
+        self.start_loc = start
+        self.avi = Cursor(start, fill="█", speed=Vec(1, 1))
+        self.score: int = 0
+        self.timer_start: float = None
+
+    def start(self) -> None:
+        """Called when the game is started"""
+        self.avi.coords = self.start_loc
+        self.avi.render()
+
+    def update(self, val: Keystroke, maze: Maze) -> None:
+        """Handle player movement"""
+        avi_loc = self.avi.loc_on_move(val.name)
+
+        if self.wall_at(avi_loc, maze):
+            # collision count and music code goes here
+            play_hit_wall_sound(avi_loc - self.avi.coords)
+        else:
+            self.avi.move(val.name)
+
+    def wall_at(self, screen: Vec, maze: Maze) -> bool:
+        """Return True if there is a wall at (x, y). Values outside the valid range always return False."""
+        x, y = maze.screen2mat(screen)
+        screen = screen - maze.top_left_corner
+        # logging.info(
+        #     f"{x=}\t{screen.x=}\t{self.maze.matrix[y][x]}, {self.maze.matrix[y][x-1]}, {self.maze.matrix[y][x+1]}"
+        # )
+        if 0 <= x < len(maze.matrix[0]) and 0 <= y < len(maze.matrix):
+            is_wall = maze.matrix[y][x] == 1
+            # if is_wall and screen.x == 2 * x + 1:
+            #     return False
+            # else:
+            #     return True
+            return is_wall
+        else:
+            return False
+
+    def render(self) -> None:
+        """Draw player on screen"""
+        self.avi.render()
+
+    def enter_box(self) -> None:
+        """Called when player enter a box"""
+        play_enter_box_sound()
+
+    def hit_wall(self) -> None:
+        """Called when player hits wall"""

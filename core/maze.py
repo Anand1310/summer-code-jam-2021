@@ -1,17 +1,21 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import random
 import sys
 from pathlib import Path
-from typing import Iterator, List, Tuple
+from typing import TYPE_CHECKING, Iterator, List, Tuple
 
 import blessed
 import numpy as np
 
 from core.render import Render
 from utils import Vec  # type: ignore
+
+if TYPE_CHECKING:
+    from core.cursor import Player
 
 render = Render()
 
@@ -114,6 +118,14 @@ class Maze(object):
             return self.cells[x + y * self.width]
         else:
             return None
+
+    def screen2mat(self, screen: Vec) -> Vec:
+        """Convert screen location of a point to matrix location"""
+        return (screen - self.top_left_corner) // (2, 1)
+
+    def mat2screen(self, mat: Vec) -> Vec:
+        """Convert matrix location of a point to screen location"""
+        return self.top_left_corner + mat * (2, 1)
 
     def neighbors(self, cell: Cell) -> Iterator[Cell]:
         """
@@ -370,38 +382,38 @@ class Box:
 
         self.loc = location
 
-    def render(self, avi: Vec) -> None:
+        self.image: str = ""
+
+    def render(self, player: Player) -> None:
         """Draw self"""
         # box drawing
-        move = term.move_xy(*self.loc)
-        frame = move + "┌" + " " * (self.shape.x - 2) + "┐"
-        frame += term.move_down(self.shape.y - 1)
-        frame += term.move_left(self.shape.x)
-        frame += "└" + " " * (self.shape.x - 2) + "┘"
-        frame += term.move_xy(*self.maze.top_left_corner)
+        frame = self.image
+        logging.info("box-frame len " + str(len(frame)))
         # show maze if necessary
-        frame += self.show_maze(avi)
+        frame += self.show_maze(player)
         render(frame, col=self.col)
 
-    def show_maze(self, avi: Vec) -> str:
+    def show_maze(self, player: Player) -> str:
         """Return associated maze if it should be shown"""
         player_inside_box = False
 
         for i in range(1, self.shape.x - 1):
             for j in range(1, self.shape.y - 1):
                 p = self.loc + (i, j)
-                player_inside_box = all(avi == p)
+                player_inside_box = all(player.avi.coords == p)
+
                 if player_inside_box:
                     break
             if player_inside_box:
                 break
 
         if player_inside_box:
+            player.enter_box()
             self.needs_cleaning = True
             return self.maze.map
         elif self.needs_cleaning:
             self.needs_cleaning = False
-            return self.maze.erase_map
+            return self.maze.erase_map + self.image
         else:
             return ""
 
@@ -412,6 +424,14 @@ class Box:
         obj.col = col
         obj.loc = Vec(*reversed(data.pop("location")))
         obj.maze = Maze.load("", data)
+
+        image = term.move_xy(*obj.maze.mat2screen(obj.loc) - (1, 1))
+        image += image + "┌" + " " * (obj.shape.x - 2) + "┐"
+        image += term.move_down(obj.shape.y - 1)  # type: ignore
+        image += term.move_left(obj.shape.x)  # type: ignore
+        image += "└" + " " * (obj.shape.x - 2) + "┘"
+        obj.image = image
+
         return obj
 
 
