@@ -42,17 +42,17 @@ class Vec(np.ndarray):
 
 class Boundary():
     def __init__(self, width: str, height: str, top_left, term) -> None:
-        self.width = height * 4
-        self.height = width * 2
+        self.width = width-1
+        self.height = height-1
         self.term = term
         self.map = self.generate_map(top_left)
     def generate_map(self, top_left):
         x, y = top_left
         my_map = []
         my_map.append(self.term.move_xy(x, y) + "┌".ljust((self.width), "─")+"┐")
-        for i in range(self.height-2):
+        for i in range(self.height-1):
             my_map.append(self.term.move_xy(x, y+i+1) + "│".ljust((self.width ), " ")+"│")
-        my_map.append(self.term.move_xy(x, y + self.height-1) + "└".ljust((self.width), "─")+"┘")
+        my_map.append(self.term.move_xy(x, y + self.height) + "└".ljust((self.width), "─")+"┘")
         return "".join(my_map)
 
 if __name__ == "__main__":
