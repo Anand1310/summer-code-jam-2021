@@ -1,5 +1,6 @@
 import sys
 from typing import List
+
 from openal import oalQuit
 
 from game import Game, Scene
