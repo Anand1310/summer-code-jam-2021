@@ -79,7 +79,7 @@ class Game:
 
 
 class Camera:
-    """Main Camera Class. Can Have Multiple Cameras in multiplayer"""
+    """Main camera class. Can have multiple cameras in multiplayer."""
 
     def __init__(
         self,
@@ -89,7 +89,7 @@ class Camera:
         camera_size: int = 100,
         quickness: float = 0.0,
     ) -> None:
-        """Initialization of the Camera
+        """Initialize the camera.
 
         :param cam_x: initial position of camera's x coordinates
         :param cam_y: initial position of camera's y coordinates
@@ -105,20 +105,20 @@ class Camera:
 
     def set_position_styled(self, x: int, y: int) -> List:
         """
-        Transition coordinates
+        Transition coordinates.
 
         :param x: x coordinate to move to
         :param y: y coordinate to move to
         :return: list of coordinates of animation
         """
-        transtion_lenght = int(1 / 0.1)
+        transition_length = int(1 / 0.1)
         interval = 10
         cx = self.cam_x
         cy = self.cam_y
         diff_x = x - cx
         diff_y = y - cy
         animation_coords = []
-        for i in range(transtion_lenght):
+        for i in range(transition_length):
             cx = cx + pt.easeInOutSine((1 / interval) * i) * diff_x
             cy = cy + pt.easeInOutSine((1 / interval) * i) * diff_y
             animation_coords.append((cx, cy))
