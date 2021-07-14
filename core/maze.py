@@ -149,7 +149,6 @@ class Maze(object):
         self.matrix = str_matrix
         return str_matrix
 
-
     def __repr__(self):
         """
         Returns an Unicode representation of the maze. Size is doubled horizontally to avoid a stretched look.
