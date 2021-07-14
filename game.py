@@ -1,16 +1,14 @@
 """Game components."""
 import logging
 import os
-from copy import copy
-from typing import Callable, Iterable, Iterator, List, Union
+from typing import Iterable, Iterator, List, Union
 
 import blessed
 import numpy as np
 import pytweening as pt
 from blessed.keyboard import Keystroke
 
-from core.sound import play_enter_box_sound, play_hit_wall_sound
-from utils import Vec  # type: ignore
+from core.render import Render
 
 if "logs" not in os.listdir():
     os.mkdir("logs")
@@ -22,6 +20,8 @@ RESET = 2
 QUIT = 3
 
 term = blessed.Terminal()
+
+render = Render()
 
 
 class Scene:
@@ -43,91 +43,6 @@ class Scene:
     def next_frame(self, val: Keystroke) -> Union[str, int]:
         """Draw next frame in the scene."""
 
-    def render(self, frame: str, col: str = None, bg_col: str = None) -> str:
-        """Adds font color and background color on text"""
-        if col is None:
-            col = self.col
-        if bg_col is None:
-            bg_col = self.bg_col
-
-        paint: Callable[[str], str] = getattr(term, f"{col}_on_{bg_col}")
-        bg = getattr(term, f"on_{bg_col}")
-        return paint(frame) + bg
-
-
-class Cursor:
-    """Creates a Cursor Object that can be moved on command"""
-
-    directions = {
-        "KEY_UP": Vec(0, -1),
-        "KEY_DOWN": Vec(0, 1),
-        "KEY_LEFT": Vec(-1, 0),
-        "KEY_RIGHT": Vec(1, 0),
-    }
-
-    def __init__(
-        self,
-        coords: Vec,
-        fill: str = "██",
-        render: Callable = Scene().render,
-        speed: Vec = Vec(2, 1),
-    ) -> None:
-
-        self.prev_coords = coords
-        self.coords = coords
-        self.fill = fill
-        self.scene_render = render
-        self.speed = speed
-        self.term = term
-
-    def loc_on_move(self, direction: str) -> Vec:
-        """Find location of cursor on move in direction."""
-        directions = self.directions[direction]
-        self.last_move = directions
-        x = min(
-            max(self.prev_coords.x + directions.x * self.speed.x, 0),
-            self.term.width - 2,
-        )
-        y = min(
-            max(self.prev_coords.y + directions.y * self.speed.y, 0),
-            self.term.height - 2,
-        )
-        return Vec(x, y)
-
-    def move(self, direction: str) -> str:
-        """Move the cursor to a new position based on direction and speed."""
-        self.coords = self.loc_on_move(direction)
-        return self.clear()
-
-    def clear(self) -> str:
-        """Clears the rendered cursor"""
-        frame = f"{self.term.move_xy(*self.prev_coords)}" + " " * len(self.fill)
-        return frame
-
-    def render(self) -> str:
-        """Renders the cursor"""
-        self.prev_coords = copy(self.coords)
-        frame = ""
-        frame += self.term.move_xy(*self.coords)
-        frame += self.scene_render(self.fill)
-        return frame
-
-    def enter_box(self) -> None:
-        """Called when player enter a box"""
-        txt = term.home + "pow!"
-        play_enter_box_sound()
-        print(txt)
-        txt = term.home + "    "
-        print(term.normal)
-
-    def hit_wall(self) -> None:
-        """Called when player hits a wall"""
-        txt = term.home + "ouch!"
-        play_hit_wall_sound(self.last_move)
-        print(txt)
-        txt = term.home + "    "
-        print(term.normal)
-
 
 class Game:
     """Main game class. Should be initiated with a list of scenes."""
@@ -148,11 +63,10 @@ class Game:
                     logging.info(f"game ended with {e}")
                     print("Game ended.")
                     break
-                if isinstance(command, str):
-                    # do not need to print anything if '' is returned
-                    if len(command) != 0:
-                        print(command)
-                elif command == NEXT_SCENE:
+                # get all the frames and print
+                print(render.screen())
+
+                if command == NEXT_SCENE:
                     self.current_scene = next(self.scenes, None)
                     continue
                 elif command == RESET:
