@@ -58,7 +58,7 @@ class Level(Scene):
     def __init__(self, level: str = "1") -> None:
         super().__init__()
         self.maze = Maze.load(level)
-        self.level_boundary = Boundary(self.maze.width, self.maze.height, self.maze.top_left_corner, term)
+        self.level_boundary = Boundary(len(self.maze.char_matrix[0]), len(self.maze.char_matrix), self.maze.top_left_corner, term)
         self.player = Player(self.maze.mat2screen(mat=self.maze.start))
 
         self.end_loc = self.maze.mat2screen(self.maze.end)
