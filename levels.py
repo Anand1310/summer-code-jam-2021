@@ -1,5 +1,4 @@
 """Examples for designing levels."""
-import logging
 import time
 from copy import copy
 from threading import Thread
@@ -177,16 +176,16 @@ class Level_2(Scene):
         """Return True if there is a wall at (x, y). Values outside the valid range always return False."""
         x, y = self.screen2mat(screen)
         screen = screen - self.maze.top_left_corner
-        logging.info(
-            f"{x=}\t{screen.x=}\t{self.maze.matrix[y][x]}, {self.maze.matrix[y][x-1]}, {self.maze.matrix[y][x+1]}"
-        )
+        # logging.info(
+        #     f"{x=}\t{screen.x=}\t{self.maze.matrix[y][x]}, {self.maze.matrix[y][x-1]}, {self.maze.matrix[y][x+1]}"
+        # )
         if 0 <= x < len(self.maze.matrix[0]) and 0 <= y < len(self.maze.matrix):
             is_wall = self.maze.matrix[y][x] == 1
             # if is_wall and screen.x == 2 * x + 1:
             #     return False
             # else:
             #     return True
-            return is_wall 
+            return is_wall
         else:
             return False
 
