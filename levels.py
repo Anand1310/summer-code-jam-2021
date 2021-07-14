@@ -69,7 +69,7 @@ class Level(Scene):
             box.loc = self.maze.top_left_corner + box.loc * (2, 1) - (1, 1)
 
     def next_frame(self, val: Keystroke) -> Union[str, int]:
-        """Draw next frame"""
+        """Draw next frame."""
         if self.first_frame:
             self.first_frame = False
             play_level_up_sound()

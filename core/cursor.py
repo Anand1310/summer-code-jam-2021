@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from copy import copy
 from typing import TYPE_CHECKING
 
@@ -80,6 +81,8 @@ class Player:
         self.avi = Cursor(start, fill="█", speed=Vec(1, 1))
         self.score: int = 0
         self.timer_start: float = None
+        self.collision_count = 0
+        self.prev_colsn_time = time.time()
 
     def start(self) -> None:
         """Called when the game is started"""
@@ -92,6 +95,16 @@ class Player:
 
         if self.wall_at(avi_loc, maze):
             # collision count and music code goes here
+
+            # collision counter
+            collision_time = time.time()
+            if collision_time - self.prev_colsn_time > 0.5:
+                self.collision_count += 1
+                self.prev_colsn_time = collision_time
+                txt = term.home + f"Collisions: {self.collision_count}"
+                render(txt, col="black")
+
+            # play sound
             play_hit_wall_sound(avi_loc - self.avi.coords)
         else:
             self.avi.move(val.name)
