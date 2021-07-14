@@ -28,12 +28,7 @@ class Cursor:
         "KEY_RIGHT": Vec(1, 0),
     }
 
-    def __init__(
-        self,
-        coords: Vec,
-        fill: str = "██",
-        speed: Vec = Vec(2, 1),
-    ) -> None:
+    def __init__(self, coords: Vec, fill: str = "██", speed: Vec = Vec(2, 1),) -> None:
 
         self.prev_coords = coords
         self.coords = coords
@@ -94,18 +89,16 @@ class Player:
         avi_loc = self.avi.loc_on_move(val.name)
 
         if self.wall_at(avi_loc, maze, val.name):
-            # collision count and music code goes here
-
-            # collision counter
             collision_time = time.time()
             if collision_time - self.prev_colsn_time > 0.5:
+                # collision counter
                 self.collision_count += 1
                 self.prev_colsn_time = collision_time
                 txt = term.home + f"Collisions: {self.collision_count}"
                 render(txt, col="black")
 
-            # play sound
-            play_hit_wall_sound(avi_loc - self.avi.coords)
+                # play sound
+                play_hit_wall_sound(avi_loc - self.avi.coords)
         else:
             self.avi.move(val.name)
 
@@ -121,9 +114,9 @@ class Player:
             if is_wall and screen.x == 2 * x + 1:
                 if direction == "KEY_LEFT":
                     return False
-                if direction == "KEY_DOWN" and maze.matrix[y][x+1] == 0:
+                if direction == "KEY_DOWN" and maze.matrix[y][x + 1] == 0:
                     return False
-                if direction == "KEY_UP" and maze.matrix[y][x+1] == 0:
+                if direction == "KEY_UP" and maze.matrix[y][x + 1] == 0:
                     return False
             return is_wall
         else:
