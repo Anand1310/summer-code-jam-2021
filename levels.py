@@ -98,13 +98,15 @@ class Level_2(Scene):
         self.end_loc = self.mat2screen(self.maze.end)
         self.first_frame = True
         self.maze_is_visible = False
+        self.collision_count = 0
+        self.prev_colsn_time = time.time()
         for box in self.maze.boxes:
             # move to top-left corner of maze + scale and extend width
             # + move to top-left corner of box
             box.loc = self.maze.top_left_corner + box.loc * (2, 1) - (1, 1)
 
     def next_frame(self, val: Keystroke) -> Union[str, int]:
-        """Draw next frame"""
+        """Draw next frame."""
         if self.first_frame:
             self.first_frame = False
             # removes the main maze after 2 sec
@@ -122,7 +124,12 @@ class Level_2(Scene):
 
             if self.wall_at(avi_loc):
                 # collision count and music code goes here
-                pass
+                collision_time = time.time()
+                if collision_time - self.prev_colsn_time > 0.5:
+                    self.collision_count += 1
+                    self.prev_colsn_time = collision_time
+                    txt = term.home + f"Collisions: {self.collision_count}"
+                    print(term.black(txt))
                 # logging.info(f"hit maze @ {avi_loc}")
             elif all(self.avi.coords == self.end_loc):
                 return NEXT_SCENE
