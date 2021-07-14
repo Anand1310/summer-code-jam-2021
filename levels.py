@@ -77,8 +77,6 @@ class Level(Scene):
             # removes the main maze after 2 sec
             Thread(target=self.remove_maze, daemon=True).start()
             frame = term.clear
-            # debugging feature
-            frame += f"{self.maze.width} {self.level_boundary.width}, {self.maze.height} {self.level_boundary.height}, {self.maze.top_left_corner}"
             frame += self.level_boundary.map
             frame += self.maze.map
             frame += term.move_xy(*self.end_loc) + "&"  # type: ignore
