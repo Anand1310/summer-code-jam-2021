@@ -70,7 +70,7 @@ class Level(Scene):
             box.loc = self.maze.top_left_corner + box.loc * (2, 1) - (1, 1)
 
     def next_frame(self, val: Keystroke) -> Union[str, int]:
-        """Draw next frame"""
+        """Draw next frame."""
         if self.first_frame:
             self.first_frame = False
             play_level_up_sound()
@@ -115,6 +115,11 @@ class Level(Scene):
                 self.maze_is_visible = False
                 self.remove_maze(0)
                 return ""
+        elif val.lower() == "c":
+            render(self.maze.erase_map)
+            for line in self.maze.char_matrix:
+                for c in line:
+                    c.render()
         return ""
 
     def remove_maze(self, sleep: float = 2) -> None:

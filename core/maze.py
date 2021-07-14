@@ -1,16 +1,17 @@
 from __future__ import annotations
 
 import json
-import logging
 import os
 import random
 import sys
+from copy import copy
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterator, List, Tuple
+from typing import TYPE_CHECKING, Dict, Iterator, List, Tuple
 
 import blessed
 import numpy as np
 
+from core.character import AnimatedCharacter
 from core.render import Render
 from utils import Vec  # type: ignore
 
@@ -75,7 +76,7 @@ class Maze(object):
     """Maze class containing full board and maze generation algorithms."""
 
     # Unicode character for a wall with other walls in the given directions.
-    UNICODE_BY_CONNECTIONS = {
+    _UNICODE_BY_CONNECTIONS = {
         "ensw": "┼",
         "ens": "├",
         "enw": "┴",
@@ -93,6 +94,11 @@ class Maze(object):
         "w": "╴",
     }
 
+    UNICODE_BY_CONNECTIONS: Dict[str, AnimatedCharacter] = {
+        key: AnimatedCharacter(char=val, col="webgreen")
+        for key, val in _UNICODE_BY_CONNECTIONS.items()
+    }
+
     def __init__(self, width: int = 20, height: int = 10):
         """Creates a new maze with the given sizes, with all walls standing."""
         self.width = width
@@ -102,6 +108,7 @@ class Maze(object):
             for x in range(self.width):
                 self.cells.append(Cell(x, y, [N, S, E, W]))
         self.matrix = self.to_np_matrix()
+        self.char_matrix: List[List[AnimatedCharacter]] = [[]]
         self.boxes: List[Box] = []
         self.start: Vec = None
         self.end: Vec = None
@@ -199,7 +206,7 @@ class Maze(object):
         def wall_at(x: int, y: int) -> bool:
             """Return True if there is a wall at (x, y). Values outside the valid range always return False."""
             if 0 <= x < len(matrix[0]) and 0 <= y < len(matrix):
-                return matrix[y][x] != " "
+                return str(matrix[y][x]) != " "
             else:
                 return False
 
@@ -218,6 +225,7 @@ class Maze(object):
         for y, line in enumerate(matrix):
             for x, char in enumerate(line):
                 if not wall_at(x, y):
+                    matrix[y][x] = AnimatedCharacter(char=" ", col="webgreen")
                     continue
 
                 connections = {N, S, E, W}
@@ -232,11 +240,14 @@ class Maze(object):
 
                 str_connections = "".join(sorted(connections))
                 # Note we are changing the matrix we are reading. We need to be
-                # careful as to not break the `g` function implementation.
-                matrix[y][x] = Maze.UNICODE_BY_CONNECTIONS[str_connections]
+                # careful as to not break the `wall_at` function implementation.
+                matrix[y][x] = copy(Maze.UNICODE_BY_CONNECTIONS[str_connections])
+                # print(type(matrix[y][x]))
+                # print(type(Maze.UNICODE_BY_CONNECTIONS[str_connections]))
 
         # Simple double join to transform list of lists into string.
-        return "\n".join("".join(line) for line in matrix) + "\n"
+        self.char_matrix = matrix
+        return "\n".join("".join(str(c) for c in line) for line in matrix) + "\n"
 
     def randomize(self) -> None:
         """
@@ -328,6 +339,9 @@ class Maze(object):
         terminal_shape = Vec(term.width, term.height)
         obj.top_left_corner = (terminal_shape - maze_shape) // 2
         obj.map = term.move_xy(*obj.top_left_corner) + maze  # type: ignore
+        for y, line in enumerate(obj.char_matrix):
+            for x, char in enumerate(line):
+                char.location = obj.top_left_corner + Vec(x, y)
 
         erase_map = obj.map
         for chr in "┼├┴┬┌└─╶┤│┘┐╷╵╴":
@@ -388,7 +402,6 @@ class Box:
         """Draw self"""
         # box drawing
         frame = self.image
-        logging.info("box-frame len " + str(len(frame)))
         # show maze if necessary
         frame += self.show_maze(player)
         render(frame, col=self.col)

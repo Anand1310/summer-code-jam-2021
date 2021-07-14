@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from copy import copy
 from typing import TYPE_CHECKING
 
@@ -80,6 +81,8 @@ class Player:
         self.avi = Cursor(start, fill="█", speed=Vec(1, 1))
         self.score: int = 0
         self.timer_start: float = None
+        self.collision_count = 0
+        self.prev_colsn_time = time.time()
 
     def start(self) -> None:
         """Called when the game is started"""
@@ -90,13 +93,23 @@ class Player:
         """Handle player movement"""
         avi_loc = self.avi.loc_on_move(val.name)
 
-        if self.wall_at(avi_loc, maze):
+        if self.wall_at(avi_loc, maze, val.name):
             # collision count and music code goes here
+
+            # collision counter
+            collision_time = time.time()
+            if collision_time - self.prev_colsn_time > 0.5:
+                self.collision_count += 1
+                self.prev_colsn_time = collision_time
+                txt = term.home + f"Collisions: {self.collision_count}"
+                render(txt, col="black")
+
+            # play sound
             play_hit_wall_sound(avi_loc - self.avi.coords)
         else:
             self.avi.move(val.name)
 
-    def wall_at(self, screen: Vec, maze: Maze) -> bool:
+    def wall_at(self, screen: Vec, maze: Maze, direction: str) -> bool:
         """Return True if there is a wall at (x, y). Values outside the valid range always return False."""
         x, y = maze.screen2mat(screen)
         screen = screen - maze.top_left_corner
@@ -105,10 +118,13 @@ class Player:
         # )
         if 0 <= x < len(maze.matrix[0]) and 0 <= y < len(maze.matrix):
             is_wall = maze.matrix[y][x] == 1
-            # if is_wall and screen.x == 2 * x + 1:
-            #     return False
-            # else:
-            #     return True
+            if is_wall and screen.x == 2 * x + 1:
+                if direction == "KEY_LEFT":
+                    return False
+                if direction == "KEY_DOWN" and maze.matrix[y][x+1] == 0:
+                    return False
+                if direction == "KEY_UP" and maze.matrix[y][x+1] == 0:
+                    return False
             return is_wall
         else:
             return False
