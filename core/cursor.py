@@ -2,7 +2,7 @@ from copy import copy
 
 from blessed import Terminal
 
-from core.sound import play_enter_box_sound, play_hit_wall_sound
+from core.sound import play_hit_wall_sound
 from game import Render
 from utils import Vec  # type: ignore
 
@@ -64,14 +64,6 @@ class Cursor:
         self.prev_coords = copy(self.coords)
         frame = self.term.move_xy(*self.coords) + self.fill
         render(frame, col="black", bg_col="white")
-
-    def enter_box(self) -> None:
-        """Called when player enter a box"""
-        txt = term.home + "pow!"
-        play_enter_box_sound()
-        print(txt)
-        txt = term.home + "    "
-        print(term.normal)
 
     def hit_wall(self) -> None:
         """Called when player hits a wall"""

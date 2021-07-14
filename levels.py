@@ -10,6 +10,7 @@ from blessed.keyboard import Keystroke
 from core.cursor import Cursor
 from core.maze import Maze
 from core.render import Render
+from core.sound import play_level_up_sound
 from game import NEXT_SCENE, QUIT, RESET, Scene
 from utils import Vec  # type: ignore
 
@@ -106,6 +107,7 @@ class Level_2(Scene):
     def next_frame(self, val: Keystroke) -> Union[str, int]:
         """Draw next frame"""
         if self.first_frame:
+            play_level_up_sound()
             self.first_frame = False
             # removes the main maze after 2 sec
             Thread(target=self.remove_maze, daemon=True).start()
