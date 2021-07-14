@@ -12,7 +12,11 @@ from core.render import Render
 
 if "logs" not in os.listdir():
     os.mkdir("logs")
-logging.basicConfig(filename="logs/debug.log", level=logging.DEBUG)
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.DEBUG)  # or whatever
+handler = logging.FileHandler("logs/debug.log", "w", "utf-8")  # or whatever
+handler.setFormatter(logging.Formatter("%(name)s %(message)s"))  # or whatever
+root_logger.addHandler(handler)
 logging.info("=" * 15)
 
 NEXT_SCENE = 1

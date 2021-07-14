@@ -109,6 +109,11 @@ class Level(Scene):
                 self.maze_is_visible = False
                 self.remove_maze(0)
                 return ""
+        elif val.lower() == "c":
+            render(self.maze.erase_map)
+            for line in self.maze.char_matrix:
+                for c in line:
+                    c.render()
         return ""
 
     def remove_maze(self, sleep: float = 2) -> None:

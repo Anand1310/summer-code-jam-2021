@@ -108,7 +108,7 @@ class Maze(object):
             for x in range(self.width):
                 self.cells.append(Cell(x, y, [N, S, E, W]))
         self.matrix = self.to_np_matrix()
-        self.char_matrix: List[List[AnimatedCharacter]] = [[]]
+        self.char_matrix:List[List[AnimatedCharacter]] = [[]]
         self.boxes: List[Box] = []
         self.start: Vec = None
         self.end: Vec = None
@@ -225,7 +225,7 @@ class Maze(object):
         for y, line in enumerate(matrix):
             for x, char in enumerate(line):
                 if not wall_at(x, y):
-                    matrix[y][x] = AnimatedCharacter(char=" ", col="webgreen")
+                    matrix[y][x] = AnimatedCharacter(char=' ', col="webgreen")
                     continue
 
                 connections = {N, S, E, W}
@@ -341,7 +341,7 @@ class Maze(object):
         obj.map = term.move_xy(*obj.top_left_corner) + maze  # type: ignore
         for y, line in enumerate(obj.char_matrix):
             for x, char in enumerate(line):
-                char.location = obj.top_left_corner + Vec(x, y)
+                char.location = obj.top_left_corner + Vec(x,y)
 
         erase_map = obj.map
         for chr in "┼├┴┬┌└─╶┤│┘┐╷╵╴":
