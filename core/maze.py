@@ -149,12 +149,6 @@ class Maze(object):
         self.matrix = str_matrix
         return str_matrix
 
-    def wall_at(self, x: int, y: int) -> bool:
-        """Return True if there is a wall at (x, y). Values outside the valid range always return False."""
-        if 0 <= x < len(self.matrix[0]) and 0 <= y < len(self.matrix):
-            return self.matrix[y][x] == 1
-        else:
-            return False
 
     def __repr__(self):
         """
