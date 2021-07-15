@@ -341,7 +341,7 @@ class Maze(object):
         obj.map = term.move_xy(*obj.top_left_corner) + maze  # type: ignore
         for y, line in enumerate(obj.char_matrix):
             for x, char in enumerate(line):
-                char.location = obj.top_left_corner + Vec(x, y)
+                char._location = obj.top_left_corner + Vec(x, y)
 
         erase_map = obj.map
         for chr in "┼├┴┬┌└─╶┤│┘┐╷╵╴":
@@ -392,7 +392,6 @@ class Box:
         self.shape = shape
         self.col = col
         self.scene_render = render
-        self.needs_cleaning: bool = False
 
         self.loc = location
 
@@ -422,7 +421,6 @@ class Box:
 
         if player_inside_box:
             player.enter_box()
-            self.needs_cleaning = True
             return self.maze.map
         else:
             return ""

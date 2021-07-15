@@ -1,7 +1,7 @@
 """Game components."""
 import logging
 import os
-from typing import Iterable, Iterator, List, Union
+from typing import List, Union
 
 import blessed
 import numpy as np
@@ -22,6 +22,8 @@ logging.info("=" * 15)
 NEXT_SCENE = 1
 RESET = 2
 QUIT = 3
+PAUSE = 4
+PLAY = 5
 
 term = blessed.Terminal()
 
@@ -51,31 +53,40 @@ class Scene:
 class Game:
     """Main game class. Should be initiated with a list of scenes."""
 
-    def __init__(self, scenes: Iterable[Scene]) -> None:
-        self.scenes: Iterator = iter(scenes)
-        self.current_scene: Scene = next(self.scenes)
+    def __init__(self, scenes: List[Scene], pause: Scene) -> None:
+        self.scenes = scenes
+        self.current_scene_index: int = 0
+        self.pause = pause
+        self.current_scene: Scene = self.scenes[self.current_scene_index]
 
     def run(self) -> None:
         """Run the main game loop."""
         with term.cbreak():
             val = Keystroke()
-            while (val.lower() != "q") or (val.lower != "x"):
-                # user input
-                try:
-                    command = self.current_scene.next_frame(val)
-                except AttributeError as e:
-                    logging.info(f"game ended with {e}")
-                    print("Game ended.")
-                    break
+            while True:
+                command = self.current_scene.next_frame(val)
                 # get all the frames and print
                 print(render.screen())
 
                 if command == NEXT_SCENE:
-                    self.current_scene = next(self.scenes, None)
-                    continue
+                    # end game if scenes end
+                    if self.current_scene_index == len(self.scenes):
+                        break
+                    else:
+                        self.current_scene_index += 1
+                        self.current_scene = self.scenes[self.current_scene_index]
+                        continue
                 elif command == RESET:
                     self.current_scene.reset()
                     val = Keystroke()
+                    continue
+                elif command == PAUSE:
+                    self.current_scene = self.pause
+                    continue
+                elif command == PLAY:
+                    self.pause.reset()
+                    self.current_scene = self.scenes[self.current_scene_index]
+                    self.current_scene.next_frame(Keystroke())
                     continue
                 elif command == QUIT:
                     break

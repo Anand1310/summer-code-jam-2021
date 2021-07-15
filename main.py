@@ -4,7 +4,7 @@ from typing import List
 from openal import oalQuit
 
 from game import Game, Scene
-from levels import EndScene, Level, TitleScene
+from levels import EndScene, Level, Pause, TitleScene
 
 if __name__ == "__main__":
     scenes: List[Scene] = [TitleScene()]
@@ -13,6 +13,6 @@ if __name__ == "__main__":
     else:
         scenes.append(Level(sys.argv[1]))
     scenes.append(EndScene())
-    game = Game(scenes)
+    game = Game(scenes, pause=Pause())
     game.run()
     oalQuit()
