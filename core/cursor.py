@@ -10,8 +10,8 @@ if TYPE_CHECKING:
 from blessed import Terminal
 from blessed.keyboard import Keystroke
 
+from core.render import Render
 from core.sound import play_echo, play_enter_box_sound, play_hit_wall_sound
-from game import Render
 from utils import Vec  # type: ignore
 
 term = Terminal()
@@ -71,13 +71,20 @@ class Cursor:
 class Player:
     """Player class, controls player movement and scores"""
 
-    def __init__(self, start: Vec):
-        self.start_loc = start
-        self.avi = Cursor(start, fill="█", speed=Vec(1, 1))
+    def __init__(self):
+        self.start_loc = None
+        self.name = ""
+        self.avi = None
         self.score: int = 0
         self.timer_start: float = None
         self.collision_count = 0
         self.prev_colsn_time = time.time()
+        self.inside_box: bool = False
+
+    def set_start(self, start: Vec) -> None:
+        """Set start coordinates. Required every level."""
+        self.start_loc = start
+        self.avi = Cursor(start, fill="█", speed=Vec(1, 1))
 
     def start(self) -> None:
         """Called when the game is started"""
@@ -93,6 +100,7 @@ class Player:
             if collision_time - self.prev_colsn_time > 0.5:
                 # collision counter
                 self.collision_count += 1
+                self.score -= self.collision_count * 2
                 self.prev_colsn_time = collision_time
                 txt = term.home + f"Collisions: {self.collision_count}"
                 render(txt, col="black")
@@ -133,7 +141,9 @@ class Player:
 
         while not wall_found:
             nearest_wall += directions
-            if 0 <= nearest_wall.x < len(maze.matrix[0]) and 0 <= nearest_wall.y < len(maze.matrix):
+            if 0 <= nearest_wall.x < len(maze.matrix[0]) and 0 <= nearest_wall.y < len(
+                maze.matrix
+            ):
                 wall_found = maze.matrix[nearest_wall.y][nearest_wall.x] == 1
 
         if direction == "KEY_RIGHT":
@@ -155,7 +165,12 @@ class Player:
 
     def enter_box(self) -> None:
         """Called when player enter a box"""
+        self.inside_box = True
         play_enter_box_sound()
+
+    def exit_box(self) -> None:
+        """Call when player exits a box."""
+        self.inside_box = False
 
     def hit_wall(self) -> None:
         """Called when player hits wall"""

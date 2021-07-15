@@ -117,6 +117,7 @@ class Maze(object):
         self.map: str = None
         self.erase_map: str = None
         self.top_left_corner: Vec = None
+        self.max_score: int = 2500
 
     def __getitem__(self, index: Tuple[int, int]):
         """Returns the cell at index = (x, y)."""
@@ -423,6 +424,7 @@ class Box:
             player.enter_box()
             return self.maze.map
         else:
+            player.exit_box()
             return ""
 
     @classmethod

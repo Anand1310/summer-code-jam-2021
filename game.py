@@ -8,6 +8,7 @@ import numpy as np
 import pytweening as pt
 from blessed.keyboard import Keystroke
 
+from core.cursor import Player
 from core.render import Render
 
 if "logs" not in os.listdir():
@@ -58,25 +59,34 @@ class Game:
         self.current_scene_index: int = 0
         self.pause = pause
         self.current_scene: Scene = self.scenes[self.current_scene_index]
+        self.player = Player()
 
     def run(self) -> None:
         """Run the main game loop."""
         with term.cbreak():
             val = Keystroke()
             while True:
+                if self.current_scene != self.pause and self.current_scene_index != 0:
+                    self.player.score -= 0.05 * (1 + 10 * self.player.inside_box)
+                txt = f"Score:{int(self.player.score)}"
+                txt = term.home + term.move_x(term.width - len(txt)) + txt
+                render(txt, col="black")
+
                 command = self.current_scene.next_frame(val)
                 # get all the frames and print
                 print(render.screen())
 
                 if command == NEXT_SCENE:
-                    # end game if scenes end
                     self.current_scene_index += 1
+                    # end game if scenes end
                     if self.current_scene_index == len(self.scenes):
                         break
                     else:
                         logging.info(self.current_scene_index)
                         logging.info(len(self.scenes))
                         self.current_scene = self.scenes[self.current_scene_index]
+                        self.current_scene.set_player(self.player)
+                        self.player.score += self.current_scene.maze.max_score
                         continue
                 elif command == RESET:
                     self.current_scene.reset()

@@ -65,7 +65,6 @@ class Level(Scene):
             self.maze.top_left_corner,
             term,
         )
-        self.player = Player(self.maze.mat2screen(mat=self.maze.start))
 
         self.end_loc = self.maze.mat2screen(self.maze.end)
         self.first_frame = True
@@ -74,6 +73,14 @@ class Level(Scene):
             # move to top-left corner of maze + scale and extend width
             # + move to top-left corner of box
             box.loc = self.maze.top_left_corner + box.loc * (2, 1) - (1, 1)
+
+        self.player: Player = None
+
+    def set_player(self, player: Player) -> None:
+        """Set player and their start location."""
+        player.set_start(self.maze.mat2screen(mat=self.maze.start))
+        player.collision_count = 0
+        self.player = player
 
     def next_frame(self, val: Keystroke) -> Union[str, int]:
         """Draw next frame."""
