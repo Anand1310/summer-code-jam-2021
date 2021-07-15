@@ -101,6 +101,7 @@ class Player:
                 play_hit_wall_sound(avi_loc - self.avi.coords)
         else:
             self.avi.move(val.name)
+            self.player_movement_sound(avi_loc, maze, val.name)
 
     def wall_at(self, screen: Vec, maze: Maze, direction: str) -> bool:
         """Return True if there is a wall at (x, y). Values outside the valid range always return False."""
@@ -121,6 +122,32 @@ class Player:
             return is_wall
         else:
             return False
+
+    def player_movement_sound(self, screen: Vec, maze: Maze, direction: str) -> None:
+        """Make player sound on move"""
+        x, y = maze.screen2mat(screen)
+        screen = screen - maze.top_left_corner
+        nearest_wall = Vec(x, y)
+        directions = Cursor.directions[direction]
+        wall_found = False
+
+        while not wall_found:
+            nearest_wall += directions
+            wall_found = maze.matrix[nearest_wall.y][nearest_wall.x] == 1
+
+        if direction == "KEY_RIGHT":
+            if screen.x == 2 * x:
+                print(direction, abs(2 * (nearest_wall.x - x)))
+                # play_echo(direction, abs(2 * (nearest_wall.x - x)))
+            else:
+                print(direction, abs(2 * (nearest_wall.x - x) - 1))
+                # play_echo(direction, abs(2 * (nearest_wall.x - x) - 1))
+        elif direction == "KEY_LEFT":
+            print(direction, abs(nearest_wall.x - x))
+            # play_echo(direction, abs(nearest_wall.x - x))
+        else:
+            print(direction, abs(nearest_wall.y - y))
+            # play_echo(direction, abs(nearest_wall.y - y))
 
     def render(self) -> None:
         """Draw player on screen"""
