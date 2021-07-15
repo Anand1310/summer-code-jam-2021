@@ -5,11 +5,12 @@ from openal import oalQuit
 
 from core.sound import play_start_bgm
 from game import Game, Scene
-from levels import EndScene, Level, Pause, TitleScene
+from levels import EndScene, InfiniteLevel, Level, Pause, TitleScene
 
 if __name__ == "__main__":
     play_start_bgm()
     scenes: List[Scene] = [TitleScene()]
+    scenes.append(InfiniteLevel())
     if len(sys.argv) == 1:
         scenes.extend([Level(str(i)) for i in range(1, 9)])
     else:

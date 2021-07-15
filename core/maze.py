@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import random
 import sys
@@ -247,6 +248,9 @@ class Maze(object):
 
         # Simple double join to transform list of lists into string.
         self.char_matrix = matrix
+        for line in matrix:
+            for c in line:
+                logging.debug(str(c))
         return "\n".join("".join(str(c) for c in line) for line in matrix) + "\n"
 
     def randomize(self) -> None:
@@ -274,7 +278,7 @@ class Maze(object):
 
     def _get_random_position(self) -> Tuple[int, int]:
         """Returns a random position on the maze."""
-        return Vec(random.randrange(0, self.width), random.randrange(0, self.height))
+        return [random.randrange(0, self.width), random.randrange(0, self.height)]
 
     def get_random_start_end_position(self, random_pos: bool = False) -> None:
         """Return a array with start and end position"""
@@ -291,22 +295,39 @@ class Maze(object):
 
         if random_pos:
             while not check():
-                self.start = self._get_random_position()
-                self.end = self._get_random_position()
+                self.start = Vec(*reversed(self._get_random_position()))
+                self.end = Vec(*reversed(self._get_random_position()))
         else:
             while (
                 self.start is None or self.matrix[self.start[0]][self.start[1]] != AIR
             ):
-                self.start = Vec(random.randrange(0, self.height), 1)
+                self.start = Vec(*reversed([random.randrange(0, self.height), 1]))
             while self.end is None or self.matrix[self.end[0]][self.end[1]] != AIR:
-                self.end = Vec(random.randrange(0, self.height), self.width * 2 - 1)
+                self.end = Vec(*reversed([random.randrange(0, self.height), self.width - 1]))
+            self.end = (self.end + 1) * 2 - 1
 
     @classmethod
     def generate(cls, width: int = 20, height: int = 10):
         """Returns a new random perfect maze with the given sizes."""
-        m = cls(width, height)
-        m.randomize()
-        return m
+        obj = cls(width, height)
+        obj.randomize()
+        # TODO remove duplicate code
+        maze = str(obj).split("\n")
+        maze_shape = Vec(len(maze[0]), len(maze))
+        new_line = term.move_left(maze_shape.x) + term.move_down(1)
+        maze = new_line.join(maze)  # type: ignore
+        maze = maze.replace(" ", term.move_right(1))  # type: ignore
+        terminal_shape = Vec(term.width, term.height)
+        obj.top_left_corner = (terminal_shape - maze_shape) // 2
+        obj.map = term.move_xy(*obj.top_left_corner) + maze  # type: ignore
+        erase_map = obj.map
+        for chr in "┼├┴┬┌└─╶┤│┘┐╷╵╴":
+            if chr in erase_map:
+                erase_map = erase_map.replace(chr, " ")
+        obj.erase_map = erase_map
+        obj.get_random_start_end_position()
+        logging.debug(str(obj))
+        return obj
 
     def set_map(self, m: List[List[int]]) -> None:
         """Set map for the maze"""

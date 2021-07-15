@@ -54,14 +54,13 @@ class Boundary:
     def generate_map(self, top_left: Vec) -> str:
         """Generates a string that can be rendered by a Render Object"""
         x, y = top_left
-        my_map = []
-        my_map.append(self.term.move_xy(x, y) + "┌".ljust((self.width), "─") + "┐")
+        my_map = [self.term.move_xy(x, y) + "┌".ljust(self.width, "─") + "┐"]
         for i in range(self.height - 1):
             my_map.append(
-                self.term.move_xy(x, y + i + 1) + "│".ljust((self.width), " ") + "│"
+                self.term.move_xy(x, y + i + 1) + "│".ljust(self.width, " ") + "│"
             )
         my_map.append(
-            self.term.move_xy(x, y + self.height) + "└".ljust((self.width), "─") + "┘"
+            self.term.move_xy(x, y + self.height) + "└".ljust(self.width, "─") + "┘"
         )
         return "".join(my_map)
 
