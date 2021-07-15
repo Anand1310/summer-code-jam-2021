@@ -133,7 +133,8 @@ class Player:
 
         while not wall_found:
             nearest_wall += directions
-            wall_found = maze.matrix[nearest_wall.y][nearest_wall.x] == 1
+            if 0 <= nearest_wall.x < len(maze.matrix[0]) and 0 <= nearest_wall.y < len(maze.matrix):
+                wall_found = maze.matrix[nearest_wall.y][nearest_wall.x] == 1
 
         # After implementing play_echo comment it off and remove print statement.
         if direction == "KEY_RIGHT":
