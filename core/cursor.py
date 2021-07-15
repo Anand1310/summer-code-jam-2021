@@ -136,22 +136,17 @@ class Player:
             if 0 <= nearest_wall.x < len(maze.matrix[0]) and 0 <= nearest_wall.y < len(maze.matrix):
                 wall_found = maze.matrix[nearest_wall.y][nearest_wall.x] == 1
 
-        # After implementing play_echo comment it off and remove print statement.
         if direction == "KEY_RIGHT":
             if screen.x == 2 * x:
                 play_echo(directions, 2 * (nearest_wall.x - x))
             else:
-                print(direction, 2 * abs(nearest_wall.x - x) - 1)
                 play_echo(directions, 2 * (nearest_wall.x - x) - 1)
         elif direction == "KEY_LEFT":
             if screen.x == 2 * x:
-                print(direction, 2 * abs(nearest_wall.x - x) - 1)
                 play_echo(directions, 2 * (nearest_wall.x - x) - 1)
             else:
-                print(direction, 2 * abs(nearest_wall.x - x))
                 play_echo(directions, 2 * (nearest_wall.x - x))
         else:
-            print(direction, abs(nearest_wall.y - y))
             play_echo(directions, nearest_wall.y - y)
 
     def render(self) -> None:
