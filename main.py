@@ -3,10 +3,12 @@ from typing import List
 
 from openal import oalQuit
 
+from core.sound import play_start_bgm
 from game import Game, Scene
 from levels import EndScene, Level, Pause, TitleScene
 
 if __name__ == "__main__":
+    play_start_bgm()
     scenes: List[Scene] = [TitleScene()]
     if len(sys.argv) == 1:
         scenes.extend([Level(str(i)) for i in range(1, 9)])

@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 from blessed import Terminal
 from blessed.keyboard import Keystroke
 
-from core.sound import play_enter_box_sound, play_hit_wall_sound
+from core.sound import play_echo, play_enter_box_sound, play_hit_wall_sound
 from game import Render
 from utils import Vec  # type: ignore
 
@@ -138,21 +138,20 @@ class Player:
         # After implementing play_echo comment it off and remove print statement.
         if direction == "KEY_RIGHT":
             if screen.x == 2 * x:
-                print(direction, 2 * abs(nearest_wall.x - x))
-                # play_echo(direction, abs(2 * (nearest_wall.x - x)))
+                play_echo(directions, 2 * (nearest_wall.x - x))
             else:
                 print(direction, 2 * abs(nearest_wall.x - x) - 1)
-                # play_echo(direction, abs(2 * (nearest_wall.x - x) - 1))
+                play_echo(directions, 2 * (nearest_wall.x - x) - 1)
         elif direction == "KEY_LEFT":
             if screen.x == 2 * x:
                 print(direction, 2 * abs(nearest_wall.x - x) - 1)
-                # play_echo(direction, abs(2 * (nearest_wall.x - x) - 1))
+                play_echo(directions, 2 * (nearest_wall.x - x) - 1)
             else:
                 print(direction, 2 * abs(nearest_wall.x - x))
-                # play_echo(direction, abs(2 * (nearest_wall.x - x)))
+                play_echo(directions, 2 * (nearest_wall.x - x))
         else:
             print(direction, abs(nearest_wall.y - y))
-            # play_echo(direction, abs(nearest_wall.y - y))
+            play_echo(directions, nearest_wall.y - y)
 
     def render(self) -> None:
         """Draw player on screen"""
