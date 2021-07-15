@@ -3,6 +3,7 @@
 from typing import Iterable, Union
 
 import numpy as np
+from blessed.terminal import Terminal
 
 
 class Vec(np.ndarray):
@@ -39,3 +40,32 @@ class Vec(np.ndarray):
 
     def __iter__(self) -> Iterable:
         return map(int, (self.x, self.y))
+
+
+class Boundary:
+    """Boundary Class stores information necessary to render a box of a specific height and width"""
+
+    def __init__(self, width: str, height: str, top_left: Vec, term: Terminal) -> None:
+        self.width = width - 1
+        self.height = height - 1
+        self.term = term
+        self.map = self.generate_map(top_left)
+
+    def generate_map(self, top_left: Vec) -> str:
+        """Generates a string that can be rendered by a Render Object"""
+        x, y = top_left
+        my_map = []
+        my_map.append(self.term.move_xy(x, y) + "┌".ljust((self.width), "─") + "┐")
+        for i in range(self.height - 1):
+            my_map.append(
+                self.term.move_xy(x, y + i + 1) + "│".ljust((self.width), " ") + "│"
+            )
+        my_map.append(
+            self.term.move_xy(x, y + self.height) + "└".ljust((self.width), "─") + "┘"
+        )
+        return "".join(my_map)
+
+
+if __name__ == "__main__":
+    square = Boundary(20, 20)
+    print("\n".join(square.map))

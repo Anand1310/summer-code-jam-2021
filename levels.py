@@ -10,7 +10,8 @@ from core.cursor import Player
 from core.maze import Maze
 from core.render import Render
 from core.sound import play_level_up_sound
-from game import NEXT_SCENE, QUIT, RESET, Scene
+from game import NEXT_SCENE, PAUSE, PLAY, QUIT, RESET, Scene
+from utils import Boundary  # type: ignore
 
 term = blessed.Terminal()
 render = Render()
@@ -57,7 +58,12 @@ class Level(Scene):
     def __init__(self, level: str = "1") -> None:
         super().__init__()
         self.maze = Maze.load(level)
-
+        self.level_boundary = Boundary(
+            len(self.maze.char_matrix[0]),
+            len(self.maze.char_matrix),
+            self.maze.top_left_corner,
+            term,
+        )
         self.player = Player(self.maze.mat2screen(mat=self.maze.start))
 
         self.end_loc = self.maze.mat2screen(self.maze.end)
@@ -76,6 +82,7 @@ class Level(Scene):
             # removes the main maze after 2 sec
             Thread(target=self.remove_maze, daemon=True).start()
             frame = term.clear
+            frame += self.level_boundary.map
             frame += self.maze.map
             frame += term.move_xy(*self.end_loc) + "&"  # type: ignore
             render(frame)
@@ -91,13 +98,15 @@ class Level(Scene):
             if all(self.player.avi.coords == self.end_loc):
                 return NEXT_SCENE
             # render boxes and mazes
+            render(self.level_boundary.map)
             for box in self.maze.boxes:
                 box.render(self.player)
             # render player
+            render(term.move_xy(*self.end_loc) + "&")
             self.player.render()
 
         elif val.lower() == "q":
-            return QUIT
+            return PAUSE
         elif val.lower() == "r":
             return RESET
         elif val.lower() == "h":
@@ -153,3 +162,62 @@ class EndScene(Scene):
     def reset(self) -> None:
         """No use."""
         pass
+
+
+class Pause(Scene):
+    """Pause Screen for the game"""
+
+    def __init__(self):
+        super().__init__()
+        self.first_frame = True
+        self.reset()
+
+    def next_frame(self, val: Keystroke) -> Union[None, int]:
+        """Return next frame to render"""
+        # no need to update each frame
+        if self.first_frame:
+            self.first_frame = False
+            render(self.current_frame)
+        elif val.lower() == "q":
+            return QUIT
+        elif val.lower() == "p":
+            # remove everything from screen
+            self.current_frame = term.move_xy(
+                x=(self.width - len(self.txt)) // 2, y=self.height // 2
+            )
+            self.current_frame += " " * len(self.txt)
+            self.current_frame += term.move_xy(
+                x=(self.width - len(self.txt2)) // 2, y=self.height // 2 + 1
+            )
+            self.current_frame += " " * len(self.txt2)
+            self.current_frame += term.move_xy(
+                x=(self.width - len(self.txt3)) // 2, y=self.height
+            )
+            self.current_frame += " " * len(self.txt3)
+            render(self.current_frame)
+            return PLAY
+        # elif val.lower() == "h":
+        #     # help
+        # elif val.lower() == "c":
+        #     # credits
+
+        return None
+
+    def reset(self) -> None:
+        """Reset current scene"""
+        self.txt = "This is the pause screen and we need to design it"
+        self.txt2 = "Hit p to play"
+        self.txt3 = "Hit q again to exit"
+        self.current_frame = term.move_xy(
+            x=(self.width - len(self.txt)) // 2, y=self.height // 2
+        )
+        self.current_frame += self.txt
+        self.current_frame += term.move_xy(
+            x=(self.width - len(self.txt2)) // 2, y=self.height // 2 + 1
+        )
+        self.current_frame += self.txt2
+        self.current_frame += term.move_xy(
+            x=(self.width - len(self.txt3)) // 2, y=self.height
+        )
+        self.current_frame += self.txt3
+        self.first_frame = True
