@@ -1,3 +1,5 @@
+import copy
+
 from openal import oalOpen
 
 from utils import Vec  # type: ignore
@@ -60,9 +62,10 @@ def enter_game_sound() -> None:
 
 def play_echo(direction: Vec, distance: int) -> None:
     """Play echo sound effect"""
+    k = copy.copy(direction)
     if direction.x != 0:
-        direction.x += int(distance)
+        k.x += int(distance)
     else:
-        direction.y += int(distance)
-    wind_sound.set_position((direction.x, 0, direction.y))
+        k.y += int(distance)
+    wind_sound.set_position((k.x, 0, k.y))
     wind_sound.play()
