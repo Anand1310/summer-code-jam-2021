@@ -132,9 +132,10 @@ class Player:
         wall_found = False
 
         while not wall_found:
+            if nearest_wall.x >= len(maze.matrix[0]) - 1 or nearest_wall.y >= len(maze.matrix) - 1:
+                break
             nearest_wall += directions
-            if 0 <= nearest_wall.x < len(maze.matrix[0]) and 0 <= nearest_wall.y < len(maze.matrix):
-                wall_found = maze.matrix[nearest_wall.y][nearest_wall.x] == 1
+            wall_found = maze.matrix[nearest_wall.y][nearest_wall.x] == 1
 
         if direction == "KEY_RIGHT":
             if screen.x == 2 * x:
