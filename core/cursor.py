@@ -146,10 +146,10 @@ class Player:
         elif direction == "KEY_LEFT":
             if screen.x == 2 * x:
                 print(direction, 2 * abs(nearest_wall.x - x) - 1)
-                # play_echo(direction, abs(2 * (nearest_wall.x - x)))
+                # play_echo(direction, abs(2 * (nearest_wall.x - x) - 1))
             else:
                 print(direction, 2 * abs(nearest_wall.x - x))
-                # play_echo(direction, abs(2 * (nearest_wall.x - x) - 1))
+                # play_echo(direction, abs(2 * (nearest_wall.x - x)))
         else:
             print(direction, abs(nearest_wall.y - y))
             # play_echo(direction, abs(nearest_wall.y - y))
