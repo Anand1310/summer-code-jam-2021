@@ -70,10 +70,12 @@ class Game:
 
                 if command == NEXT_SCENE:
                     # end game if scenes end
+                    self.current_scene_index += 1
                     if self.current_scene_index == len(self.scenes):
                         break
                     else:
-                        self.current_scene_index += 1
+                        logging.info(self.current_scene_index)
+                        logging.info(len(self.scenes))
                         self.current_scene = self.scenes[self.current_scene_index]
                         continue
                 elif command == RESET:
