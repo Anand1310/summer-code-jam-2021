@@ -135,6 +135,7 @@ class Player:
             nearest_wall += directions
             wall_found = maze.matrix[nearest_wall.y][nearest_wall.x] == 1
 
+        # After implementing play_echo comment it off and remove print statement.
         if direction == "KEY_RIGHT":
             if screen.x == 2 * x:
                 print(direction, abs(2 * (nearest_wall.x - x)))
