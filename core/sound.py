@@ -10,6 +10,7 @@ level_up_sound = oalOpen("sound/level_up.wav")
 bgm = oalOpen("sound/bgm.wav")
 start_screen_music = oalOpen("sound/start.wav")
 wind_sound = oalOpen("sound/wind.wav")
+build_sound = oalOpen("sound/build.wav")
 
 
 def play_enter_box_sound() -> None:
@@ -69,3 +70,9 @@ def play_echo(direction: Vec, distance: int) -> None:
         k.y += int(distance) * 1.5
     wind_sound.set_position((k.x, 0, k.y))
     wind_sound.play()
+
+
+def play_build_sound() -> None:
+    """Play sound effect for maze_generation once"""
+    # https://mixkit.co/free-sound-effects/
+    build_sound.play()
