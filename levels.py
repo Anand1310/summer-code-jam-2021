@@ -9,7 +9,7 @@ from blessed.keyboard import Keystroke
 from core.cursor import Player
 from core.maze import Maze
 from core.render import Render
-from core.sound import play_level_up_sound
+from core.sound import enter_game_sound, play_level_up_sound, stop_bgm
 from game import NEXT_SCENE, PAUSE, PLAY, QUIT, RESET, Scene
 from utils import Boundary  # type: ignore
 
@@ -43,6 +43,7 @@ class TitleScene(Scene):
             render(self.current_frame)
             # return self.current_frame
         elif str(val) == " " or val.name == "KEY_ENTER":
+            enter_game_sound()
             return NEXT_SCENE
         return None
         # return ""
@@ -152,6 +153,7 @@ class EndScene(Scene):
         """Return next frame to render"""
         # no need to update each frame
         if self.first_frame:
+            stop_bgm()
             self.first_frame = False
             render(self.current_frame)
             # return self.render(self.current_frame)
