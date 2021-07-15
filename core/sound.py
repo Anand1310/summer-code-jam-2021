@@ -64,8 +64,8 @@ def play_echo(direction: Vec, distance: int) -> None:
     """Play echo sound effect"""
     k = copy.copy(direction)
     if direction.x != 0:
-        k.x += int(distance)
+        k.x += int(distance) * 1.5
     else:
-        k.y += int(distance)
+        k.y += int(distance) * 1.5
     wind_sound.set_position((k.x, 0, k.y))
     wind_sound.play()
