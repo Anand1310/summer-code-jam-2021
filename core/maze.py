@@ -398,14 +398,13 @@ class Box:
 
         self.image: str = ""
 
-    def render(self, player: Player) -> bool:
-        """Draw self and return whether player is inside"""
+    def render(self, player: Player) -> None:
+        """Draw self"""
         # box drawing
         frame = self.image
         # show maze if necessary
         frame += self.show_maze(player)
         render(frame, col=self.col)
-        return self.player_inside
 
     def show_maze(self, player: Player) -> str:
         """Return associated maze if it should be shown"""
