@@ -30,12 +30,7 @@ class Cursor:
         "KEY_RIGHT": Vec(1, 0),
     }
 
-    def __init__(
-        self,
-        coords: Vec,
-        fill: str = "██",
-        speed: Vec = Vec(2, 1),
-    ) -> None:
+    def __init__(self, coords: Vec, fill: str = "██", speed: Vec = Vec(2, 1),) -> None:
 
         self.prev_coords = coords
         self.coords = coords
@@ -102,8 +97,8 @@ class Score:
 
     def render(self) -> None:
         """Render score"""
-        txt = f"Score:{int(self.value)}"
-        txt = term.home + term.move_x(term.width - len(txt)) + txt
+        txt = f"Persistence: {int(self.value)}"
+        txt = term.home + term.move_x(term.width - 18) + txt
         render(txt, col="black")
 
 
