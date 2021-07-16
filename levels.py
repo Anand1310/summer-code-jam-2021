@@ -69,6 +69,50 @@ class TitleScene(Scene):
         """Reset has no use for title scene."""
         pass
 
+class CreditsScene(Scene):
+    def __init__(self) -> None:
+        super().__init__()
+        txt = []
+        txt.append("Credits")
+        txt.append("")
+        txt.append("Anand")
+        txt.append("Pritam Dey")
+        txt.append("Jason Ho")
+        txt.append("Himi")
+        txt.append("Olivia")
+        txt.append("Stone Steel")
+        txt.append("")
+        txt.append("Back")
+        self.current_frame = term.black_on_peachpuff2 + term.clear
+        width = (self.width - len(txt[0])) // 2
+        height = self.height // 4
+        for i in range(len(txt)):
+            self.current_frame += term.move_xy(x=width, y=height + i)
+            self.current_frame += txt[i]
+        self.first_frame = True
+        self.menu = Menu(Vec(width - 3, height+2), Vec(0,7), txt[2:])
+
+    def next_frame(self, val: Keystroke) -> Union[None, int]:
+        """Returns next frame to render"""
+        # no need to update the frame anymore
+        if self.first_frame:
+            self.first_frame = False
+            render(self.current_frame)
+            self.menu.render()
+            # return self.current_frame
+        elif val.is_sequence and (257 < val.code < 262):
+            self.menu.move(val.name)
+            self.menu.render()
+        elif str(val) == " " or val.name == "KEY_ENTER":
+            if self.menu.options[self.menu.selected] == "Back":
+                play_level_up_sound()
+                self.first_frame = True
+                self.menu.selected = 0
+                self.menu.coords = self.menu.l_bounds
+                return TITLE
+        return None
+
+
 
 class Level(Scene):
     """First basic game"""
