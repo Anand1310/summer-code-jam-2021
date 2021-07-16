@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import logging
 import os
 import random
 import sys
@@ -17,7 +16,7 @@ from core.render import Render
 from utils import Vec  # type: ignore
 
 if TYPE_CHECKING:
-    from core.cursor import Player
+    from core.player import Player
 
 render = Render()
 
@@ -393,43 +392,42 @@ class Box:
         self.shape = shape
         self.col = col
         self.scene_render = render
+        self.player_inside = False
 
         self.loc = location
 
         self.image: str = ""
 
-    def render(self, player: Player) -> None:
-        """Draw self"""
+    def render(self, player: Player) -> bool:
+        """Draw self and return whether player is inside"""
         # box drawing
         frame = self.image
         # show maze if necessary
         frame += self.show_maze(player)
         render(frame, col=self.col)
+        return self.player_inside
 
     def show_maze(self, player: Player) -> str:
         """Return associated maze if it should be shown"""
-        player_inside_box = False
+        self.player_inside = False
 
         for i in range(1, self.shape.x - 1):
             for j in range(1, self.shape.y - 1):
                 p = self.loc + (i, j)
-                player_inside_box = all(player.avi.coords == p)
+                self.player_inside = all(player.avi.coords == p)
 
-                if player_inside_box:
+                if self.player_inside:
                     break
-            if player_inside_box:
+            if self.player_inside:
                 break
 
-        if player_inside_box:
+        # note if player is inside some box for scoring
+        player.inside_box[self.col] = self.player_inside
+        # if player enters inside, play sound etc
+        if self.player_inside:
             player.enter_box()
-            logging.info(player.avi.coords)
-            logging.info("now true")
-            logging.info(self.loc)
             return self.maze.map
         else:
-            logging.info(player.avi.coords)
-            logging.info("now false")
-            player.exit_box()
             return ""
 
     @classmethod

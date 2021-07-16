@@ -8,7 +8,7 @@ import numpy as np
 import pytweening as pt
 from blessed.keyboard import Keystroke
 
-from core.cursor import Player
+from core.player import Player
 from core.render import Render
 
 if "logs" not in os.listdir():

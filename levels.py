@@ -1,5 +1,4 @@
 """Examples for designing levels."""
-import logging
 import time
 from threading import Thread
 from typing import Union
@@ -7,8 +6,8 @@ from typing import Union
 import blessed
 from blessed.keyboard import Keystroke
 
-from core.cursor import Player
 from core.maze import Maze
+from core.player import Player
 from core.render import Render
 from core.sound import enter_game_sound, play_level_up_sound, stop_bgm
 from game import NEXT_SCENE, PAUSE, PLAY, QUIT, RESET, Scene
@@ -71,27 +70,23 @@ class Level(Scene):
         self.first_frame = True
         self.maze_is_visible = False
         self.reward_on_goal = 0
-        for box in self.maze.boxes:
-            # move to top-left corner of maze + scale and extend width
-            # + move to top-left corner of box
-            box.loc = self.maze.top_left_corner + box.loc * (2, 1) - (1, 1)
 
         self.player: Player = Player()
 
     def build_level(self) -> None:
         """Load current level specific attributes"""
         self.player.start_loc = self.maze.mat2screen(mat=self.maze.start)
-        logging.info("initial")
-        logging.info(self.maze.mat2screen(mat=self.maze.start))
         self.player.collision_count = 0
         self.reward_on_goal = 200
 
+        for box in self.maze.boxes:
+            # move to top-left corner of maze + scale and extend width
+            # + move to top-left corner of box
+            box.loc = self.maze.top_left_corner + box.loc * (2, 1) - (1, 1)
+            self.player.inside_box[box.col] = False
+
     def next_frame(self, val: Keystroke) -> Union[str, int]:
         """Draw next frame."""
-        # update score
-        logging.info("in levels")
-        logging.info(self.player.inside_box)
-        self.player.score.update(player_inside_box=self.player.inside_box)
         if self.first_frame:
             self.first_frame = False
             self.build_level()
@@ -137,6 +132,9 @@ class Level(Scene):
                 self.maze_is_visible = False
                 self.remove_maze(0)
                 return ""
+
+        # things that should update on every frame goes here
+        self.player.score.update(player_inside_box=any(self.player.inside_box.values()))
         return ""
 
     def remove_maze(self, sleep: float = 2) -> None:

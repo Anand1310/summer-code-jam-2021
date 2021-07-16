@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import time
 from copy import copy
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict
 
 if TYPE_CHECKING:
     from core.maze import Maze
@@ -91,10 +91,13 @@ class Score:
         if collision_count:
             self.value -= collision_count * 2
         else:
-            self.value -= self.penalty * (1 + 10 * player_inside_box)
-            # self.value -= self.penalty + int(player_inside_box)
+            # self.value -= self.penalty * (1 + 10 * player_inside_box)
             logging.info("in score")
+            logging.info(self.value)
+            logging.info(self.penalty * int(not player_inside_box))
             logging.info(player_inside_box)
+            self.value -= self.penalty * int(not player_inside_box)
+            logging.info(self.value)
         self.render()
 
     def render(self) -> None:
@@ -119,7 +122,7 @@ class Player:
             self.timer_start: float = None
             self.collision_count = 0
             self.prev_colsn_time = time.time()
-            self.inside_box: bool = False
+            self.inside_box: Dict[str, bool] = {}
         else:
             self.__dict__ = Player.__monostate
 
@@ -204,12 +207,11 @@ class Player:
 
     def enter_box(self) -> None:
         """Called when player enter a box"""
-        self.inside_box = True
         play_enter_box_sound()
 
-    def exit_box(self) -> None:
-        """Call when player exits a box."""
-        self.inside_box = False
+    # def exit_box(self) -> None:
+    #     """Call when player exits a box."""
+    #     self.inside_box = False
 
     def hit_wall(self) -> None:
         """Called when player hits wall"""
