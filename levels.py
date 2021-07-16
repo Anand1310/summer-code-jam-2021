@@ -7,11 +7,11 @@ import blessed
 from blessed.keyboard import Keystroke
 
 from core.maze import Maze
-from core.player import Player
+from core.player import Player, Menu
 from core.render import Render
 from core.sound import enter_game_sound, play_level_up_sound, stop_bgm
-from game import NEXT_SCENE, PAUSE, PLAY, QUIT, RESET, Scene
-from utils import Boundary  # type: ignore
+from game import NEXT_SCENE, PAUSE, PLAY, QUIT, RESET, CREDITS, TITLE, Scene
+from utils import Boundary, Vec  # type: ignore
 
 term = blessed.Terminal()
 render = Render()
@@ -22,18 +22,20 @@ class TitleScene(Scene):
 
     def __init__(self) -> None:
         super().__init__()
-        txt1 = "welcome to 'Game name' :)"
-        txt2 = "hit space to start"
+        txt = []
+        txt.append("welcome to 'Game name' :)")
+        txt.append("")
+        txt.append("Start")
+        txt.append("Credits")
         self.current_frame = term.black_on_peachpuff2 + term.clear
-        self.current_frame += term.move_xy(
-            x=(self.width - len(txt1)) // 2, y=self.height // 2
-        )
-        self.current_frame += txt1
-        self.current_frame += term.move_xy(
-            x=(self.width - len(txt1)) // 2, y=self.height // 2 + 1
-        )
-        self.current_frame += txt2
+        width = (self.width - len(txt[0])) // 2
+        height = self.height // 2
+        for i in range(len(txt)):
+            self.current_frame += term.move_xy(x=width, y=height + i)
+            self.current_frame += txt[i]
         self.first_frame = True
+
+        self.menu = Menu(Vec(width - 3, height+2), Vec(0,1), txt[2:])
 
     def next_frame(self, val: Keystroke) -> Union[None, int]:
         """Returns next frame to render"""
@@ -41,10 +43,25 @@ class TitleScene(Scene):
         if self.first_frame:
             self.first_frame = False
             render(self.current_frame)
+            self.menu.render()
             # return self.current_frame
+        elif val.is_sequence and (257 < val.code < 262):
+            self.menu.move(val.name)
+            self.menu.render()
         elif str(val) == " " or val.name == "KEY_ENTER":
-            enter_game_sound()
-            return NEXT_SCENE
+            if self.menu.options[self.menu.selected] == "Start":
+                self.first_frame = True
+                self.menu.selected = 0
+                self.menu.coords = self.menu.l_bounds
+                enter_game_sound()
+                return NEXT_SCENE
+            else:
+                play_level_up_sound()
+                self.first_frame = True
+                self.menu.selected = 0
+                self.menu.coords = self.menu.l_bounds
+                return CREDITS
+                #go to credits scene? how do we do that?
         return None
         # return ""
 
