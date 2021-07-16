@@ -1,4 +1,5 @@
 """Examples for designing levels."""
+import json
 import time
 from threading import Thread
 from typing import Union
@@ -58,7 +59,13 @@ class Level(Scene):
 
     def __init__(self, level: str = "1") -> None:
         super().__init__()
-        self.maze = Maze.load(level)
+
+        with open(f"levels/{level}.json", "r") as f:
+            data = json.load(f)
+
+        # dialogues = data.pop("dialogues")
+        self.maze = Maze.load(data=data)
+
         self.level_boundary = Boundary(
             len(self.maze.char_matrix[0]),
             len(self.maze.char_matrix),

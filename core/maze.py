@@ -315,7 +315,7 @@ class Maze(object):
         self.height = self.matrix.shape[1] // 2
 
     @classmethod
-    def load(cls, fname: str, data: dict = None) -> Maze:
+    def load(cls, fname: str = "", data: dict = None) -> Maze:
         """Load everything from json file"""
         obj = cls(width=20, height=10)
         if data is None:
