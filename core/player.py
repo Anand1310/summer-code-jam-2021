@@ -212,3 +212,20 @@ class Player:
 
     def hit_wall(self) -> None:
         """Called when player hits wall"""
+
+class Menu(Cursor):
+    def __init__(self, coords: Vec, bounds: Vec, options: list, fill: str = "->", col: str = "black", bg_col: str = "peachpuff2") -> None:
+        super().__init__(coords, fill=fill, col=col, bg_col=bg_col)
+        self.l_bounds = coords
+        self.u_bounds = coords+bounds
+        self.bounds = bounds
+        self.options = options
+        self.selected = 0
+
+    def move(self, move: str):
+        new_loc = super().loc_on_move(move)
+        if all(self.l_bounds <= new_loc) and all(new_loc <= self.u_bounds):
+            self.coords = new_loc
+            self.selected += self.directions[move].y
+            # self.selected = min(max(self.selected, 0), len(self.options)-1)
+            self.clear()
