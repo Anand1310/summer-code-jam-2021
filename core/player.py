@@ -30,7 +30,8 @@ class Cursor:
         "KEY_RIGHT": Vec(1, 0),
     }
 
-    def __init__(self, coords: Vec, fill: str = "██", speed: Vec = Vec(2, 1), col: str="black", bg_col: str="white") -> None:
+    def __init__(self, coords: Vec, fill: str = "██", speed: Vec = Vec(2, 1),
+                 col: str = "black", bg_col: str = "white") -> None:
 
         self.prev_coords = coords
         self.coords = coords
@@ -213,7 +214,9 @@ class Player:
     def hit_wall(self) -> None:
         """Called when player hits wall"""
 
+
 class Menu(Cursor):
+    """Menu Cursor that moves up and down"""
     def __init__(self, coords: Vec, bounds: Vec, options: list, fill: str = "->", col: str = "black", bg_col: str = "peachpuff2") -> None:
         super().__init__(coords, fill=fill, col=col, bg_col=bg_col)
         self.l_bounds = coords
@@ -222,7 +225,7 @@ class Menu(Cursor):
         self.options = options
         self.selected = 0
 
-    def move(self, move: str):
+    def move(self, move: str) -> None:
         new_loc = super().loc_on_move(move)
         if all(self.l_bounds <= new_loc) and all(new_loc <= self.u_bounds):
             self.coords = new_loc
