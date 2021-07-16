@@ -25,6 +25,8 @@ RESET = 2
 QUIT = 3
 PAUSE = 4
 PLAY = 5
+CREDITS = 6
+TITLE = 7
 
 term = blessed.Terminal()
 
@@ -80,7 +82,7 @@ class Game:
                 if command == NEXT_SCENE:
                     self.current_scene_index += 1
                     # end game if scenes end
-                    if self.current_scene_index == len(self.scenes):
+                    if self.current_scene_index == len(self.scenes)-1:
                         break
                     else:
                         self.current_scene = self.scenes[self.current_scene_index]
@@ -97,6 +99,12 @@ class Game:
                     self.current_scene = self.scenes[self.current_scene_index]
                     self.current_scene.next_frame(Keystroke())
                     continue
+                elif command == CREDITS:
+                    self.current_scene = self.scenes[-1]
+                    self.current_scene.next_frame(Keystroke())
+                elif command == TITLE:
+                    self.current_scene = self.scenes[0]
+                    self.current_scene.next_frame(Keystroke())
                 elif command == QUIT:
                     break
                 val = term.inkey(timeout=0.05)  # 20 fps
