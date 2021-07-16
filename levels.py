@@ -1,4 +1,5 @@
 """Examples for designing levels."""
+import logging
 import time
 from threading import Thread
 from typing import Union
@@ -10,7 +11,7 @@ from core.cursor import Player
 from core.maze import Maze
 from core.render import Render
 from core.sound import enter_game_sound, play_level_up_sound, stop_bgm
-from game import INFINITE, NEXT_SCENE, PAUSE, PLAY, QUIT, RESET, Scene
+from game import NEXT_SCENE, PAUSE, PLAY, QUIT, RESET, Scene
 from utils import Boundary  # type: ignore
 
 term = blessed.Terminal()
@@ -138,87 +139,107 @@ class Level(Scene):
 
 
 class InfiniteLevel(Scene):
-    """First basic game"""
+    """Infinite level of maze"""
+
+    instance = None
+    random = None
 
     def __init__(self, random_pos: bool) -> None:
+        global random
         super().__init__()
-        self.maze = Maze.generate(term.width // 5, term.height // 3, random_pos=random_pos)
-        self.level_boundary = Boundary(
-            len(self.maze.char_matrix[0]),
-            len(self.maze.char_matrix),
-            self.maze.top_left_corner,
-            term,
-        )
-        self.player = Player(self.maze.mat2screen(mat=self.maze.start))
+        if type(self).instance is None:
+            # self.maze = Maze.generate(term.width // 5, term.height // 3, random_pos=random_pos)
+            random = random_pos
+            self.maze = Maze.generate(3, 3, random_pos=random_pos)
+            self.level_boundary = Boundary(
+                len(self.maze.char_matrix[0]),
+                len(self.maze.char_matrix),
+                self.maze.top_left_corner,
+                term,
+            )
+            self.player = Player(self.maze.mat2screen(mat=self.maze.start))
 
-        self.end_loc = self.maze.mat2screen(self.maze.end)
-        self.first_frame = True
-        self.maze_is_visible = False
-        for box in self.maze.boxes:
-            # move to top-left corner of maze + scale and extend width
-            # + move to top-left corner of box
-            box.loc = self.maze.top_left_corner + box.loc * (2, 1) - (1, 1)
+            self.end_loc = self.maze.mat2screen(self.maze.end)
+            self.first_frame = True
+            self.maze_is_visible = False
+            for box in self.maze.boxes:
+                # move to top-left corner of maze + scale and extend width
+                # + move to top-left corner of box
+                box.loc = self.maze.top_left_corner + box.loc * (2, 1) - (1, 1)
+            type(self).instance = self
+        else:
+            logging.error(RuntimeError("Only one instance of 'Foo' can exist at a time"))
 
     def next_frame(self, val: Keystroke) -> Union[str, int]:
         """Draw next frame."""
-        if self.first_frame:
-            self.first_frame = False
+        if self.instance.first_frame:
+            self.instance.first_frame = False
             play_level_up_sound()
             # removes the main maze after 2 sec
-            Thread(target=self.remove_maze, daemon=True).start()
+            Thread(target=self.instance.remove_maze, daemon=True).start()
             frame = term.clear
-            frame += self.level_boundary.map
-            frame += self.maze.map
-            frame += term.move_xy(*self.end_loc) + "&"  # type: ignore
+            frame += self.instance.level_boundary.map
+            frame += self.instance.maze.map
+            frame += term.move_xy(*self.instance.end_loc) + "&"  # type: ignore
             render(frame)
-            for box in self.maze.boxes:
-                box.render(self.player)
+            for box in self.instance.maze.boxes:
+                box.render(self.instance.player)
 
-            self.player.start()
+            self.instance.player.start()
 
         elif val.is_sequence and (257 < val.code < 262):
             # update player
-            self.player.update(val, self.maze)
+            self.instance.player.update(val, self.instance.maze)
             # check if game ends
-            if all(self.player.avi.coords == self.end_loc):
-                return INFINITE
+            if all(self.instance.player.avi.coords == self.instance.end_loc):
+                self.instance.reset_cls()
+                self.instance.next_frame(Keystroke())
+                render(self.instance.maze.map)
+                return
             # render boxes and mazes
-            render(self.level_boundary.map)
-            for box in self.maze.boxes:
-                box.render(self.player)
+            render(self.instance.level_boundary.map)
+            for box in self.instance.maze.boxes:
+                box.render(self.instance.player)
             # render player
-            render(term.move_xy(*self.end_loc) + "&")
-            self.player.render()
+            render(term.move_xy(*self.instance.end_loc) + "&")
+            self.instance.player.render()
 
         elif val.lower() == "q":
             return PAUSE
         elif val.lower() == "r":
             return RESET
         elif val.lower() == "h":
-            if not self.maze_is_visible:
-                self.maze_is_visible = True
-                render(self.maze.map)
-                self.player.render()
+            if not self.instance.maze_is_visible:
+                self.instance.maze_is_visible = True
+                render(self.instance.maze.map)
+                self.instance.player.render()
             else:
-                self.maze_is_visible = False
-                self.remove_maze(0)
+                self.instance.maze_is_visible = False
+                self.instance.remove_maze(0)
                 return ""
         return ""
 
     def remove_maze(self, sleep: float = 2) -> None:
         """Erase main maze"""
         time.sleep(sleep)
-        render(self.maze.erase_map)
-        self.player.render()
-        for box in self.maze.boxes:
-            box.render(self.player)
+        render(self.instance.maze.erase_map)
+        self.instance.player.render()
+        for box in self.instance.maze.boxes:
+            box.render(self.instance.player)
 
     def reset(self) -> None:
         """Reset this level"""
-        for box in self.maze.boxes:
+        for box in self.instance.maze.boxes:
             box.needs_cleaning = False
-        self.player.start()
-        self.first_frame = True
+        self.instance.player.start()
+        self.instance.first_frame = True
+
+    @classmethod
+    def reset_cls(cls):
+        """Reset class"""
+        global random
+        cls.instance = None  # First clear Foo.instance so that __init__ does not fail
+        cls.instance = InfiniteLevel(random)
 
 
 class EndScene(Scene):
