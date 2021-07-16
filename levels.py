@@ -72,6 +72,7 @@ class TitleScene(Scene):
 
 class CreditsScene(Scene):
     """The class for the Credits"""
+
     def __init__(self) -> None:
         super().__init__()
         txt = []
