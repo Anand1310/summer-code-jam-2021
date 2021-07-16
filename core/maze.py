@@ -334,15 +334,9 @@ class Maze(object):
         terminal_shape = Vec(term.width, term.height)
         self.top_left_corner = (terminal_shape - maze_shape) // 2
         self.map = term.move_xy(*self.top_left_corner) + maze  # type: ignore
-        erase_map = self.map
         for y, line in enumerate(self.char_matrix):
             for x, char in enumerate(line):
                 char._location = self.top_left_corner + Vec(x, y)
-
-        for chr in "┼├┴┬┌└─╶┤│┘┐╷╵╴":
-            if chr in erase_map:
-                erase_map = erase_map.replace(chr, " ")
-        self.erase_map = erase_map
 
     @classmethod
     def load(cls, fname: str, data: dict = None) -> Maze:
@@ -438,6 +432,20 @@ class Box:
             return self.maze.map
         else:
             return ""
+
+    def player_in_box(self, player: Player) -> bool:
+        """Return True if player in box"""
+        player_inside_box = None
+
+        for i in range(1, self.shape.x - 1):
+            for j in range(1, self.shape.y - 1):
+                p = self.loc + (i, j)
+                player_inside_box = all(player.avi.coords == p)
+
+                if player_inside_box:
+                    return True
+            if player_inside_box:
+                return True
 
     @classmethod
     def load(cls, data: dict, col: str) -> Box:

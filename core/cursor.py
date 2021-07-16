@@ -98,7 +98,7 @@ class Player:
                 render(txt, col="black")
 
                 # play sound
-                play_hit_wall_sound(avi_loc - self.avi.coords)
+                self.hit_wall(avi_loc)
         else:
             self.avi.move(val.name)
             self.player_movement_sound(avi_loc, maze, val.name)
@@ -158,5 +158,6 @@ class Player:
         """Called when player enter a box"""
         play_enter_box_sound()
 
-    def hit_wall(self) -> None:
+    def hit_wall(self, avi_loc: Vec) -> None:
         """Called when player hits wall"""
+        play_hit_wall_sound(avi_loc - self.avi.coords)

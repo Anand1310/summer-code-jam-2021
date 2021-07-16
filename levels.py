@@ -75,6 +75,7 @@ class Level(Scene):
             # move to top-left corner of maze + scale and extend width
             # + move to top-left corner of box
             box.loc = self.maze.top_left_corner + box.loc * (2, 1) - (1, 1)
+        self.t1 = Thread(target=self.remove_maze, daemon=True)
 
     def next_frame(self, val: Keystroke) -> Union[str, int]:
         """Draw next frame."""
@@ -82,11 +83,9 @@ class Level(Scene):
             self.first_frame = False
             play_level_up_sound()
             # removes the main maze after 2 sec
-            Thread(target=self.remove_maze, daemon=True).start()
-            frame = term.clear
-            frame += self.level_boundary.map
+            self.t1.start()
+            frame = self.get_boundary_frame()
             frame += self.maze.map
-            frame += term.move_xy(*self.end_loc) + "&"  # type: ignore
             render(frame)
             for box in self.maze.boxes:
                 box.render(self.player)
@@ -99,12 +98,13 @@ class Level(Scene):
             # check if game ends
             if all(self.player.avi.coords == self.end_loc):
                 return NEXT_SCENE
-            # render boxes and mazes
-            render(self.level_boundary.map)
-            for box in self.maze.boxes:
-                box.render(self.player)
-            # render player
-            render(term.move_xy(*self.end_loc) + "&")
+            if not self.t1.is_alive() or self.player_in_boxes(self.player):
+                # render boxes and mazes
+                render(self.level_boundary.map)
+                for box in self.maze.boxes:
+                    box.render(self.player)
+                # render player
+                render(term.move_xy(*self.end_loc) + "&")
             self.player.render()
 
         elif val.lower() == "q":
@@ -125,10 +125,25 @@ class Level(Scene):
     def remove_maze(self, sleep: float = 2) -> None:
         """Erase main maze"""
         time.sleep(sleep)
-        render(self.maze.erase_map)
+        render(self.get_boundary_frame())
         self.player.render()
         for box in self.maze.boxes:
             box.render(self.player)
+
+    def get_boundary_frame(self) -> str:
+        """Get the frame with only boundary"""
+        frame = term.clear
+        frame += self.level_boundary.map
+        frame += term.move_xy(*self.end_loc) + "&"  # type: ignore
+        return frame
+
+    def player_in_boxes(self, player: Player) -> bool:
+        """Return True if player in any boxes"""
+        k = None
+        for box in self.maze.boxes:
+            k = box.player_in_box(player)
+            if k:
+                return True
 
     def reset(self) -> None:
         """Reset this level"""
@@ -166,6 +181,7 @@ class InfiniteLevel(Scene):
                 # move to top-left corner of maze + scale and extend width
                 # + move to top-left corner of box
                 box.loc = self.maze.top_left_corner + box.loc * (2, 1) - (1, 1)
+            self.t1 = Thread(target=self.remove_maze, daemon=True)
             type(self).instance = self
         else:
             logging.error(RuntimeError("Only one instance of 'Foo' can exist at a time"))
@@ -176,15 +192,12 @@ class InfiniteLevel(Scene):
             self.instance.first_frame = False
             play_level_up_sound()
             # removes the main maze after 2 sec
-            Thread(target=self.instance.remove_maze, daemon=True).start()
-            frame = term.clear
-            frame += self.instance.level_boundary.map
+            self.instance.t1.start()
+            frame = self.get_boundary_frame()
             frame += self.instance.maze.map
-            frame += term.move_xy(*self.instance.end_loc) + "&"  # type: ignore
             render(frame)
             for box in self.instance.maze.boxes:
                 box.render(self.instance.player)
-
             self.instance.player.start()
 
         elif val.is_sequence and (257 < val.code < 262):
@@ -196,12 +209,13 @@ class InfiniteLevel(Scene):
                 self.instance.next_frame(Keystroke())
                 render(self.instance.maze.map)
                 return
-            # render boxes and mazes
-            render(self.instance.level_boundary.map)
-            for box in self.instance.maze.boxes:
-                box.render(self.instance.player)
-            # render player
-            render(term.move_xy(*self.instance.end_loc) + "&")
+            if not self.instance.t1.is_alive() and self.player_in_boxes(self.instance.player):
+                # render boxes and mazes
+                render(self.instance.level_boundary.map)
+                for box in self.instance.maze.boxes:
+                    box.render(self.instance.player)
+                # render player
+                render(term.move_xy(*self.instance.end_loc) + "&")
             self.instance.player.render()
 
         elif val.lower() == "q":
@@ -222,10 +236,26 @@ class InfiniteLevel(Scene):
     def remove_maze(self, sleep: float = 2) -> None:
         """Erase main maze"""
         time.sleep(sleep)
-        render(self.instance.maze.erase_map)
+        frame = self.get_boundary_frame()
+        render(frame)
         self.instance.player.render()
         for box in self.instance.maze.boxes:
             box.render(self.instance.player)
+
+    def get_boundary_frame(self) -> str:
+        """Get the frame with only boundary"""
+        frame = term.clear
+        frame += self.instance.level_boundary.map
+        frame += term.move_xy(*self.instance.end_loc) + "&"  # type: ignore
+        return frame
+
+    def player_in_boxes(self, player: Player) -> bool:
+        """Return True if player in any boxes"""
+        k = None
+        for box in self.instance.maze.boxes:
+            k = box.player_in_box(player)
+            if k:
+                return True
 
     def reset(self) -> None:
         """Reset this level"""
@@ -238,7 +268,7 @@ class InfiniteLevel(Scene):
     def reset_cls(cls):
         """Reset class"""
         global random
-        cls.instance = None  # First clear Foo.instance so that __init__ does not fail
+        cls.instance = None
         cls.instance = InfiniteLevel(random)
 
 
