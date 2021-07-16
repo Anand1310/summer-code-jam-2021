@@ -30,7 +30,7 @@ class Cursor:
         "KEY_RIGHT": Vec(1, 0),
     }
 
-    def __init__(self, coords: Vec, fill: str = "██", speed: Vec = Vec(2, 1),) -> None:
+    def __init__(self, coords: Vec, fill: str = "██", speed: Vec = Vec(2, 1), col: str="black", bg_col: str="white") -> None:
 
         self.prev_coords = coords
         self.coords = coords
@@ -39,6 +39,8 @@ class Cursor:
         self.speed = speed
         self.direction = Vec(1, 0)
         self.term = term
+        self.col = col
+        self.bg_col = bg_col
 
     def loc_on_move(self, move: str) -> Vec:
         """Find location of cursor on move in direction."""
@@ -62,14 +64,14 @@ class Cursor:
     def clear(self) -> None:
         """Clears the rendered cursor"""
         frame = f"{self.term.move_xy(*self.prev_coords)}" + " " * len(self.fill)
-        render(frame)
+        render(frame, bg_col=self.bg_col)
         # return frame
 
     def render(self) -> None:
         """Renders the cursor"""
         self.prev_coords = copy(self.coords)
         frame = self.term.move_xy(*self.coords) + self.fill
-        render(frame, col="black", bg_col="white")
+        render(frame, col=self.col, bg_col=self.bg_col)
 
 
 class Score:
