@@ -25,6 +25,7 @@ RESET = 2
 QUIT = 3
 PAUSE = 4
 PLAY = 5
+LOSE = 6
 
 term = blessed.Terminal()
 
@@ -95,9 +96,9 @@ class Game:
                 elif command == PLAY:
                     self.pause.reset()
                     self.current_scene = self.scenes[self.current_scene_index]
-                    self.current_scene.next_frame(Keystroke())
+                    self.current_scene.refresh()
                     continue
-                elif command == QUIT:
+                elif command == QUIT or command == LOSE:
                     break
                 val = term.inkey(timeout=0.05)  # 20 fps
 

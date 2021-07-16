@@ -1,5 +1,6 @@
 """Examples for designing levels."""
 import json
+import logging
 import time
 from threading import Thread
 from typing import Union
@@ -11,8 +12,8 @@ from core.maze import Maze
 from core.player import Player
 from core.render import Render
 from core.sound import enter_game_sound, play_level_up_sound, stop_bgm
-from game import NEXT_SCENE, PAUSE, PLAY, QUIT, RESET, Scene
-from utils import Boundary  # type: ignore
+from game import LOSE, NEXT_SCENE, PAUSE, PLAY, QUIT, RESET, Scene
+from utils import Boundary, Vec  # type: ignore
 
 term = blessed.Terminal()
 render = Render()
@@ -63,7 +64,13 @@ class Level(Scene):
         with open(f"levels/{level}.json", "r") as f:
             data = json.load(f)
 
-        # dialogues = data.pop("dialogues")
+        self.instructions: {}
+        self.dialogues = data.pop("dialogues", None)
+        if self.dialogues:
+            for dialogue in self.dialogues:
+                hit_point, coordinate, text = dialogue
+                self.instructions[tuple(hit_point)] = [coordinate, text]
+
         self.maze = Maze.load(data=data)
 
         self.level_boundary = Boundary(
@@ -97,9 +104,11 @@ class Level(Scene):
         if self.first_frame:
             self.first_frame = False
             self.build_level()
+
             play_level_up_sound()
             # removes the main maze after 2 sec
             Thread(target=self.remove_maze, daemon=True).start()
+            # self.instruct_player(*self.instructions[tuple(reversed(self.maze.start))])
             frame = term.clear
             frame += self.level_boundary.map
             frame += self.maze.map
@@ -142,7 +151,18 @@ class Level(Scene):
 
         # things that should update on every frame goes here
         self.player.score.update(player_inside_box=any(self.player.inside_box.values()))
+        if self.player.score.value <= 0:
+            return LOSE
         return ""
+
+    def refresh(self) -> None:
+        """Refreshing the scene"""
+        render(self.level_boundary.map)
+        for box in self.maze.boxes:
+            box.render(self.player)
+        # render player
+        render(term.move_xy(*self.end_loc) + "&")
+        self.player.render()
 
     def remove_maze(self, sleep: float = 2) -> None:
         """Erase main maze"""
@@ -158,6 +178,14 @@ class Level(Scene):
             box.needs_cleaning = False
         self.player.start()
         self.first_frame = True
+
+    def instruct_player(self, coordinate: Vec, text: str) -> None:
+        """Instructions"""
+        logging.info("wala")
+        location = self.maze.mat2screen(Vec(*coordinate))
+        render(term.move_xy(*location) + text)
+        time.sleep(2)
+        render(term.move_xy(*location) + ' ' * len(text))
 
 
 class EndScene(Scene):
