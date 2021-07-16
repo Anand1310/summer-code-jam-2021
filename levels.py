@@ -7,8 +7,8 @@ from typing import Union
 import blessed
 from blessed.keyboard import Keystroke
 
-from core.cursor import Player
 from core.maze import Maze
+from core.player import Player
 from core.render import Render
 from core.sound import enter_game_sound, play_level_up_sound, stop_bgm
 from game import NEXT_SCENE, PAUSE, PLAY, QUIT, RESET, Scene
@@ -66,21 +66,32 @@ class Level(Scene):
             self.maze.top_left_corner,
             term,
         )
-        self.player = Player(self.maze.mat2screen(mat=self.maze.start))
 
         self.end_loc = self.maze.mat2screen(self.maze.end)
         self.first_frame = True
         self.maze_is_visible = False
+        self.reward_on_goal = 0
+
+        self.player: Player = Player()
+        self.t1 = Thread(target=self.remove_maze, daemon=True)
+
+    def build_level(self) -> None:
+        """Load current level specific attributes"""
+        self.player.start_loc = self.maze.mat2screen(mat=self.maze.start)
+        self.player.collision_count = 0
+        self.reward_on_goal = 200
+
         for box in self.maze.boxes:
             # move to top-left corner of maze + scale and extend width
             # + move to top-left corner of box
             box.loc = self.maze.top_left_corner + box.loc * (2, 1) - (1, 1)
-        self.t1 = Thread(target=self.remove_maze, daemon=True)
+        self.player.inside_box[box.col] = False
 
     def next_frame(self, val: Keystroke) -> Union[str, int]:
         """Draw next frame."""
         if self.first_frame:
             self.first_frame = False
+            self.build_level()
             play_level_up_sound()
             # removes the main maze after 2 sec
             self.t1.start()
@@ -97,6 +108,7 @@ class Level(Scene):
             self.player.update(val, self.maze)
             # check if game ends
             if all(self.player.avi.coords == self.end_loc):
+                self.player.score.value += self.reward_on_goal
                 return NEXT_SCENE
             if not self.t1.is_alive() or self.player_in_boxes(self.player):
                 # render boxes and mazes
@@ -106,7 +118,8 @@ class Level(Scene):
                 # render player
                 render(term.move_xy(*self.end_loc) + "&")
             self.player.render()
-
+        elif val.lower() == "e":
+            self.player.player_movement_sound(maze=self.maze)
         elif val.lower() == "q":
             return PAUSE
         elif val.lower() == "r":
@@ -120,6 +133,9 @@ class Level(Scene):
                 self.maze_is_visible = False
                 self.remove_maze(0)
                 return ""
+
+        # things that should update on every frame goes here
+        self.player.score.update(player_inside_box=any(self.player.inside_box.values()))
         return ""
 
     def remove_maze(self, sleep: float = 2) -> None:

@@ -17,7 +17,7 @@ from core.render import Render
 from utils import Vec  # type: ignore
 
 if TYPE_CHECKING:
-    from core.cursor import Player
+    from core.player import Player
 
 render = Render()
 
@@ -400,6 +400,7 @@ class Box:
         self.shape = shape
         self.col = col
         self.scene_render = render
+        self.player_inside = False
 
         self.loc = location
 
@@ -415,19 +416,22 @@ class Box:
 
     def show_maze(self, player: Player) -> str:
         """Return associated maze if it should be shown"""
-        player_inside_box = False
+        self.player_inside = False
 
         for i in range(1, self.shape.x - 1):
             for j in range(1, self.shape.y - 1):
                 p = self.loc + (i, j)
-                player_inside_box = all(player.avi.coords == p)
+                self.player_inside = all(player.avi.coords == p)
 
-                if player_inside_box:
+                if self.player_inside:
                     break
-            if player_inside_box:
+            if self.player_inside:
                 break
 
-        if player_inside_box:
+        # note if player is inside some box for scoring
+        player.inside_box[self.col] = self.player_inside
+        # if player enters inside, play sound etc
+        if self.player_inside:
             player.enter_box()
             return self.maze.map
         else:
