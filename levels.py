@@ -35,7 +35,7 @@ class TitleScene(Scene):
             self.current_frame += txt[i]
         self.first_frame = True
 
-        self.menu = Menu(Vec(width - 3, height+2), Vec(0,1), txt[2:])
+        self.menu = Menu(Vec(width - 3, height+2), Vec(0, 1), txt[2:])
 
     def next_frame(self, val: Keystroke) -> Union[None, int]:
         """Returns next frame to render"""
@@ -61,7 +61,7 @@ class TitleScene(Scene):
                 self.menu.selected = 0
                 self.menu.coords = self.menu.l_bounds
                 return CREDITS
-                #go to credits scene? how do we do that?
+                # go to credits scene? how do we do that?
         return None
         # return ""
 
@@ -69,7 +69,9 @@ class TitleScene(Scene):
         """Reset has no use for title scene."""
         pass
 
+
 class CreditsScene(Scene):
+    """The class for the Credits"""
     def __init__(self) -> None:
         super().__init__()
         txt = []
@@ -90,7 +92,7 @@ class CreditsScene(Scene):
             self.current_frame += term.move_xy(x=width, y=height + i)
             self.current_frame += txt[i]
         self.first_frame = True
-        self.menu = Menu(Vec(width - 3, height+2), Vec(0,7), txt[2:])
+        self.menu = Menu(Vec(width - 3, height+2), Vec(0, 7), txt[2:])
 
     def next_frame(self, val: Keystroke) -> Union[None, int]:
         """Returns next frame to render"""
@@ -111,7 +113,6 @@ class CreditsScene(Scene):
                 self.menu.coords = self.menu.l_bounds
                 return TITLE
         return None
-
 
 
 class Level(Scene):
