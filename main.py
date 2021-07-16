@@ -5,7 +5,7 @@ from openal import oalQuit
 
 from core.sound import play_start_bgm
 from game import Game, Scene
-from levels import CreditsScene, EndScene, Level, Pause, TitleScene, CreditsScene
+from levels import CreditsScene, EndScene, Level, Pause, TitleScene
 
 if __name__ == "__main__":
     play_start_bgm()

@@ -7,10 +7,10 @@ import blessed
 from blessed.keyboard import Keystroke
 
 from core.maze import Maze
-from core.player import Player, Menu
+from core.player import Menu, Player
 from core.render import Render
 from core.sound import enter_game_sound, play_level_up_sound, stop_bgm
-from game import NEXT_SCENE, PAUSE, PLAY, QUIT, RESET, CREDITS, TITLE, Scene
+from game import CREDITS, NEXT_SCENE, PAUSE, PLAY, QUIT, RESET, TITLE, Scene
 from utils import Boundary, Vec  # type: ignore
 
 term = blessed.Terminal()
