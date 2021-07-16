@@ -66,11 +66,12 @@ class Game:
         with term.cbreak():
             val = Keystroke()
             while True:
-                if self.current_scene != self.pause and self.current_scene_index != 0:
-                    self.player.score -= 0.05 * (1 + 10 * self.player.inside_box)
-                txt = f"Score:{int(self.player.score)}"
-                txt = term.home + term.move_x(term.width - len(txt)) + txt
-                render(txt, col="black")
+                # player score
+                # if self.current_scene != self.pause and self.current_scene_index != 0:
+                #     self.player.score -= 0.05 * (1 + 10 * self.player.inside_box)
+                # txt = f"Score:{int(self.player.score)}"
+                # txt = term.home + term.move_x(term.width - len(txt)) + txt
+                # render(txt, col="black")
 
                 command = self.current_scene.next_frame(val)
                 # get all the frames and print
@@ -82,11 +83,7 @@ class Game:
                     if self.current_scene_index == len(self.scenes):
                         break
                     else:
-                        logging.info(self.current_scene_index)
-                        logging.info(len(self.scenes))
                         self.current_scene = self.scenes[self.current_scene_index]
-                        self.current_scene.set_player(self.player)
-                        self.player.score += self.current_scene.maze.max_score
                         continue
                 elif command == RESET:
                     self.current_scene.reset()

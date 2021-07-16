@@ -1,4 +1,5 @@
 """Examples for designing levels."""
+import logging
 import time
 from threading import Thread
 from typing import Union
@@ -69,23 +70,31 @@ class Level(Scene):
         self.end_loc = self.maze.mat2screen(self.maze.end)
         self.first_frame = True
         self.maze_is_visible = False
+        self.reward_on_goal = 0
         for box in self.maze.boxes:
             # move to top-left corner of maze + scale and extend width
             # + move to top-left corner of box
             box.loc = self.maze.top_left_corner + box.loc * (2, 1) - (1, 1)
 
-        self.player: Player = None
+        self.player: Player = Player()
 
-    def set_player(self, player: Player) -> None:
-        """Set player and their start location."""
-        player.set_start(self.maze.mat2screen(mat=self.maze.start))
-        player.collision_count = 0
-        self.player = player
+    def build_level(self) -> None:
+        """Load current level specific attributes"""
+        self.player.start_loc = self.maze.mat2screen(mat=self.maze.start)
+        logging.info("initial")
+        logging.info(self.maze.mat2screen(mat=self.maze.start))
+        self.player.collision_count = 0
+        self.reward_on_goal = 200
 
     def next_frame(self, val: Keystroke) -> Union[str, int]:
         """Draw next frame."""
+        # update score
+        logging.info("in levels")
+        logging.info(self.player.inside_box)
+        self.player.score.update(player_inside_box=self.player.inside_box)
         if self.first_frame:
             self.first_frame = False
+            self.build_level()
             play_level_up_sound()
             # removes the main maze after 2 sec
             Thread(target=self.remove_maze, daemon=True).start()
@@ -104,6 +113,7 @@ class Level(Scene):
             self.player.update(val, self.maze)
             # check if game ends
             if all(self.player.avi.coords == self.end_loc):
+                self.player.score.value += self.reward_on_goal
                 return NEXT_SCENE
             # render boxes and mazes
             render(self.level_boundary.map)
@@ -112,7 +122,8 @@ class Level(Scene):
             # render player
             render(term.move_xy(*self.end_loc) + "&")
             self.player.render()
-
+        elif val.lower() == "e":
+            self.player.player_movement_sound(maze=self.maze)
         elif val.lower() == "q":
             return PAUSE
         elif val.lower() == "r":
