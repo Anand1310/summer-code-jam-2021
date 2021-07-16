@@ -10,7 +10,7 @@ from levels import EndScene, InfiniteLevel, Level, Pause, TitleScene
 if __name__ == "__main__":
     play_start_bgm()
     scenes: List[Scene] = [TitleScene()]
-    scenes.append(InfiniteLevel())
+    scenes.append(InfiniteLevel(True))
     if len(sys.argv) == 1:
         scenes.extend([Level(str(i)) for i in range(1, 9)])
     else:

@@ -113,7 +113,7 @@ class Maze(object):
         self.boxes: List[Box] = []
         self.start: Vec = None
         self.end: Vec = None
-        self.min_distance = np.linalg.norm(self.height - self.width)
+        self.min_distance = np.linalg.norm(self.height - self.width * 1.5)
 
         self.map: str = None
         self.erase_map: str = None
@@ -278,54 +278,43 @@ class Maze(object):
 
     def _get_random_position(self) -> Tuple[int, int]:
         """Returns a random position on the maze."""
-        return [random.randrange(0, self.width), random.randrange(0, self.height)]
+        return random.randrange(0, self.width * 2), random.randrange(0, self.height)
 
     def get_random_start_end_position(self, random_pos: bool = False) -> None:
         """Return a array with start and end position"""
 
         def check() -> bool:
             """Return whether the player and target location are valid"""
-            if self.start is None and all(self.start == self.end) and self.end is None:
+            if (self.start is None or all(self.start == self.end) or self.end is None
+                    or self.matrix[self.start.y][self.start.x] != AIR or self.matrix[self.end.y][self.end.x] != AIR):
                 return False
             else:
                 distance = np.linalg.norm(self.start - self.end)
                 if distance < self.min_distance:
                     return False
+                logging.debug(self.end)
                 return True
 
         if random_pos:
             while not check():
-                self.start = Vec(*reversed(self._get_random_position()))
-                self.end = Vec(*reversed(self._get_random_position()))
+                self.start = Vec(*self._get_random_position())
+                self.end = Vec(*self._get_random_position())
         else:
             while (
-                self.start is None or self.matrix[self.start[0]][self.start[1]] != AIR
+                    self.start is None or self.matrix[self.start.y][self.start.x] != AIR
             ):
                 self.start = Vec(*reversed([random.randrange(0, self.height), 1]))
-            while self.end is None or self.matrix[self.end[0]][self.end[1]] != AIR:
+            while self.end is None or self.matrix[self.end.y][self.end.x] != AIR:
                 self.end = Vec(*reversed([random.randrange(0, self.height), self.width - 1]))
             self.end = (self.end + 1) * 2 - 1
 
     @classmethod
-    def generate(cls, width: int = 20, height: int = 10):
+    def generate(cls, width: int = 20, height: int = 10, *, random_pos: bool):
         """Returns a new random perfect maze with the given sizes."""
         obj = cls(width, height)
         obj.randomize()
-        # TODO remove duplicate code
-        maze = str(obj).split("\n")
-        maze_shape = Vec(len(maze[0]), len(maze))
-        new_line = term.move_left(maze_shape.x) + term.move_down(1)
-        maze = new_line.join(maze)  # type: ignore
-        maze = maze.replace(" ", term.move_right(1))  # type: ignore
-        terminal_shape = Vec(term.width, term.height)
-        obj.top_left_corner = (terminal_shape - maze_shape) // 2
-        obj.map = term.move_xy(*obj.top_left_corner) + maze  # type: ignore
-        erase_map = obj.map
-        for chr in "┼├┴┬┌└─╶┤│┘┐╷╵╴":
-            if chr in erase_map:
-                erase_map = erase_map.replace(chr, " ")
-        obj.erase_map = erase_map
-        obj.get_random_start_end_position()
+        obj.set_erase_map()
+        obj.get_random_start_end_position(random_pos)
         logging.debug(str(obj))
         return obj
 
@@ -334,6 +323,26 @@ class Maze(object):
         self.matrix = np.array(m)
         self.width = self.matrix.shape[0] // 2
         self.height = self.matrix.shape[1] // 2
+
+    def set_erase_map(self) -> None:
+        """Set top_left_corner, map and erase map for the maze"""
+        maze = str(self).split("\n")
+        maze_shape = Vec(len(maze[0]), len(maze))
+        new_line = term.move_left(maze_shape.x) + term.move_down(1)
+        maze = new_line.join(maze)  # type: ignore
+        maze = maze.replace(" ", term.move_right(1))  # type: ignore
+        terminal_shape = Vec(term.width, term.height)
+        self.top_left_corner = (terminal_shape - maze_shape) // 2
+        self.map = term.move_xy(*self.top_left_corner) + maze  # type: ignore
+        erase_map = self.map
+        for y, line in enumerate(self.char_matrix):
+            for x, char in enumerate(line):
+                char._location = self.top_left_corner + Vec(x, y)
+
+        for chr in "┼├┴┬┌└─╶┤│┘┐╷╵╴":
+            if chr in erase_map:
+                erase_map = erase_map.replace(chr, " ")
+        self.erase_map = erase_map
 
     @classmethod
     def load(cls, fname: str, data: dict = None) -> Maze:
@@ -352,23 +361,7 @@ class Maze(object):
         if end:
             obj.end = Vec(*reversed(end))
 
-        maze = str(obj).split("\n")
-        maze_shape = Vec(len(maze[0]), len(maze))
-        new_line = term.move_left(maze_shape.x) + term.move_down(1)
-        maze = new_line.join(maze)  # type: ignore
-        maze = maze.replace(" ", term.move_right(1))  # type: ignore
-        terminal_shape = Vec(term.width, term.height)
-        obj.top_left_corner = (terminal_shape - maze_shape) // 2
-        obj.map = term.move_xy(*obj.top_left_corner) + maze  # type: ignore
-        for y, line in enumerate(obj.char_matrix):
-            for x, char in enumerate(line):
-                char._location = obj.top_left_corner + Vec(x, y)
-
-        erase_map = obj.map
-        for chr in "┼├┴┬┌└─╶┤│┘┐╷╵╴":
-            if chr in erase_map:
-                erase_map = erase_map.replace(chr, " ")
-        obj.erase_map = erase_map
+        obj.set_erase_map()
         for color, box_dict in data.items():
             obj.boxes.append(Box.load(data=box_dict, col=color))
 
@@ -403,11 +396,11 @@ class Box:
     """Box where parts of maze become visible."""
 
     def __init__(
-        self,
-        location: Vec = Vec(1, 1),
-        maze: Maze = None,
-        shape: Vec = Vec(3, 3),
-        col: str = "black",
+            self,
+            location: Vec = Vec(1, 1),
+            maze: Maze = None,
+            shape: Vec = Vec(3, 3),
+            col: str = "black",
     ):
         self.maze = maze
         self.shape = shape

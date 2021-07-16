@@ -140,9 +140,9 @@ class Level(Scene):
 class InfiniteLevel(Scene):
     """First basic game"""
 
-    def __init__(self) -> None:
+    def __init__(self, random_pos: bool) -> None:
         super().__init__()
-        self.maze = Maze.generate()
+        self.maze = Maze.generate(term.width // 5, term.height // 3, random_pos=random_pos)
         self.level_boundary = Boundary(
             len(self.maze.char_matrix[0]),
             len(self.maze.char_matrix),
