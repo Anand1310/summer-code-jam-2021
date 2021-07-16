@@ -47,22 +47,23 @@ class Cursor:
 
     def loc_on_move(self, move: str) -> Vec:
         """Find location of cursor on move in direction."""
-        self.direction = self.directions[move]
-        x = min(
-            max(self.prev_coords.x + self.direction.x * self.speed.x, 0),
-            self.term.width - 2,
-        )
-        y = min(
-            max(self.prev_coords.y + self.direction.y * self.speed.y, 0),
-            self.term.height - 2,
-        )
-        return Vec(x, y)
 
     def move(self, move: str) -> None:
         """Move the cursor to a new position based on direction and speed."""
-        logging.info(self.coords)
-        self.coords = self.loc_on_move(move)
+        self.direction = self.directions[move]
+        self.coords.x = min(
+            max(self.prev_coords.x + self.direction.x * self.speed.x, 0),
+            self.term.width - 2,
+        )
+        self.coords.y = min(
+            max(self.prev_coords.y + self.direction.y * self.speed.y, 0),
+            self.term.height - 2,
+        )
         self.clear()
+
+    def stop(self) -> None:
+        """Stop current move and go back"""
+        self.coords = copy(self.prev_coords)
 
     def clear(self) -> None:
         """Clears the rendered cursor"""
@@ -134,9 +135,10 @@ class Player:
 
     def update(self, val: Keystroke, maze: Maze) -> None:
         """Handle player movement"""
-        avi_loc = self.avi.loc_on_move(val.name)
+        self.avi.move(val.name)
 
-        if self.wall_at(avi_loc, maze, val.name):
+        if self.wall_at(self.avi.coords, maze, val.name):
+            self.avi.stop()
             collision_time = time.time()
             if collision_time - self.prev_colsn_time > 0.5:
                 # collision counter
@@ -147,29 +149,12 @@ class Player:
                 render(txt, col="black")
 
                 # play sound
-                play_hit_wall_sound(avi_loc - self.avi.coords)
-        else:
-            self.avi.move(val.name)
+                play_hit_wall_sound(self.avi.coords - self.avi.coords)
 
     def wall_at(self, screen: Vec, maze: Maze, direction: str) -> bool:
         """Return True if there is a wall at (x, y). Values outside the valid range always return False."""
-        x, y = maze.screen2mat(screen)
         screen = screen - maze.top_left_corner
-        # logging.info(
-        #     f"{x=}\t{screen.x=}\t{self.maze.matrix[y][x]}, {self.maze.matrix[y][x-1]}, {self.maze.matrix[y][x+1]}"
-        # )
-        if 0 <= x < len(maze.matrix[0]) and 0 <= y < len(maze.matrix):
-            is_wall = maze.matrix[y][x] == 1
-            if is_wall and screen.x == 2 * x + 1:
-                if direction == "KEY_LEFT":
-                    return False
-                if direction == "KEY_DOWN" and maze.matrix[y][x + 1] == 0:
-                    return False
-                if direction == "KEY_UP" and maze.matrix[y][x + 1] == 0:
-                    return False
-            return is_wall
-        else:
-            return False
+        return maze.char_matrix[screen.y][screen.x].char != " "
 
     def player_movement_sound(self, maze: Maze) -> None:
         """Make player sound on move"""
@@ -208,10 +193,6 @@ class Player:
     def enter_box(self) -> None:
         """Called when player enter a box"""
         play_enter_box_sound()
-
-    # def exit_box(self) -> None:
-    #     """Call when player exits a box."""
-    #     self.inside_box = False
 
     def hit_wall(self) -> None:
         """Called when player hits wall"""
