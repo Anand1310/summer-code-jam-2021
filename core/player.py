@@ -60,7 +60,7 @@ class Cursor:
 
     def move(self, move: str) -> None:
         """Move the cursor to a new position based on direction and speed."""
-        logging.info(self.coords)
+        logging.info("Player position:" + str(self.coords))
         self.coords = self.loc_on_move(move)
         self.clear()
 

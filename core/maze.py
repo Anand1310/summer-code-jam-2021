@@ -14,7 +14,7 @@ import numpy as np
 
 from core.character import AnimatedCharacter
 from core.render import Render
-from utils import Vec  # type: ignore
+from utils import Vec, points_in_circle_np  # type: ignore
 
 if TYPE_CHECKING:
     from core.player import Player
@@ -241,16 +241,16 @@ class Maze(object):
 
                 str_connections = "".join(sorted(connections))
                 # Note we are changing the matrix we are reading. We need to be
-                # careful as to not break the `wall_at` function implementation.
-                matrix[y][x] = copy(Maze.UNICODE_BY_CONNECTIONS[str_connections])
+                # careful as to not break the `wall_at` function implementation
+                if str_connections != "":
+                    matrix[y][x] = copy(Maze.UNICODE_BY_CONNECTIONS[str_connections])
+                elif str_connections == "":
+                    matrix[y][x] = AnimatedCharacter(" ")
                 # print(type(matrix[y][x]))
                 # print(type(Maze.UNICODE_BY_CONNECTIONS[str_connections]))
 
         # Simple double join to transform list of lists into string.
         self.char_matrix = matrix
-        for line in matrix:
-            for c in line:
-                logging.debug(str(c))
         return "\n".join("".join(str(c) for c in line) for line in matrix) + "\n"
 
     def randomize(self) -> None:
@@ -292,13 +292,13 @@ class Maze(object):
                 distance = np.linalg.norm(self.start - self.end)
                 if distance < self.min_distance:
                     return False
-                logging.debug(self.end)
                 return True
 
         if random_pos:
             while not check():
                 self.start = Vec(*self._get_random_position())
                 self.end = Vec(*self._get_random_position())
+            logging.debug("starting pos: {}".format(self.start))
         else:
             while (
                     self.start is None or self.matrix[self.start.y][self.start.x] != AIR
@@ -315,7 +315,6 @@ class Maze(object):
         obj.randomize()
         obj.set_erase_map()
         obj.get_random_start_end_position(random_pos)
-        logging.debug(str(obj))
         return obj
 
     def set_map(self, m: List[List[int]]) -> None:
@@ -328,15 +327,19 @@ class Maze(object):
         """Set top_left_corner, map and erase map for the maze"""
         maze = str(self).split("\n")
         maze_shape = Vec(len(maze[0]), len(maze))
+        self.set_top_left_corner(maze_shape)
         new_line = term.move_left(maze_shape.x) + term.move_down(1)
         maze = new_line.join(maze)  # type: ignore
         maze = maze.replace(" ", term.move_right(1))  # type: ignore
-        terminal_shape = Vec(term.width, term.height)
-        self.top_left_corner = (terminal_shape - maze_shape) // 2
         self.map = term.move_xy(*self.top_left_corner) + maze  # type: ignore
         for y, line in enumerate(self.char_matrix):
             for x, char in enumerate(line):
                 char._location = self.top_left_corner + Vec(x, y)
+
+    def set_top_left_corner(self, maze_shape: Vec) -> None:
+        """Set location of the top left corner"""
+        terminal_shape = Vec(term.width, term.height)
+        self.top_left_corner = (terminal_shape - maze_shape) // 2
 
     @classmethod
     def load(cls, fname: str, data: dict = None) -> Maze:
@@ -357,7 +360,7 @@ class Maze(object):
 
         obj.set_erase_map()
         for color, box_dict in data.items():
-            obj.boxes.append(Box.load(data=box_dict, col=color))
+            obj.boxes.append(Box.load_from_dict(data=box_dict, col=color))
 
         return obj
 
@@ -408,10 +411,10 @@ class Box:
 
     def render(self, player: Player) -> None:
         """Draw self"""
-        # box drawing
-        frame = self.image
         # show maze if necessary
-        frame += self.show_maze(player)
+        frame = self.show_maze(player)
+        # box drawing
+        frame += self.image
         render(frame, col=self.col)
 
     def show_maze(self, player: Player) -> str:
@@ -420,7 +423,7 @@ class Box:
 
         for i in range(1, self.shape.x - 1):
             for j in range(1, self.shape.y - 1):
-                p = self.loc + (i, j)
+                p = self.loc + (-i, -j)
                 self.player_inside = all(player.avi.coords == p)
 
                 if self.player_inside:
@@ -450,9 +453,10 @@ class Box:
                     return True
             if player_inside_box:
                 return True
+        return False
 
     @classmethod
-    def load(cls, data: dict, col: str) -> Box:
+    def load_from_dict(cls, data: dict, col: str) -> Box:
         """Load box data from dictionary"""
         obj = cls()
         obj.col = col
@@ -467,6 +471,40 @@ class Box:
         obj.image = image
 
         return obj
+
+    def generate_map(self, maze: Maze, radius: int) -> dict:
+        """Generate the map of the box"""
+        pt_list = points_in_circle_np(radius, self.loc.x, self.loc.y)
+        height, width = len(maze.matrix), len(maze.matrix[1])
+        return_map = np.zeros(shape=(height, width))
+        for i in pt_list:
+            if i.x >= 0 and i.x < width and i.y >= 0 and i.y < height:
+                return_map[i.y][i.x] = maze.matrix[i.y][i.x]
+        self.maze = copy(maze)
+        self.maze.matrix = return_map
+        cells = copy(self.maze.cells)
+        for i in range(len(cells) // 2):
+            if not (pt_list - Vec(cells[i].x, cells[i].y)).any():
+                del cells[i]
+        self.maze.cells = cells
+        new_maze = str(self.maze).split("\n")
+        new_maze_shape = Vec(len(new_maze[0]), len(new_maze))
+        self.maze.set_top_left_corner(new_maze_shape)
+        new_line = term.move_left(new_maze_shape.x) + term.move_down(1)
+        new_maze = new_line.join(new_maze)  # type: ignore
+        new_maze = new_maze.replace(" ", term.move_right(1))  # type: ignore
+
+        self.maze.map = term.move_xy(*self.maze.top_left_corner) + new_maze
+        logging.debug(str(self.maze))
+
+    def generate_image(self) -> None:
+        """Generate image for the box"""
+        image = term.move_xy(*self.maze.mat2screen(self.loc) - (1, 1))
+        image += image + "┌" + " " * (self.shape.x - 2) + "┐"
+        image += term.move_down(self.shape.y - 1)  # type: ignore
+        image += term.move_left(self.shape.x)  # type: ignore
+        image += "└" + " " * (self.shape.x - 2) + "┘"
+        self.image = image
 
 
 if __name__ == "__main__":

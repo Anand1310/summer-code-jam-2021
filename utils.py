@@ -1,6 +1,6 @@
 # type: ignore
 """Collection of utilities."""
-from typing import Iterable, Union
+from typing import Generator, Iterable, Union
 
 import numpy as np
 from blessed.terminal import Terminal
@@ -63,6 +63,15 @@ class Boundary:
             self.term.move_xy(x, y + self.height) + "└".ljust(self.width, "─") + "┘"
         )
         return "".join(my_map)
+
+
+def points_in_circle_np(radius: int, x0: int = 0, y0: int = 0, ) -> Generator[Vec]:
+    """Return a list of point in the circle"""
+    x_ = np.arange(x0 - radius - 1, x0 + radius + 1, dtype=int)
+    y_ = np.arange(y0 - radius - 1, y0 + radius + 1, dtype=int)
+    x, y = np.where((x_[:, np.newaxis] - x0) ** 2 + (y_ - y0) ** 2 <= radius ** 2)
+    for x, y in zip(x_[x], y_[y]):
+        yield Vec(x, y)
 
 
 if __name__ == "__main__":
