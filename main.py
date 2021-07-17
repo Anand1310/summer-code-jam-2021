@@ -6,7 +6,8 @@ from openal import oalQuit
 from core.sound import play_start_bgm
 from game import Game, Scene
 from levels import (
-    EndScene, Level, credit_scene, leaderboard_menu, pause_menu, title_scene
+    EndScene, InfiniteLevel, Level, credit_scene, leaderboard_menu, pause_menu,
+    title_scene
 )
 
 if __name__ == "__main__":
@@ -16,6 +17,7 @@ if __name__ == "__main__":
         scenes.extend([Level(str(i)) for i in range(1, 9)])
     else:
         scenes.append(Level(sys.argv[1]))
+    scenes.append(InfiniteLevel(True))
     game = Game(
         scenes,
         pause=pause_menu,

@@ -29,6 +29,7 @@ CREDITS = 7
 TUTORIAL = 8
 END = 9
 LEADERBOARD = 9
+INFINITE = 11
 
 
 term = blessed.Terminal()
@@ -98,6 +99,9 @@ class Game:
                     else:
                         self.current_scene = self.scenes[self.current_scene_index]
                         continue
+                elif command == INFINITE:
+                    self.current_scene.reset()
+                    self.current_scene = self.scenes[9]
                 elif command == RESET:
                     self.current_scene.reset()
                     val = Keystroke()
