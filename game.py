@@ -84,6 +84,9 @@ class Game:
                         break
                     else:
                         self.current_scene = self.scenes[self.current_scene_index]
+
+                        if self.current_scene_index == len(self.scenes) - 2:
+                            self.current_scene.set_player(self.player)
                         continue
                 elif command == RESET:
                     self.current_scene.reset()
