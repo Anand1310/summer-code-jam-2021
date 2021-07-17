@@ -128,11 +128,11 @@ class Maze(object):
 
     def screen2mat(self, screen: Vec) -> Vec:
         """Convert screen location of a point to matrix location"""
-        return (screen - self.top_left_corner) // (2, 1)
+        return Vec(*reversed((screen - self.top_left_corner) // (2, 1)))
 
     def mat2screen(self, mat: Vec) -> Vec:
         """Convert matrix location of a point to screen location"""
-        return self.top_left_corner + mat * (2, 1)
+        return self.top_left_corner + Vec(mat[1], mat[0]) * (2, 1)
 
     def neighbors(self, cell: Cell) -> Iterator[Cell]:
         """
@@ -324,20 +324,24 @@ class Maze(object):
 
         obj.set_map(data.pop("map"))
 
-        start = data.pop("start", None)
-        if start:
-            obj.start = Vec(*reversed(start))
-        end = data.pop("end", None)
-        if end:
-            obj.end = Vec(*reversed(end))
-
+        # getting shape of the maze from string representation
         maze = str(obj).split("\n")
         maze_shape = Vec(len(maze[0]), len(maze))
+        terminal_shape = Vec(term.width, term.height)
+        obj.top_left_corner = (terminal_shape - maze_shape) // 2
+
+        start = data.pop("start", None)
+        if start:
+            obj.start = obj.mat2screen(start)
+        end = data.pop("end", None)
+        if end:
+            obj.end = obj.mat2screen(end)
+
+        # convreting maze in string form to image
         new_line = term.move_left(maze_shape.x) + term.move_down(1)
         maze = new_line.join(maze)  # type: ignore
         maze = maze.replace(" ", term.move_right(1))  # type: ignore
-        terminal_shape = Vec(term.width, term.height)
-        obj.top_left_corner = (terminal_shape - maze_shape) // 2
+
         obj.map = term.move_xy(*obj.top_left_corner) + maze  # type: ignore
         for y, line in enumerate(obj.char_matrix):
             for x, char in enumerate(line):
@@ -393,6 +397,7 @@ class Box:
         self.col = col
         self.scene_render = render
         self.player_inside = False
+        self.needs_cleaning = False
 
         self.loc = location
 
@@ -400,6 +405,9 @@ class Box:
 
     def render(self, player: Player) -> None:
         """Draw self"""
+        import logging
+
+        logging.info("whala")
         # box drawing
         frame = self.image
         # show maze if necessary
@@ -410,22 +418,18 @@ class Box:
         """Return associated maze if it should be shown"""
         self.player_inside = False
 
-        for i in range(1, self.shape.x - 1):
-            for j in range(1, self.shape.y - 1):
-                p = self.loc + (i, j)
-                self.player_inside = all(player.avi.coords == p)
-
-                if self.player_inside:
-                    break
-            if self.player_inside:
-                break
+        self.player_inside = all(self.loc + (1, 1) == player.avi.coords)
 
         # note if player is inside some box for scoring
         player.inside_box[self.col] = self.player_inside
         # if player enters inside, play sound etc
         if self.player_inside:
             player.enter_box()
+            self.needs_cleaning = True
             return self.maze.map
+        elif self.needs_cleaning:
+            self.needs_cleaning = False
+            return self.maze.erase_map + self.image
         else:
             return ""
 
@@ -434,7 +438,7 @@ class Box:
         """Load box data from dictionary"""
         obj = cls()
         obj.col = col
-        obj.loc = Vec(*reversed(data.pop("location")))
+        obj.loc = Vec(*data.pop("location"))
         obj.maze = Maze.load("", data)
 
         image = term.move_xy(*obj.maze.mat2screen(obj.loc) - (1, 1))

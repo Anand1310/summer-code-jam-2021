@@ -70,8 +70,8 @@ class Game:
 
                 command = self.current_scene.next_frame(val)
                 # get all the frames and print
-                print(render.screen())
-
+                frame = render.screen()
+                print(frame)
                 if command == NEXT_SCENE:
                     self.current_scene_index += 1
                     # end game if scenes end

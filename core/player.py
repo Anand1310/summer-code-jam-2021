@@ -7,8 +7,6 @@ from typing import TYPE_CHECKING, Dict
 if TYPE_CHECKING:
     from core.maze import Maze
 
-import logging
-
 from blessed import Terminal
 from blessed.keyboard import Keystroke
 
@@ -88,7 +86,10 @@ class Score:
             self.value -= collision_count * 2
         else:
             # self.value -= self.penalty * (1 + 10 * player_inside_box)
-            self.value -= self.penalty * int(not player_inside_box)
+            if player_inside_box:
+                self.value -= self.penalty / 2
+            else:
+                self.value -= self.penalty
         self.render()
 
     def render(self) -> None:
@@ -148,7 +149,7 @@ class Player:
 
     def player_movement_sound(self, maze: Maze) -> None:
         """Make player sound on move"""
-        x, y = maze.screen2mat(self.avi.coords)
+        y, x = maze.screen2mat(self.avi.coords)
         screen = self.avi.coords - maze.top_left_corner
         nearest_wall = Vec(x, y)
         direction = copy(self.avi.direction)

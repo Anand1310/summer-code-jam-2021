@@ -2,6 +2,7 @@
 import json
 import logging
 import time
+from copy import copy
 from threading import Thread
 from typing import Dict, Union
 
@@ -13,7 +14,7 @@ from core.player import Player
 from core.render import Render
 from core.sound import enter_game_sound, play_level_up_sound, stop_bgm
 from game import LOSE, NEXT_SCENE, PAUSE, PLAY, QUIT, RESET, Scene
-from utils import Boundary, Vec  # type: ignore
+from utils import Boundary  # type: ignore
 
 term = blessed.Terminal()
 render = Render()
@@ -80,34 +81,36 @@ class Level(Scene):
             term,
         )
 
-        self.end_loc = self.maze.mat2screen(self.maze.end)
-        self.first_frame = True
+        self.end_loc = self.maze.end
+        self.first_act = True  # set up what to do at the start of the level
+        self.show_level = 40  # number of frames to show the level
+        self.wait = self.show_level
         self.maze_is_visible = False
         self.reward_on_goal = 0
 
         self.player: Player = Player()
 
-    def build_level(self) -> None:
-        """Load current level specific attributes"""
-        self.player.start_loc = self.maze.mat2screen(mat=self.maze.start)
-        self.player.collision_count = 0
-        self.reward_on_goal = 200
-
         for box in self.maze.boxes:
             # move to top-left corner of maze + scale and extend width
             # + move to top-left corner of box
-            box.loc = self.maze.top_left_corner + box.loc * (2, 1) - (1, 1)
+            box.loc = self.maze.mat2screen(box.loc) - (1, 1)
             self.player.inside_box[box.col] = False
+
+    def build_level(self) -> None:
+        """Load current level specific attributes"""
+        self.player.start_loc = copy(self.maze.start)
+        self.player.collision_count = 0
+        self.reward_on_goal = 200
 
     def next_frame(self, val: Keystroke) -> Union[str, int]:
         """Draw next frame."""
-        if self.first_frame:
-            self.first_frame = False
+        if self.first_act:
+            self.first_act = False
+            self.show_level = 30
             self.build_level()
 
             play_level_up_sound()
-            # removes the main maze after 2 sec
-            Thread(target=self.remove_maze, daemon=True).start()
+            # show the maze for 1 sec
             frame = term.clear
             frame += self.level_boundary.map
             frame += self.maze.map
@@ -115,11 +118,16 @@ class Level(Scene):
             render(frame)
             for box in self.maze.boxes:
                 box.render(self.player)
-            # time.sleep(2)
-            print("t"*1000)
-            # if self.instructions:
-            #     self.instruct_player(*self.instructions[tuple(reversed(self.maze.start))])
             self.player.start()
+            return ""
+
+        elif self.wait > 0:
+            # block any actions from player and then remove maze
+            if self.instructions and self.wait == self.show_level:
+                Thread(target=self.instruct_player, daemon=True).start()
+            self.wait -= 1
+            if self.wait == 0:
+                self.remove_maze(0)
 
         elif val.is_sequence and (257 < val.code < 262):
             # update player
@@ -129,6 +137,8 @@ class Level(Scene):
                 self.player.score.value += self.reward_on_goal
                 return NEXT_SCENE
             # render boxes and mazes
+            if self.instructions:
+                Thread(target=self.instruct_player, daemon=True).start()
             self.render()
         elif val.lower() == "e":
             self.player.player_movement_sound(maze=self.maze)
@@ -144,19 +154,19 @@ class Level(Scene):
             else:
                 self.maze_is_visible = False
                 self.remove_maze(0)
-                return ""
 
         # things that should update on every frame goes here
-        self.player.score.update(player_inside_box=any(self.player.inside_box.values()))
+        if not self.wait > 0:
+            self.player.score.update(player_inside_box=any(self.player.inside_box.values()))
         if self.player.score.value <= 0:
             return LOSE
         return ""
 
     def render(self) -> None:
         """Refreshing the scene"""
-        render(self.level_boundary.map)
         for box in self.maze.boxes:
             box.render(self.player)
+        render(self.level_boundary.map)
         # render player
         render(term.move_xy(*self.end_loc) + "&")
         self.player.render()
@@ -174,15 +184,25 @@ class Level(Scene):
         for box in self.maze.boxes:
             box.needs_cleaning = False
         self.player.start()
-        self.first_frame = True
+        self.first_act = True
 
-    def instruct_player(self, coordinate: Vec, text: str) -> None:
+    def instruct_player(self) -> None:
         """Instructions"""
-        logging.info("wala")
-        location = self.maze.mat2screen(Vec(*coordinate))
-        render(term.move_xy(*location) + text)
-        time.sleep(2)
-        render(term.move_xy(*location) + ' ' * len(text))
+        player_loc = tuple(self.maze.screen2mat(self.player.avi.coords))
+        logging.info("hit points")
+        logging.info(self.instructions.keys())
+        logging.info("player loc")
+        logging.info(player_loc)
+        if player_loc not in self.instructions.keys():
+            return
+        coordinate, text = self.instructions.pop(player_loc)
+        text_loc = self.maze.mat2screen(coordinate)
+
+        frame = term.move_xy(*text_loc) + text
+        render(frame)
+        time.sleep(4)
+        frame = term.move_xy(*text_loc) + " " * len(text)
+        render(frame)
 
 
 class EndScene(Scene):
