@@ -663,7 +663,7 @@ def title_menu_action(choice: str) -> Union[int, None]:
 
 title_scene = Menu(
     txt=["Welcome :)", ""],
-    choices=["Start", "Tutorial", "Credits", "Leaderboard", "Quit"],
+    choices=["Start", "Tutorial", "Credits", "Quit"],
     action_on_choice=title_menu_action,
 )
 
