@@ -28,8 +28,14 @@ class Cursor:
         "KEY_RIGHT": Vec(1, 0),
     }
 
-    def __init__(self, coords: Vec, fill: str = "██", speed: Vec = Vec(2, 1),
-                 col: str = "black", bg_col: str = "white") -> None:
+    def __init__(
+        self,
+        coords: Vec,
+        fill: str = "██",
+        speed: Vec = Vec(2, 1),
+        col: str = "black",
+        bg_col: str = "white",
+    ) -> None:
 
         self.prev_coords = coords
         self.coords = coords
@@ -107,7 +113,9 @@ class Player:
         if not Player.__monostate:
             Player.__monostate = self.__dict__
             self.start_loc = location
-            self.avi = Cursor(location, fill="█", speed=Vec(1, 1), bg_col="lightskyblue1")
+            self.avi = Cursor(
+                location, fill="█", speed=Vec(1, 1), bg_col="lightskyblue1"
+            )
             self.score: Score = Score()
             self.timer_start: float = None
             self.collision_count = 0
@@ -127,7 +135,6 @@ class Player:
         self.avi.move(val.name)
 
         if self.wall_at(self.avi.coords, maze, val.name):
-            self.avi.stop()
             collision_time = time.time()
             if collision_time - self.prev_colsn_time > 0.5:
                 # collision counter
@@ -138,7 +145,8 @@ class Player:
                 render(txt, col="black")
 
                 # play sound
-                play_hit_wall_sound(self.avi.coords - self.avi.coords)
+                play_hit_wall_sound(self.avi.coords - self.avi.prev_coords)
+            self.avi.stop()
 
     def wall_at(self, screen: Vec, maze: Maze, direction: str) -> bool:
         """Return True if there is a wall at (x, y). Values outside the valid range always return False."""
@@ -164,16 +172,19 @@ class Player:
 
         if all(direction == (1, 0)):  # right
             if screen.x == 2 * x:
-                play_echo(direction, 2 * (nearest_wall.x - x))
+                self._play_echo(direction, 2 * (nearest_wall.x - x))
             else:
-                play_echo(direction, 2 * (nearest_wall.x - x) - 1)
+                self._play_echo(direction, 2 * (nearest_wall.x - x) - 1)
         elif all(direction == (-1, 0)):  # left
             if screen.x == 2 * x:
-                play_echo(direction, 2 * (nearest_wall.x - x) - 1)
+                self._play_echo(direction, 2 * (nearest_wall.x - x) - 1)
             else:
-                play_echo(direction, 2 * (nearest_wall.x - x))
+                self._play_echo(direction, 2 * (nearest_wall.x - x))
         else:
-            play_echo(direction, nearest_wall.y - y)
+            self._play_echo(direction, nearest_wall.y - y)
+
+    def _play_echo(self, direction: Vec, distance: float) -> None:
+        play_echo(direction, distance)
 
     def render(self) -> None:
         """Draw player on screen"""
@@ -190,8 +201,15 @@ class Player:
 class MenuCursor(Cursor):
     """Menu Cursor that moves up and down"""
 
-    def __init__(self, coords: Vec, bounds: Vec, options: list, fill: str = "->",
-                 col: str = "black", bg_col: str = "peachpuff2") -> None:
+    def __init__(
+        self,
+        coords: Vec,
+        bounds: Vec,
+        options: list,
+        fill: str = "->",
+        col: str = "black",
+        bg_col: str = "peachpuff2",
+    ) -> None:
         super().__init__(coords, fill=fill, col=col, bg_col=bg_col)
         self.l_bounds = copy(coords)
         self.u_bounds = coords + bounds
