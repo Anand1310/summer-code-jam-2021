@@ -294,7 +294,7 @@ class Leaderboard(Scene):
         with open("leaderboard.txt", "r") as f:
             players = f.read()
             players_sorted = sorted(
-                [player.split(">") for player in players.split("\n")[:-1]],
+                [player.split(">") for player in players.split("\n")],
                 key=lambda x: float(x[1]),
                 reverse=True,
             )
