@@ -67,12 +67,6 @@ class Game:
         with term.cbreak():
             val = Keystroke()
             while True:
-                # player score
-                # if self.current_scene != self.pause and self.current_scene_index != 0:
-                #     self.player.score -= 0.05 * (1 + 10 * self.player.inside_box)
-                # txt = f"Score:{int(self.player.score)}"
-                # txt = term.home + term.move_x(term.width - len(txt)) + txt
-                # render(txt, col="black")
 
                 command = self.current_scene.next_frame(val)
                 # get all the frames and print
@@ -96,7 +90,7 @@ class Game:
                 elif command == PLAY:
                     self.pause.reset()
                     self.current_scene = self.scenes[self.current_scene_index]
-                    self.current_scene.refresh()
+                    self.current_scene.render()
                     continue
                 elif command == QUIT or command == LOSE:
                     break

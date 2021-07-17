@@ -93,12 +93,7 @@ class Score:
             self.value -= collision_count * 2
         else:
             # self.value -= self.penalty * (1 + 10 * player_inside_box)
-            logging.info("in score")
-            logging.info(self.value)
-            logging.info(self.penalty * int(not player_inside_box))
-            logging.info(player_inside_box)
             self.value -= self.penalty * int(not player_inside_box)
-            logging.info(self.value)
         self.render()
 
     def render(self) -> None:

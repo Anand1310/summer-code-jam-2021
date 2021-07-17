@@ -3,7 +3,7 @@ import json
 import logging
 import time
 from threading import Thread
-from typing import Union
+from typing import Dict, Union
 
 import blessed
 from blessed.keyboard import Keystroke
@@ -64,7 +64,7 @@ class Level(Scene):
         with open(f"levels/{level}.json", "r") as f:
             data = json.load(f)
 
-        self.instructions: {}
+        self.instructions: Dict = {}
         self.dialogues = data.pop("dialogues", None)
         if self.dialogues:
             for dialogue in self.dialogues:
@@ -108,7 +108,6 @@ class Level(Scene):
             play_level_up_sound()
             # removes the main maze after 2 sec
             Thread(target=self.remove_maze, daemon=True).start()
-            # self.instruct_player(*self.instructions[tuple(reversed(self.maze.start))])
             frame = term.clear
             frame += self.level_boundary.map
             frame += self.maze.map
@@ -116,7 +115,8 @@ class Level(Scene):
             render(frame)
             for box in self.maze.boxes:
                 box.render(self.player)
-
+            if self.instructions:
+                self.instruct_player(*self.instructions[tuple(reversed(self.maze.start))])
             self.player.start()
 
         elif val.is_sequence and (257 < val.code < 262):
@@ -127,12 +127,7 @@ class Level(Scene):
                 self.player.score.value += self.reward_on_goal
                 return NEXT_SCENE
             # render boxes and mazes
-            render(self.level_boundary.map)
-            for box in self.maze.boxes:
-                box.render(self.player)
-            # render player
-            render(term.move_xy(*self.end_loc) + "&")
-            self.player.render()
+            self.render()
         elif val.lower() == "e":
             self.player.player_movement_sound(maze=self.maze)
         elif val.lower() == "q":
@@ -155,7 +150,7 @@ class Level(Scene):
             return LOSE
         return ""
 
-    def refresh(self) -> None:
+    def render(self) -> None:
         """Refreshing the scene"""
         render(self.level_boundary.map)
         for box in self.maze.boxes:
