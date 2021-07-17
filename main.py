@@ -17,10 +17,10 @@ if __name__ == "__main__":
         scenes.extend([Level(str(i)) for i in range(1, 9)])
     else:
         scenes.append(Level(sys.argv[1]))
-    scenes.append(InfiniteLevel(True))
     game = Game(
         scenes,
         pause=pause_menu,
+        infinite=InfiniteLevel(True),
         leaderboard=leaderboard_menu,
         tutorial=Level("0"),
         end_scene=EndScene(),

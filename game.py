@@ -63,6 +63,7 @@ class Game:
     def __init__(
         self,
         scenes: List[Scene],
+        infinite: Scene,
         pause: Scene,
         tutorial: Scene,
         leaderboard: Scene,
@@ -71,6 +72,7 @@ class Game:
     ) -> None:
         self.scenes = scenes
         self.current_scene_index: int = 0
+        self.infinite = infinite
         self.pause = pause
         self.tutorial = tutorial
         self.leaderboard = leaderboard
@@ -101,7 +103,7 @@ class Game:
                         continue
                 elif command == INFINITE:
                     self.current_scene.reset()
-                    self.current_scene = self.scenes[9]
+                    self.current_scene = self.infinite
                 elif command == RESET:
                     self.current_scene.reset()
                     val = Keystroke()
