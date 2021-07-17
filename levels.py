@@ -14,7 +14,9 @@ from core.maze import AIR, Box, Maze
 from core.player import MenuCursor, Player
 from core.render import Render
 from core.sound import enter_game_sound, play_level_up_sound, stop_bgm
-from game import CREDITS, LOSE, NEXT_SCENE, PAUSE, PLAY, QUIT, RESET, TITLE, Scene
+from game import (
+    CREDITS, LOSE, NEXT_SCENE, PAUSE, PLAY, QUIT, RESET, TITLE, Scene
+)
 from utils import Boundary, Vec  # type: ignore
 
 term = blessed.Terminal()
@@ -328,7 +330,7 @@ class InfiniteLevel(Scene):
         if type(self).instance is None:
             # self.maze = Maze.generate(term.width // 5, term.height // 3, random_pos=random_pos)
             random = random_pos
-            self.maze = Maze.generate(10, 10, random_pos=random_pos)
+            self.maze = Maze.generate(7, 7, random_pos=random_pos)
             self.generate_boxes()
             self.level_boundary = Boundary(
                 len(self.maze.char_matrix[0]),
@@ -336,7 +338,7 @@ class InfiniteLevel(Scene):
                 self.maze.top_left_corner,
                 term,
             )
-            self.end_loc = self.maze.end
+            self.end_loc = self.maze.mat2screen(self.maze.end)
             self.first_act = True  # set up what to do at the start of the level
             self.show_level = 40  # number of frames to show the level
             self.wait = self.show_level
@@ -375,7 +377,7 @@ class InfiniteLevel(Scene):
             render(frame)
             for box in self.instance.maze.boxes:
                 box.render(self.instance.player)
-            self.instance.player.start()
+            self.player.start()
             return ""
 
         elif self.wait > 0:
@@ -421,11 +423,12 @@ class InfiniteLevel(Scene):
 
     def render(self) -> None:
         """Refreshing the scene"""
-        for box in self.maze.boxes:
-            box.render(self.player)
-        render(self.level_boundary.map)
+        render(term.clear)
+        for box in self.instance.maze.boxes:
+            box.render(self.instance.player)
+        render(self.instance.level_boundary.map)
         # render player
-        render(term.move_xy(*self.end_loc) + "&")
+        render(term.move_xy(*self.instance.end_loc) + "&")
         self.player.render()
 
     def remove_maze(self, sleep: float = 2) -> None:

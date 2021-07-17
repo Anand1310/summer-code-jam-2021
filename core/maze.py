@@ -303,7 +303,6 @@ class Maze(object):
             while not check():
                 self.start = Vec(*self._get_random_position())
                 self.end = Vec(*self._get_random_position())
-            self.end = self.mat2screen(self.end)
             logging.debug(f"starting pos: {self.start} {self.end}")
         else:
             while self.start is None or self.matrix[self.start.x][self.start.y] != AIR:
