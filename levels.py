@@ -422,13 +422,15 @@ class InfiniteLevel(Scene):
             return LOSE
         return ""
 
-    def render(self) -> None:
+    def render(self, hard: bool = False) -> None:
         """Refreshing the scene"""
-        for box in self.instance.maze.boxes:
-            box.render(self.instance.player)
-        render(self.instance.level_boundary.map)
+        if hard:
+            render(term.clear, bg_col="lightskyblue1")
+        for box in self.maze.boxes:
+            box.render(self.player)
+        render(self.level_boundary.map)
         # render player
-        render(term.move_xy(*self.instance.end_loc) + "&")
+        render(term.move_xy(*self.end_loc) + "&")
         self.player.render()
 
     def remove_maze(self, sleep: float = 2) -> None:
