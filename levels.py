@@ -16,7 +16,7 @@ from core.sound import enter_game_sound, play_level_up_sound, stop_bgm
 from core.table import make_table
 from game import (
     CREDITS, END, LEADERBOARD, LOSE, NEXT_SCENE, PAUSE, PLAY, QUIT, RESET,
-    TITLE, Scene
+    TITLE, TUTORIAL, Scene
 )
 from utils import Boundary, Vec  # type: ignore
 
@@ -431,13 +431,15 @@ def title_menu_action(choice: str) -> Union[int, None]:
         return NEXT_SCENE
     elif choice == "Credits":
         return CREDITS
+    elif choice == "Tutorial":
+        return TUTORIAL
     else:
         return QUIT
 
 
 title_scene = Menu(
     txt=["Welcome :)", ""],
-    choices=["Start", "Credits", "Quit"],
+    choices=["Start", "Tutorial", "Credits", "Quit"],
     action_on_choice=title_menu_action,
 )
 
