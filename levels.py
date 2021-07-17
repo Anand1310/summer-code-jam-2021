@@ -286,7 +286,7 @@ class Leaderboard(Scene):
 
     def __init__(self) -> None:
         super().__init__()
-        txt1 = "Your name has been etched into the sands of time."
+        txt1 = "Your name has been etched onto the sands of time."
         self.current_frame = term.yellow_on_firebrick + term.clear
         self.current_frame += term.move_xy(x=(self.width - len(txt1)) // 2, y=3)
         self.current_frame += txt1
@@ -306,7 +306,7 @@ class Leaderboard(Scene):
                     reverse=True,
                 )
                 scores = make_table(
-                    rows=players_sorted, labels=["Name", "Score"], centered=True,
+                    rows=players_sorted, labels=["Name", "Persistence"], centered=True,
                 )
 
                 table_width = len(scores.split("\n")[0])
