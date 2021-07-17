@@ -328,9 +328,9 @@ class InfiniteLevel(Scene):
         super().__init__()
         self.player: Player = Player()
         if type(self).instance is None:
-            # self.maze = Maze.generate(term.width // 5, term.height // 3, random_pos=random_pos)
+            self.maze = Maze.generate(term.width // 5, term.height // 3, random_pos=random_pos)
             random = random_pos
-            self.maze = Maze.generate(7, 7, random_pos=random_pos)
+            # self.maze = Maze.generate(7, 7, random_pos=random_pos)
             self.generate_boxes()
             self.level_boundary = Boundary(
                 len(self.maze.char_matrix[0]),
@@ -426,11 +426,11 @@ class InfiniteLevel(Scene):
         """Refreshing the scene"""
         if hard:
             render(term.clear, bg_col="lightskyblue1")
-        for box in self.maze.boxes:
+        for box in self.instance.maze.boxes:
             box.render(self.player)
-        render(self.level_boundary.map)
+        render(self.instance.level_boundary.map)
         # render player
-        render(term.move_xy(*self.end_loc) + "&")
+        render(term.move_xy(*self.instance.end_loc) + "&")
         self.player.render()
 
     def remove_maze(self, sleep: float = 2) -> None:
@@ -467,7 +467,7 @@ class InfiniteLevel(Scene):
         if num_box_x == 0:
             num_box_x = 1
         radius = (
-            max(self.maze.width * 2 // num_box_x, self.maze.height // num_box_y) + 5
+            max(self.maze.width * 2 // num_box_x, self.maze.height // num_box_y) + 3
         )
         number_of_box = num_box_x * num_box_y
         box_list = []
@@ -490,17 +490,12 @@ class InfiniteLevel(Scene):
                     or all(box_pos == self.maze.end)
                 ):
                     box_pos = Vec(
-                        *reversed(
-                            (
-                                self.maze.height // num_box_y // 2
-                                + (self.maze.height * 2 // num_box_y) * y
-                                + randrange(-2, 2),
-                                self.maze.width * 2 // num_box_x // 2
-                                + (self.maze.width * 2 // num_box_x) * x
-                                + randrange(-2, 2),
-                            )
-                        )
-                    )
+                        self.maze.height // num_box_y // 2
+                        + (self.maze.height * 2 // num_box_y) * y
+                        + randrange(-2, 2),
+                        self.maze.width * 2 // num_box_x // 2
+                        + (self.maze.width * 2 // num_box_x) * x
+                        + randrange(-2, 2))
                 logging.debug("Box pos: {}".format(str(box_pos)))
                 box = Box(box_pos)
                 box.generate_map(self.maze, radius)
