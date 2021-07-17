@@ -246,6 +246,7 @@ class InfiniteLevel(Scene):
                     box.render(self.instance.player)
                 # render player
                 render(term.move_xy(*self.instance.end_loc) + "&")
+                self.instance.maze_is_visible = False
             self.instance.player.render()
         elif val.lower() == "e":
             self.player.player_movement_sound(maze=self.maze)
@@ -261,7 +262,6 @@ class InfiniteLevel(Scene):
                     box.render(self.instance.player)
                 self.instance.player.render()
             else:
-                self.instance.maze_is_visible = False
                 self.instance.remove_maze(0)
                 return ""
 
@@ -271,11 +271,12 @@ class InfiniteLevel(Scene):
 
     def remove_maze(self, sleep: float = 2) -> None:
         """Erase main maze"""
+        self.instance.maze_is_visible = False
         time.sleep(sleep)
         render(self.get_boundary_frame())
-        self.instance.player.render()
         for box in self.instance.maze.boxes:
             box.render(self.instance.player)
+        self.instance.player.render()
 
     def get_boundary_frame(self) -> str:
         """Get the frame with only boundary"""
@@ -294,13 +295,13 @@ class InfiniteLevel(Scene):
 
     def generate_boxes(self) -> None:
         """Generate boxes"""
-        num_box_x = self.maze.width // 10
+        num_box_x = self.maze.width // 6
         num_box_y = self.maze.height // 4
         if num_box_y == 0:
             num_box_y = 1
         if num_box_x == 0:
             num_box_x = 1
-        radius = max(self.maze.width // num_box_x, self.maze.height // num_box_y) + 5
+        radius = max(self.maze.width * 2 // num_box_x, self.maze.height // num_box_y) + 5
         number_of_box = num_box_x * num_box_y
         box_list = []
         logging.debug("radius {}".format(radius))
