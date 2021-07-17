@@ -272,19 +272,27 @@ class Level(Scene):
         self.player.start()
         self.first_act = True
 
+    global prev_text, prev_text_loc
+    prev_text = ""
+
     def instruct_player(self) -> None:
         """Instructions"""
+        global prev_text, prev_text_loc
         player_loc = tuple(self.maze.screen2mat(self.player.avi.coords))
         if player_loc not in self.instructions.keys():
             return
+        if prev_text != "":
+            frame = term.move_xy(*prev_text_loc) + " " * len(prev_text)
+            render(frame)
         coordinate, text = self.instructions.pop(player_loc)
         text_loc = self.maze.mat2screen(coordinate)
-
         frame = term.move_xy(*text_loc) + text
         render(frame)
-        time.sleep(4)
-        frame = term.move_xy(*text_loc) + " " * len(text)
-        render(frame)
+        prev_text = text
+        prev_text_loc = text_loc
+        # time.sleep(2)
+        # frame = term.move_xy(*text_loc) + " " * len(text)
+        # render(frame)
 
 
 class EndScene(Scene):
