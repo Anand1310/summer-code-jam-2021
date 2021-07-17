@@ -15,7 +15,8 @@ from core.render import Render
 from core.sound import enter_game_sound, play_level_up_sound, stop_bgm
 from core.table import make_table
 from game import (
-    CREDITS, LOSE, NEXT_SCENE, PAUSE, PLAY, QUIT, RESET, TITLE, Scene
+    CREDITS, END, LEADERBOARD, LOSE, NEXT_SCENE, PAUSE, PLAY, QUIT, RESET,
+    TITLE, Scene
 )
 from utils import Boundary, Vec  # type: ignore
 
@@ -27,26 +28,34 @@ class Menu(Scene):
     """Example of a title scene."""
 
     def __init__(
-        self, txt: List[str], choices: List[str], action_on_choice: Callable
+        self,
+        txt: List[str],
+        choices: List[str],
+        action_on_choice: Callable,
+        action_on_first_frame: Callable = None,
     ) -> None:
         super().__init__()
         self.txt = txt
         self.choices = choices
+        self.build_once = False
         self.action_on_choice = action_on_choice
-        # txt = []
-        # txt.append("welcome to 'Game name' :)")
-        # txt.append("")
-        # txt.append("Start")
-        # txt.append("Credits")
-        # txt.append("Quit")
+        self.action_on_first_frame = action_on_first_frame
+
+        self.first_frame = True
+        self.current_frame: str = ""
+        self.menu: MenuCursor = None
+
+    def build(self) -> None:
+        """Build self.txt"""
+        if self.action_on_first_frame and not self.build_once:
+            self.choices = self.action_on_first_frame() + self.choices
         self.current_frame = term.black_on_peachpuff2 + term.clear
-        width = (self.width - max(len(s) for s in txt)) // 2
+        width = (self.width - max(len(s) for s in self.txt)) // 2
         txt = self.txt + list(self.choices)
         height = self.height // 2 - len(txt) // 2
         for i in range(len(txt)):
             self.current_frame += term.move_xy(x=width, y=height + i)
             self.current_frame += txt[i]
-        self.first_frame = True
 
         self.menu = MenuCursor(
             Vec(width - 3, height + 2),
@@ -58,27 +67,18 @@ class Menu(Scene):
         """Returns next frame to render"""
         # no need to update the frame anymore
         if self.first_frame:
+            self.build()
             self.first_frame = False
             render(self.current_frame)
             self.menu.render()
             # return self.current_frame
         elif val.is_sequence and (257 < val.code < 262):
-            logging.info(self.menu.coords)
             self.menu.move(val.name)
             self.menu.render()
         elif str(val) == " " or val.name == "KEY_ENTER":
             choice = self.menu.options[self.menu.selected]
-            # if choice == "Start":
-            #     enter_game_sound()
-            #     return NEXT_SCENE
-            # elif choice == "Credits":
-            #     play_level_up_sound()
-            #     return CREDITS
-            # else:
-            #     return QUIT
 
             play_level_up_sound()
-            logging.info("powla")
             return self.action_on_choice(choice)
         return ""
         # return ""
@@ -88,55 +88,6 @@ class Menu(Scene):
         self.first_frame = True
         self.menu.selected = 0
         self.menu.coords = copy(self.menu.l_bounds)
-
-
-# class CreditsScene(Scene):
-#     """The class for the Credits"""
-
-#     def __init__(self) -> None:
-#         super().__init__()
-#         txt = []
-#         txt.append("Credits")
-#         txt.append("")
-#         txt.append("Anand")
-#         txt.append("Pritam Dey")
-#         txt.append("Jason Ho")
-#         txt.append("Himi")
-#         txt.append("Olivia")
-#         txt.append("Stone Steel")
-#         txt.append("")
-#         txt.append("Back")
-#         self.current_frame = term.black_on_peachpuff2 + term.clear
-#         width = (self.width - len(txt[0])) // 2
-#         height = self.height // 4
-#         for i in range(len(txt)):
-#             self.current_frame += term.move_xy(x=width, y=height + i)
-#             self.current_frame += txt[i]
-#         self.first_frame = True
-#         self.menu = MenuCursor(Vec(width - 3, height + 2), Vec(0, 7), txt[2:])
-
-#     def next_frame(self, val: Keystroke) -> Union[None, int]:
-#         """Returns next frame to render"""
-#         # no need to update the frame anymore
-#         if self.first_frame:
-#             self.first_frame = False
-#             render(self.current_frame)
-#             self.menu.render()
-#             # return self.current_frame
-#         elif val.is_sequence and (257 < val.code < 262):
-#             self.menu.move(val.name)
-#             self.menu.render()
-#         elif str(val) == " " or val.name == "KEY_ENTER":
-#             if self.menu.options[self.menu.selected] == "Back":
-#                 play_level_up_sound()
-#                 return TITLE
-#         return None
-
-# def reset(self) -> None:
-#     """Reset this level"""
-#     self.first_frame = True
-#     self.menu.selected = 0
-#     self.menu.coords = copy(self.menu.l_bounds)
 
 
 class Level(Scene):
@@ -332,7 +283,7 @@ class EndScene(Scene):
             render(self.current_frame)
             # return self.render(self.current_frame)
         elif val.lower() == "q":
-            return NEXT_SCENE
+            return QUIT
         else:
             inp = term.inkey()
             if inp.code == term.KEY_ENTER:
@@ -341,11 +292,11 @@ class EndScene(Scene):
                     score_file.write(f"{self.name}>{self.player.score.value:.2f}\n")
 
                 score_file.close()
-                return NEXT_SCENE
+                return LEADERBOARD
             elif inp.code == term.KEY_ESCAPE or inp == chr(3):
                 # don't save score
                 self.name = None
-                return NEXT_SCENE
+                return LEADERBOARD
             elif not inp.is_sequence and len(self.name) < 50 and inp != ">":
                 self.name += inp
             elif inp.code in (term.KEY_BACKSPACE, term.KEY_DELETE):
@@ -423,6 +374,54 @@ class Pause(Scene):
         self.first_frame = True
 
 
+class Leaderboard(Scene):
+    """Example of a title scene."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        txt1 = "Your name has been etched onto the sands of time."
+        self.current_frame = term.firebrick_on_lightgreen + term.clear
+        self.current_frame += term.move_xy(x=(self.width - len(txt1)) // 2, y=3)
+        self.current_frame += txt1
+
+        self.first_frame = True
+
+    def next_frame(self, val: Keystroke) -> Union[None, int]:
+        """Returns next frame to render"""
+        # no need to update the frame anymore
+        if self.first_frame:
+            self.first_frame = False
+            with open("leaderboard.txt", "r") as f:
+                players = f.read()
+                players_sorted = sorted(
+                    [player.split(">") for player in players.split("\n")[:-1]],
+                    key=lambda x: float(x[1]),
+                    reverse=True,
+                )
+                scores = make_table(
+                    rows=players_sorted,
+                    labels=["Name", "Persistence"],
+                    centered=True,
+                )
+
+                table_width = len(scores.split("\n")[0])
+                for n, line in enumerate(scores.split("\n")):
+                    self.current_frame += term.move_xy(
+                        x=(self.width - table_width) // 2,
+                        y=n + 5,
+                    )
+                    self.current_frame += line
+            render(self.current_frame)
+            # return self.current_frame
+        elif str(val) == " " or val.name == "KEY_ENTER":
+            return END
+        return None
+        # return ""
+
+    def reset(self) -> None:
+        """Reset has no use for title scene."""
+
+
 def title_menu_action(choice: str) -> Union[int, None]:
     """Actions for Title menu"""
     logging.info("title")
@@ -482,49 +481,31 @@ pause_menu = Menu(
 )
 
 
-class Leaderboard(Scene):
-    """Example of a title scene."""
+def leaderboard_action(choice: str) -> Union[None, int]:
+    """Action for leaderboard"""
+    if choice == "Main Menu":
+        return TITLE
+    return None
 
-    def __init__(self) -> None:
-        super().__init__()
-        txt1 = "Your name has been etched onto the sands of time."
-        self.current_frame = term.firebrick_on_lightgreen + term.clear
-        self.current_frame += term.move_xy(x=(self.width - len(txt1)) // 2, y=3)
-        self.current_frame += txt1
 
-        self.first_frame = True
+def leaderboard_first_frame() -> List[str]:
+    """First frame action for leaderboard"""
+    with open("leaderboard.txt", "r") as f:
+        players = f.read()
+        players_sorted = sorted(
+            [player.split(">") for player in players.split("\n")[:-1]],
+            key=lambda x: float(x[1]),
+            reverse=True,
+        )
+    players_sorted = ["\t".join(player) for player in players_sorted]
+    if len(players_sorted) > 10:
+        players_sorted = players_sorted[:10]
+    return players_sorted
 
-    def next_frame(self, val: Keystroke) -> Union[None, int]:
-        """Returns next frame to render"""
-        # no need to update the frame anymore
-        if self.first_frame:
-            self.first_frame = False
-            with open("leaderboard.txt", "r") as f:
-                players = f.read()
-                players_sorted = sorted(
-                    [player.split(">") for player in players.split("\n")[:-1]],
-                    key=lambda x: float(x[1]),
-                    reverse=True,
-                )
-                scores = make_table(
-                    rows=players_sorted,
-                    labels=["Name", "Persistence"],
-                    centered=True,
-                )
 
-                table_width = len(scores.split("\n")[0])
-                for n, line in enumerate(scores.split("\n")):
-                    self.current_frame += term.move_xy(
-                        x=(self.width - table_width) // 2,
-                        y=n + 5,
-                    )
-                    self.current_frame += line
-            render(self.current_frame)
-            # return self.current_frame
-        elif str(val) == " " or val.name == "KEY_ENTER":
-            return NEXT_SCENE
-        return None
-        # return ""
-
-    def reset(self) -> None:
-        """Reset has no use for title scene."""
+leaderboard_menu = Menu(
+    txt=["Leaderboard", ""],
+    choices=["Main Menu"],
+    action_on_choice=leaderboard_action,
+    action_on_first_frame=leaderboard_first_frame,
+)

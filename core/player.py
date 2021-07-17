@@ -176,8 +176,10 @@ class Player:
             else:
                 self._play_echo(direction, 2 * (nearest_wall.x - x) - 1)
         elif all(direction == (-1, 0)):  # left
-            if screen.x == 2 * x:
-                self._play_echo(direction, 2 * (nearest_wall.x - x) - 1)
+            if maze.matrix[y][x] == 1:
+                play_echo(direction, -1)
+            elif screen.x == 2 * x:
+                play_echo(direction, 2 * (nearest_wall.x - x) - 1)
             else:
                 self._play_echo(direction, 2 * (nearest_wall.x - x))
         else:
