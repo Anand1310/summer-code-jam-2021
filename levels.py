@@ -1,18 +1,22 @@
 """Examples for designing levels."""
+import json
 import logging
 import time
+from copy import copy
 from random import randrange
 from threading import Thread
-from typing import Union
+from typing import Dict, Union
 
 import blessed
 from blessed.keyboard import Keystroke
 
 from core.maze import AIR, Box, Maze
-from core.player import Player
+from core.player import Menu, Player
 from core.render import Render
 from core.sound import enter_game_sound, play_level_up_sound, stop_bgm
-from game import NEXT_SCENE, PAUSE, PLAY, QUIT, RESET, Scene
+from game import (
+    CREDITS, LOSE, NEXT_SCENE, PAUSE, PLAY, QUIT, RESET, TITLE, Scene
+)
 from utils import Boundary, Vec  # type: ignore
 
 term = blessed.Terminal()
@@ -24,18 +28,77 @@ class TitleScene(Scene):
 
     def __init__(self) -> None:
         super().__init__()
-        txt1 = "welcome to 'Game name' :)"
-        txt2 = "hit space to start"
+        txt = []
+        txt.append("welcome to 'Game name' :)")
+        txt.append("")
+        txt.append("Start")
+        txt.append("Credits")
+        txt.append("Quit")
         self.current_frame = term.black_on_peachpuff2 + term.clear
-        self.current_frame += term.move_xy(
-            x=(self.width - len(txt1)) // 2, y=self.height // 2
-        )
-        self.current_frame += txt1
-        self.current_frame += term.move_xy(
-            x=(self.width - len(txt1)) // 2, y=self.height // 2 + 1
-        )
-        self.current_frame += txt2
+        width = (self.width - len(txt[0])) // 2
+        height = self.height // 2
+        for i in range(len(txt)):
+            self.current_frame += term.move_xy(x=width, y=height + i)
+            self.current_frame += txt[i]
         self.first_frame = True
+
+        self.menu = Menu(Vec(width - 3, height + 2), Vec(0, 2), txt[2:])
+
+    def next_frame(self, val: Keystroke) -> Union[str, int]:
+        """Returns next frame to render"""
+        # no need to update the frame anymore
+        if self.first_frame:
+            self.first_frame = False
+            render(self.current_frame)
+            self.menu.render()
+            # return self.current_frame
+        elif val.is_sequence and (257 < val.code < 262):
+            self.menu.move(val.name)
+            self.menu.render()
+        elif str(val) == " " or val.name == "KEY_ENTER":
+            choice = self.menu.options[self.menu.selected]
+            if choice == "Start":
+                enter_game_sound()
+                return NEXT_SCENE
+            elif choice == "Credits":
+                play_level_up_sound()
+                return CREDITS
+            else:
+                return QUIT
+        return ""
+        # return ""
+
+    def reset(self) -> None:
+        """Reset has no use for title scene."""
+        self.first_frame = True
+        self.menu.selected = 0
+        self.menu.coords = copy(self.menu.l_bounds)
+
+
+class CreditsScene(Scene):
+    """The class for the Credits"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        txt = []
+        txt.append("Credits")
+        txt.append("")
+        txt.append("Anand")
+        txt.append("Pritam Dey")
+        txt.append("Jason Ho")
+        txt.append("Himi")
+        txt.append("Olivia")
+        txt.append("Stone Steel")
+        txt.append("")
+        txt.append("Back")
+        self.current_frame = term.black_on_peachpuff2 + term.clear
+        width = (self.width - len(txt[0])) // 2
+        height = self.height // 4
+        for i in range(len(txt)):
+            self.current_frame += term.move_xy(x=width, y=height + i)
+            self.current_frame += txt[i]
+        self.first_frame = True
+        self.menu = Menu(Vec(width - 3, height + 2), Vec(0, 7), txt[2:])
 
     def next_frame(self, val: Keystroke) -> Union[None, int]:
         """Returns next frame to render"""
@@ -43,16 +106,22 @@ class TitleScene(Scene):
         if self.first_frame:
             self.first_frame = False
             render(self.current_frame)
+            self.menu.render()
             # return self.current_frame
+        elif val.is_sequence and (257 < val.code < 262):
+            self.menu.move(val.name)
+            self.menu.render()
         elif str(val) == " " or val.name == "KEY_ENTER":
-            enter_game_sound()
-            return NEXT_SCENE
+            if self.menu.options[self.menu.selected] == "Back":
+                play_level_up_sound()
+                return TITLE
         return None
-        # return ""
 
     def reset(self) -> None:
-        """Reset has no use for title scene."""
-        pass
+        """Reset this level"""
+        self.first_frame = True
+        self.menu.selected = 0
+        self.menu.coords = copy(self.menu.l_bounds)
 
 
 class Level(Scene):
@@ -60,7 +129,19 @@ class Level(Scene):
 
     def __init__(self, level: str = "1") -> None:
         super().__init__()
-        self.maze = Maze.load(level)
+
+        with open(f"levels/{level}.json", "r") as f:
+            data = json.load(f)
+
+        self.instructions: Dict = {}
+        self.dialogues = data.pop("dialogues", None)
+        if self.dialogues:
+            for dialogue in self.dialogues:
+                hit_point, coordinate, text = dialogue
+                self.instructions[tuple(hit_point)] = [coordinate, text]
+
+        self.maze = Maze.load(data=data)
+
         self.level_boundary = Boundary(
             len(self.maze.char_matrix[0]),
             len(self.maze.char_matrix),
@@ -68,41 +149,51 @@ class Level(Scene):
             term,
         )
 
-        self.end_loc = self.maze.mat2screen(self.maze.end)
-        self.first_frame = True
+        self.end_loc = self.maze.end
+        self.first_act = True  # set up what to do at the start of the level
+        self.show_level = 40  # number of frames to show the level
+        self.wait = self.show_level
         self.maze_is_visible = False
         self.reward_on_goal = 0
 
         self.player: Player = Player()
-        self.t1 = Thread(target=self.remove_maze, daemon=True)
-
-    def build_level(self) -> None:
-        """Load current level specific attributes"""
-        self.player.start_loc = self.maze.mat2screen(mat=self.maze.start)
-        self.player.collision_count = 0
-        self.reward_on_goal = 200
 
         for box in self.maze.boxes:
             # move to top-left corner of maze + scale and extend width
             # + move to top-left corner of box
-            box.loc = self.maze.top_left_corner + box.loc * (2, 1) - (1, 1)
-        self.player.inside_box[box.col] = False
+            box.loc = self.maze.mat2screen(box.loc) - (1, 1)
+            self.player.inside_box[box.col] = False
+
+    def build_level(self) -> None:
+        """Load current level specific attributes"""
+        self.player.start_loc = copy(self.maze.start)
+        self.player.collision_count = 0
+        self.reward_on_goal = 200
 
     def next_frame(self, val: Keystroke) -> Union[str, int]:
         """Draw next frame."""
-        if self.first_frame:
-            self.first_frame = False
+        if self.first_act:
+            self.first_act = False
+            self.show_level = 30
             self.build_level()
+
             play_level_up_sound()
             # removes the main maze after 2 sec
-            self.t1.start()
             frame = self.get_boundary_frame()
             frame += self.maze.map
             render(frame)
             for box in self.maze.boxes:
                 box.render(self.player)
-
             self.player.start()
+            return ""
+
+        elif self.wait > 0:
+            # block any actions from player and then remove maze
+            if self.instructions and self.wait == self.show_level:
+                Thread(target=self.instruct_player, daemon=True).start()
+            self.wait -= 1
+            if self.wait == 0:
+                self.remove_maze(0)
 
         elif val.is_sequence and (257 < val.code < 262):
             # update player
@@ -111,14 +202,9 @@ class Level(Scene):
             if all(self.player.avi.coords == self.end_loc):
                 self.player.score.value += self.reward_on_goal
                 return NEXT_SCENE
-            if not self.t1.is_alive() or self.player_in_boxes(self.player):
-                # render boxes and mazes
-                render(self.level_boundary.map)
-                for box in self.maze.boxes:
-                    box.render(self.player)
-                # render player
-                render(term.move_xy(*self.end_loc) + "&")
-            self.player.render()
+            if self.instructions:
+                Thread(target=self.instruct_player, daemon=True).start()
+            self.render()
         elif val.lower() == "e":
             self.player.player_movement_sound(maze=self.maze)
         elif val.lower() == "q":
@@ -133,16 +219,29 @@ class Level(Scene):
                     box.render(self.player)
                 self.player.render()
             else:
-                self.maze_is_visible = False
                 self.remove_maze(0)
-                return ""
 
         # things that should update on every frame goes here
-        self.player.score.update(player_inside_box=any(self.player.inside_box.values()))
+        if not self.wait > 0:
+            self.player.score.update(
+                player_inside_box=any(self.player.inside_box.values())
+            )
+        if self.player.score.value <= 0:
+            return LOSE
         return ""
+
+    def render(self) -> None:
+        """Refreshing the scene"""
+        for box in self.maze.boxes:
+            box.render(self.player)
+        render(self.level_boundary.map)
+        # render player
+        render(term.move_xy(*self.end_loc) + "&")
+        self.player.render()
 
     def remove_maze(self, sleep: float = 2) -> None:
         """Erase main maze"""
+        self.maze_is_visible = False
         time.sleep(sleep)
         render(self.get_boundary_frame())
         self.player.render()
@@ -169,8 +268,21 @@ class Level(Scene):
         for box in self.maze.boxes:
             box.needs_cleaning = False
         self.player.start()
-        self.first_frame = True
-        self.instance.t1 = Thread(target=self.remove_maze, daemon=True)
+        self.first_act = True
+
+    def instruct_player(self) -> None:
+        """Instructions"""
+        player_loc = tuple(self.maze.screen2mat(self.player.avi.coords))
+        if player_loc not in self.instructions.keys():
+            return
+        coordinate, text = self.instructions.pop(player_loc)
+        text_loc = self.maze.mat2screen(coordinate)
+
+        frame = term.move_xy(*text_loc) + text
+        render(frame)
+        time.sleep(4)
+        frame = term.move_xy(*text_loc) + " " * len(text)
+        render(frame)
 
 
 class InfiniteLevel(Scene):
@@ -182,10 +294,11 @@ class InfiniteLevel(Scene):
     def __init__(self, random_pos: bool) -> None:
         global random
         super().__init__()
+        self.player: Player = Player()
         if type(self).instance is None:
-            self.maze = Maze.generate(term.width // 5, term.height // 3, random_pos=random_pos)
+            # self.maze = Maze.generate(term.width // 5, term.height // 3, random_pos=random_pos)
             random = random_pos
-            # self.maze = Maze.generate(10, 3, random_pos=random_pos)
+            self.maze = Maze.generate(10, 10, random_pos=random_pos)
             self.generate_boxes()
             self.level_boundary = Boundary(
                 len(self.maze.char_matrix[0]),
@@ -193,12 +306,19 @@ class InfiniteLevel(Scene):
                 self.maze.top_left_corner,
                 term,
             )
-            self.player = Player()
-
-            self.end_loc = self.maze.mat2screen(self.maze.end)
-            self.first_frame = True
+            self.end_loc = self.maze.end
+            self.first_act = True  # set up what to do at the start of the level
+            self.show_level = 40  # number of frames to show the level
+            self.wait = self.show_level
             self.maze_is_visible = False
-            self.t1 = Thread(target=self.remove_maze, daemon=True)
+            self.reward_on_goal = 0
+
+            for box in self.maze.boxes:
+                # move to top-left corner of maze + scale and extend width
+                # + move to top-left corner of box
+                box.loc = self.maze.mat2screen(box.loc) - (1, 1)
+                self.player.inside_box[box.col] = False
+
             type(self).instance = self
         else:
             logging.error(RuntimeError("Only one instance of 'Infinitelevel' can exist at a time"))
@@ -209,45 +329,39 @@ class InfiniteLevel(Scene):
         self.player.collision_count = 0
         self.reward_on_goal = 200
 
-        for box in self.maze.boxes:
-            # move to top-left corner of maze + scale and extend width
-            # + move to top-left corner of box
-            box.loc = self.maze.top_left_corner + box.loc * (2, 1) - (1, 1)
-        self.player.inside_box[box.col] = False
-
     def next_frame(self, val: Keystroke) -> Union[str, int]:
         """Draw next frame."""
-        if self.instance.first_frame:
-            self.instance.first_frame = False
+        if self.first_act:
+            self.first_act = False
+            self.show_level = 30
             self.build_level()
+
             play_level_up_sound()
             # removes the main maze after 2 sec
-            self.instance.t1.start()
             frame = self.get_boundary_frame()
             frame += self.instance.maze.map
             render(frame)
             for box in self.instance.maze.boxes:
                 box.render(self.instance.player)
-
             self.instance.player.start()
+            return ""
+
+        elif self.wait > 0:
+            # block any actions from player and then remove maze
+            self.wait -= 1
+            if self.wait == 0:
+                self.remove_maze(0)
 
         elif val.is_sequence and (257 < val.code < 262):
             # update player
             self.instance.player.update(val, self.instance.maze)
             # check if game ends
             if all(self.instance.player.avi.coords == self.instance.end_loc):
+                self.player.score.value += self.reward_on_goal
                 self.instance.reset_cls()
                 self.instance.next_frame(Keystroke())
                 render(self.instance.maze.map)
-            if not self.instance.t1.is_alive() or self.player_in_boxes(self.instance.player):
-                # render boxes and mazes
-                render(self.instance.level_boundary.map)
-                for box in self.instance.maze.boxes:
-                    box.render(self.instance.player)
-                # render player
-                render(term.move_xy(*self.instance.end_loc) + "&")
-                self.instance.maze_is_visible = False
-            self.instance.player.render()
+            self.render()
         elif val.lower() == "e":
             self.player.player_movement_sound(maze=self.maze)
         elif val.lower() == "q":
@@ -257,17 +371,30 @@ class InfiniteLevel(Scene):
         elif val.lower() == "h":
             if not self.instance.maze_is_visible:
                 self.instance.maze_is_visible = True
-                render(self.instance.maze.map)
+                render(self.instance.map)
                 for box in self.instance.maze.boxes:
-                    box.render(self.instance.player)
+                    box.render(self.player)
                 self.instance.player.render()
             else:
                 self.instance.remove_maze(0)
-                return ""
 
         # things that should update on every frame goes here
-        self.player.score.update(player_inside_box=any(self.player.inside_box.values()))
+        if not self.wait > 0:
+            self.player.score.update(
+                player_inside_box=any(self.player.inside_box.values())
+            )
+        if self.player.score.value <= 0:
+            return LOSE
         return ""
+
+    def render(self) -> None:
+        """Refreshing the scene"""
+        for box in self.maze.boxes:
+            box.render(self.player)
+        render(self.level_boundary.map)
+        # render player
+        render(term.move_xy(*self.end_loc) + "&")
+        self.player.render()
 
     def remove_maze(self, sleep: float = 2) -> None:
         """Erase main maze"""
@@ -276,7 +403,7 @@ class InfiniteLevel(Scene):
         render(self.get_boundary_frame())
         for box in self.instance.maze.boxes:
             box.render(self.instance.player)
-        self.instance.player.render()
+        self.player.render()
 
     def get_boundary_frame(self) -> str:
         """Get the frame with only boundary"""
@@ -312,15 +439,15 @@ class InfiniteLevel(Scene):
         for y in range(0, num_box_y):
             for x in range(0, num_box_x):
                 box_pos = None
-                while box_pos is None or box_pos.x < 2 or box_pos.y < 2 or box_pos.x > len(
-                        self.maze.matrix[1]) - 2 or box_pos.y > len(self.maze.matrix) - 2 or \
-                        self.maze.matrix[box_pos.y][box_pos.x] != AIR or all(box_pos == self.maze.start) or all(
+                while box_pos is None or box_pos.x < 2 or box_pos.y < 2 or box_pos.y > len(
+                        self.maze.matrix[1]) - 2 or box_pos.x > len(self.maze.matrix) - 2 or \
+                        self.maze.matrix[box_pos.x][box_pos.y] != AIR or all(box_pos == self.maze.start) or all(
                         box_pos == self.maze.end):
-                    box_pos = Vec(
-                        self.maze.width * 2 // num_box_x // 2 + (self.maze.width * 2 // num_box_x) * x + randrange(-2,
-                                                                                                                   2),
-                        (self.maze.height // num_box_y // 2) + (self.maze.height * 2 // num_box_y) * y + randrange(-2,
-                                                                                                                   2))
+                    box_pos = Vec(*reversed((
+                        self.maze.height // num_box_y // 2 + (self.maze.height * 2 // num_box_y) * y
+                        + randrange(-2, 2),
+                        self.maze.width * 2 // num_box_x // 2 + (self.maze.width * 2 // num_box_x) * x
+                        + randrange(-2, 2))))
                 logging.debug("Box pos: {}".format(str(box_pos)))
                 box = Box(box_pos)
                 box.generate_map(self.maze, radius)
@@ -333,8 +460,7 @@ class InfiniteLevel(Scene):
         for box in self.instance.maze.boxes:
             box.needs_cleaning = False
         self.instance.player.start()
-        self.instance.first_frame = True
-        self.instance.t1 = Thread(target=self.remove_maze, daemon=True)
+        self.instance.first_act = True
 
     @classmethod
     def reset_cls(cls):

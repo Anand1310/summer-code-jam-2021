@@ -25,7 +25,9 @@ RESET = 2
 QUIT = 3
 PAUSE = 4
 PLAY = 5
-INFINITE = 7
+LOSE = 6
+CREDITS = 7
+TITLE = 0
 
 term = blessed.Terminal()
 
@@ -67,33 +69,18 @@ class Game:
         with term.cbreak():
             val = Keystroke()
             while True:
-                # player score
-                # if self.current_scene != self.pause and self.current_scene_index != 0:
-                #     self.player.score -= 0.05 * (1 + 10 * self.player.inside_box)
-                # txt = f"Score:{int(self.player.score)}"
-                # txt = term.home + term.move_x(term.width - len(txt)) + txt
-                # render(txt, col="black")
 
                 command = self.current_scene.next_frame(val)
                 # get all the frames and print
-                print(render.screen())
-
+                frame = render.screen()
+                print(frame)
                 if command == NEXT_SCENE:
+                    self.current_scene.reset()
                     self.current_scene_index += 1
                     # end game if scenes end
-                    if self.current_scene_index == len(self.scenes):
+                    if self.current_scene_index == len(self.scenes)-1:
                         break
                     else:
-                        self.current_scene = self.scenes[self.current_scene_index]
-                        continue
-                elif command == INFINITE:
-                    # TODO infinite level
-                    self.current_scene_index += 1
-                    if self.current_scene_index == len(self.scenes):
-                        break
-                    else:
-                        logging.info(self.current_scene_index)
-                        logging.info(len(self.scenes))
                         self.current_scene = self.scenes[self.current_scene_index]
                         continue
                 elif command == RESET:
@@ -106,9 +93,17 @@ class Game:
                 elif command == PLAY:
                     self.pause.reset()
                     self.current_scene = self.scenes[self.current_scene_index]
-                    self.current_scene.next_frame(Keystroke())
+                    self.current_scene.render()
                     continue
-                elif command == QUIT:
+                elif command == CREDITS:
+                    self.current_scene.reset()
+                    self.current_scene = self.scenes[-1]
+                    self.current_scene.next_frame(Keystroke())
+                elif command == TITLE:
+                    self.current_scene.reset()
+                    self.current_scene = self.scenes[0]
+                    self.current_scene.next_frame(Keystroke())
+                elif command == QUIT or command == LOSE:
                     break
                 val = term.inkey(timeout=0.05)  # 20 fps
 

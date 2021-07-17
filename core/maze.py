@@ -129,11 +129,11 @@ class Maze(object):
 
     def screen2mat(self, screen: Vec) -> Vec:
         """Convert screen location of a point to matrix location"""
-        return (screen - self.top_left_corner) // (2, 1)
+        return Vec(*reversed((screen - self.top_left_corner) // (2, 1)))
 
     def mat2screen(self, mat: Vec) -> Vec:
         """Convert matrix location of a point to screen location"""
-        return self.top_left_corner + mat * (2, 1)
+        return self.top_left_corner + Vec(mat[1], mat[0]) * (2, 1)
 
     def neighbors(self, cell: Cell) -> Iterator[Cell]:
         """
@@ -278,7 +278,7 @@ class Maze(object):
 
     def _get_random_position(self) -> Tuple[int, int]:
         """Returns a random position on the maze."""
-        return random.randrange(0, self.width * 2), random.randrange(0, self.height)
+        return random.randrange(0, self.height), random.randrange(0, self.width * 2)
 
     def get_random_start_end_position(self, random_pos: bool = False) -> None:
         """Return a array with start and end position"""
@@ -286,7 +286,7 @@ class Maze(object):
         def check() -> bool:
             """Return whether the player and target location are valid"""
             if (self.start is None or all(self.start == self.end) or self.end is None
-                    or self.matrix[self.start.y][self.start.x] != AIR or self.matrix[self.end.y][self.end.x] != AIR):
+                    or self.matrix[self.start.x][self.start.y] != AIR or self.matrix[self.end.x][self.end.y] != AIR):
                 return False
             else:
                 distance = np.linalg.norm(self.start - self.end)
@@ -298,13 +298,13 @@ class Maze(object):
             while not check():
                 self.start = Vec(*self._get_random_position())
                 self.end = Vec(*self._get_random_position())
-            logging.debug("starting pos: {}".format(self.start))
+            logging.debug(f"starting pos: {self.start} {self.end}")
         else:
             while (
-                    self.start is None or self.matrix[self.start.y][self.start.x] != AIR
+                    self.start is None or self.matrix[self.start.x][self.start.y] != AIR
             ):
                 self.start = Vec(*reversed([random.randrange(0, self.height), 1]))
-            while self.end is None or self.matrix[self.end.y][self.end.x] != AIR:
+            while self.end is None or self.matrix[self.end.x][self.end.y] != AIR:
                 self.end = Vec(*reversed([random.randrange(0, self.height), self.width - 1]))
             self.end = (self.end + 1) * 2 - 1
 
@@ -336,13 +336,19 @@ class Maze(object):
             for x, char in enumerate(line):
                 char._location = self.top_left_corner + Vec(x, y)
 
+        erase_map = self.map
+        for chr in "┼├┴┬┌└─╶┤│┘┐╷╵╴":
+            if chr in erase_map:
+                erase_map = erase_map.replace(chr, " ")
+        self.erase_map = erase_map
+
     def set_top_left_corner(self, maze_shape: Vec) -> None:
         """Set location of the top left corner"""
         terminal_shape = Vec(term.width, term.height)
         self.top_left_corner = (terminal_shape - maze_shape) // 2
 
     @classmethod
-    def load(cls, fname: str, data: dict = None) -> Maze:
+    def load(cls, fname: str = "", data: dict = None) -> Maze:
         """Load everything from json file"""
         obj = cls(width=20, height=10)
         if data is None:
@@ -351,14 +357,18 @@ class Maze(object):
 
         obj.set_map(data.pop("map"))
 
+        # getting shape of the maze from string representation
+        maze = str(obj).split("\n")
+        maze_shape = Vec(len(maze[0]), len(maze))
+        obj.set_top_left_corner(maze_shape)
+
         start = data.pop("start", None)
         if start:
-            obj.start = Vec(*reversed(start))
+            obj.start = obj.mat2screen(start)
         end = data.pop("end", None)
         if end:
-            obj.end = Vec(*reversed(end))
+            obj.end = obj.mat2screen(end)
 
-        obj.set_erase_map()
         for color, box_dict in data.items():
             obj.boxes.append(Box.load_from_dict(data=box_dict, col=color))
 
@@ -402,6 +412,7 @@ class Box:
         self.col = col
         self.scene_render = render
         self.player_inside = False
+        self.needs_cleaning = False
 
         self.loc = location
 
@@ -419,46 +430,31 @@ class Box:
         """Return associated maze if it should be shown"""
         self.player_inside = False
 
-        for i in range(1, self.shape.x - 1):
-            for j in range(1, self.shape.y - 1):
-                p = self.loc + (i, j)
-                self.player_inside = all(player.avi.coords == p)
-
-                if self.player_inside:
-                    break
-            if self.player_inside:
-                break
+        self.player_inside = all(self.loc + (1, 1) == player.avi.coords)
 
         # note if player is inside some box for scoring
         player.inside_box[self.col] = self.player_inside
         # if player enters inside, play sound etc
         if self.player_inside:
             player.enter_box()
+            self.needs_cleaning = True
             return self.maze.map
+        elif self.needs_cleaning:
+            self.needs_cleaning = False
+            return self.maze.erase_map + self.image
         else:
             return ""
 
     def player_in_box(self, player: Player) -> bool:
         """Return True if player in box"""
-        player_inside_box = None
-
-        for i in range(1, self.shape.x - 1):
-            for j in range(1, self.shape.y - 1):
-                p = self.loc + (i, j)
-                player_inside_box = all(player.avi.coords == p)
-
-                if player_inside_box:
-                    return True
-            if player_inside_box:
-                return True
-        return False
+        return all(self.loc + (1, 1) == player.avi.coords)
 
     @classmethod
     def load_from_dict(cls, data: dict, col: str) -> Box:
         """Load box data from dictionary"""
         obj = cls()
         obj.col = col
-        obj.loc = Vec(*reversed(data.pop("location")))
+        obj.loc = Vec(*data.pop("location"))
         obj.maze = Maze.load("", data)
 
         image = term.move_xy(*obj.maze.mat2screen(obj.loc) - (1, 1))

@@ -57,7 +57,7 @@ class Boundary:
         my_map = [self.term.move_xy(x, y) + "┌".ljust(self.width, "─") + "┐"]
         for i in range(self.height - 1):
             my_map.append(
-                self.term.move_xy(x, y + i + 1) + "│".ljust(self.width, " ") + "│"
+                self.term.move_xy(x, y + i + 1) + "│" + self.term.move_right(self.width-1) + "│"
             )
         my_map.append(
             self.term.move_xy(x, y + self.height) + "└".ljust(self.width, "─") + "┘"
