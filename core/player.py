@@ -188,7 +188,7 @@ class Player:
         """Called when player hits wall"""
 
 
-class Menu(Cursor):
+class MenuCursor(Cursor):
     """Menu Cursor that moves up and down"""
 
     def __init__(self, coords: Vec, bounds: Vec, options: list, fill: str = "->",
@@ -202,7 +202,7 @@ class Menu(Cursor):
 
     def move(self, direction: str) -> None:
         """A bounded move method"""
-        super(Menu, self).move(direction)
+        super(MenuCursor, self).move(direction)
         new_loc = self.coords
         if any(self.l_bounds > new_loc) or any(new_loc > self.u_bounds):
             self.stop()

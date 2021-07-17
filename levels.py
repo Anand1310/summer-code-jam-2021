@@ -1,46 +1,55 @@
 """Examples for designing levels."""
 import json
+import logging
 import time
 from copy import copy
 from threading import Thread
-from typing import Dict, Union
+from typing import Callable, Dict, List, Union
 
 import blessed
 from blessed.keyboard import Keystroke
 
 from core.maze import Maze
-from core.player import Menu, Player
+from core.player import MenuCursor, Player
 from core.render import Render
 from core.sound import enter_game_sound, play_level_up_sound, stop_bgm
-from game import (
-    CREDITS, LOSE, NEXT_SCENE, PAUSE, PLAY, QUIT, RESET, TITLE, Scene
-)
+from game import CREDITS, LOSE, NEXT_SCENE, PAUSE, PLAY, QUIT, RESET, TITLE, Scene
 from utils import Boundary, Vec  # type: ignore
 
 term = blessed.Terminal()
 render = Render()
 
 
-class TitleScene(Scene):
+class Menu(Scene):
     """Example of a title scene."""
 
-    def __init__(self) -> None:
+    def __init__(
+        self, txt: List[str], choices: List[str], action_on_choice: Callable
+    ) -> None:
         super().__init__()
-        txt = []
-        txt.append("welcome to 'Game name' :)")
-        txt.append("")
-        txt.append("Start")
-        txt.append("Credits")
-        txt.append("Quit")
+        self.txt = txt
+        self.choices = choices
+        self.action_on_choice = action_on_choice
+        # txt = []
+        # txt.append("welcome to 'Game name' :)")
+        # txt.append("")
+        # txt.append("Start")
+        # txt.append("Credits")
+        # txt.append("Quit")
         self.current_frame = term.black_on_peachpuff2 + term.clear
-        width = (self.width - len(txt[0])) // 2
-        height = self.height // 2
+        width = (self.width - max(len(s) for s in txt)) // 2
+        txt = self.txt + list(self.choices)
+        height = self.height // 2 - len(txt) // 2
         for i in range(len(txt)):
             self.current_frame += term.move_xy(x=width, y=height + i)
             self.current_frame += txt[i]
         self.first_frame = True
 
-        self.menu = Menu(Vec(width - 3, height + 2), Vec(0, 2), txt[2:])
+        self.menu = MenuCursor(
+            Vec(width - 3, height + 2),
+            Vec(0, len(self.choices) - 1),
+            list(self.choices),
+        )
 
     def next_frame(self, val: Keystroke) -> Union[str, int]:
         """Returns next frame to render"""
@@ -51,18 +60,23 @@ class TitleScene(Scene):
             self.menu.render()
             # return self.current_frame
         elif val.is_sequence and (257 < val.code < 262):
+            logging.info(self.menu.coords)
             self.menu.move(val.name)
             self.menu.render()
         elif str(val) == " " or val.name == "KEY_ENTER":
             choice = self.menu.options[self.menu.selected]
-            if choice == "Start":
-                enter_game_sound()
-                return NEXT_SCENE
-            elif choice == "Credits":
-                play_level_up_sound()
-                return CREDITS
-            else:
-                return QUIT
+            # if choice == "Start":
+            #     enter_game_sound()
+            #     return NEXT_SCENE
+            # elif choice == "Credits":
+            #     play_level_up_sound()
+            #     return CREDITS
+            # else:
+            #     return QUIT
+
+            play_level_up_sound()
+            logging.info("powla")
+            return self.action_on_choice(choice)
         return ""
         # return ""
 
@@ -73,53 +87,53 @@ class TitleScene(Scene):
         self.menu.coords = copy(self.menu.l_bounds)
 
 
-class CreditsScene(Scene):
-    """The class for the Credits"""
+# class CreditsScene(Scene):
+#     """The class for the Credits"""
 
-    def __init__(self) -> None:
-        super().__init__()
-        txt = []
-        txt.append("Credits")
-        txt.append("")
-        txt.append("Anand")
-        txt.append("Pritam Dey")
-        txt.append("Jason Ho")
-        txt.append("Himi")
-        txt.append("Olivia")
-        txt.append("Stone Steel")
-        txt.append("")
-        txt.append("Back")
-        self.current_frame = term.black_on_peachpuff2 + term.clear
-        width = (self.width - len(txt[0])) // 2
-        height = self.height // 4
-        for i in range(len(txt)):
-            self.current_frame += term.move_xy(x=width, y=height + i)
-            self.current_frame += txt[i]
-        self.first_frame = True
-        self.menu = Menu(Vec(width - 3, height + 2), Vec(0, 7), txt[2:])
+#     def __init__(self) -> None:
+#         super().__init__()
+#         txt = []
+#         txt.append("Credits")
+#         txt.append("")
+#         txt.append("Anand")
+#         txt.append("Pritam Dey")
+#         txt.append("Jason Ho")
+#         txt.append("Himi")
+#         txt.append("Olivia")
+#         txt.append("Stone Steel")
+#         txt.append("")
+#         txt.append("Back")
+#         self.current_frame = term.black_on_peachpuff2 + term.clear
+#         width = (self.width - len(txt[0])) // 2
+#         height = self.height // 4
+#         for i in range(len(txt)):
+#             self.current_frame += term.move_xy(x=width, y=height + i)
+#             self.current_frame += txt[i]
+#         self.first_frame = True
+#         self.menu = MenuCursor(Vec(width - 3, height + 2), Vec(0, 7), txt[2:])
 
-    def next_frame(self, val: Keystroke) -> Union[None, int]:
-        """Returns next frame to render"""
-        # no need to update the frame anymore
-        if self.first_frame:
-            self.first_frame = False
-            render(self.current_frame)
-            self.menu.render()
-            # return self.current_frame
-        elif val.is_sequence and (257 < val.code < 262):
-            self.menu.move(val.name)
-            self.menu.render()
-        elif str(val) == " " or val.name == "KEY_ENTER":
-            if self.menu.options[self.menu.selected] == "Back":
-                play_level_up_sound()
-                return TITLE
-        return None
+#     def next_frame(self, val: Keystroke) -> Union[None, int]:
+#         """Returns next frame to render"""
+#         # no need to update the frame anymore
+#         if self.first_frame:
+#             self.first_frame = False
+#             render(self.current_frame)
+#             self.menu.render()
+#             # return self.current_frame
+#         elif val.is_sequence and (257 < val.code < 262):
+#             self.menu.move(val.name)
+#             self.menu.render()
+#         elif str(val) == " " or val.name == "KEY_ENTER":
+#             if self.menu.options[self.menu.selected] == "Back":
+#                 play_level_up_sound()
+#                 return TITLE
+#         return None
 
-    def reset(self) -> None:
-        """Reset this level"""
-        self.first_frame = True
-        self.menu.selected = 0
-        self.menu.coords = copy(self.menu.l_bounds)
+# def reset(self) -> None:
+#     """Reset this level"""
+#     self.first_frame = True
+#     self.menu.selected = 0
+#     self.menu.coords = copy(self.menu.l_bounds)
 
 
 class Level(Scene):
@@ -230,8 +244,10 @@ class Level(Scene):
             return LOSE
         return ""
 
-    def render(self) -> None:
+    def render(self, hard: bool = False) -> None:
         """Refreshing the scene"""
+        if hard:
+            render(term.clear, bg_col="lightskyblue1")
         for box in self.maze.boxes:
             box.render(self.player)
         render(self.level_boundary.map)
@@ -355,3 +371,62 @@ class Pause(Scene):
         )
         self.current_frame += self.txt3
         self.first_frame = True
+
+
+def title_menu_action(choice: str) -> Union[int, None]:
+    """Actions for Title menu"""
+    logging.info("title")
+    if choice == "Start":
+        enter_game_sound()
+        return NEXT_SCENE
+    elif choice == "Credits":
+        return CREDITS
+    else:
+        return QUIT
+
+
+title_scene = Menu(
+    txt=["Welcome :)", ""],
+    choices=["Start", "Credits", "Quit"],
+    action_on_choice=title_menu_action,
+)
+
+
+def credit_menu_action(choice: str) -> Union[int, None]:
+    """Actions for Credit menu"""
+    logging.info("credit")
+    if choice == "Back":
+        return TITLE
+    return None
+
+
+credit_scene = Menu(
+    txt=["Creidts", ""],
+    choices=[
+        "Anand",
+        "Pritam Dey",
+        "Jason Ho",
+        "Himi",
+        "Olivia",
+        "StoneSteel",
+        "",
+        "Back",
+    ],
+    action_on_choice=credit_menu_action,
+)
+
+
+def pause_menu_action(choice: str) -> Union[int, None]:
+    """Actions for Pause menu"""
+    if choice == "Return":
+        return PLAY
+    elif choice == "Quit":
+        return QUIT
+    return None
+
+
+pause_menu = Menu(
+    txt=["Game Paused", ""],
+    choices=["Return", "Quit"],
+    action_on_choice=pause_menu_action,
+)
