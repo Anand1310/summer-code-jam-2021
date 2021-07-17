@@ -54,16 +54,27 @@ class Boundary:
     def generate_map(self, top_left: Vec) -> str:
         """Generates a string that can be rendered by a Render Object"""
         x, y = top_left
-        my_map = []
-        my_map.append(self.term.move_xy(x, y) + "┌".ljust((self.width), "─") + "┐")
+        my_map = [self.term.move_xy(x, y) + "┌".ljust(self.width, "─") + "┐"]
         for i in range(self.height - 1):
             my_map.append(
                 self.term.move_xy(x, y + i + 1) + "│" + self.term.move_right(self.width-1) + "│"
             )
         my_map.append(
-            self.term.move_xy(x, y + self.height) + "└".ljust((self.width), "─") + "┘"
+            self.term.move_xy(x, y + self.height) + "└".ljust(self.width, "─") + "┘"
         )
         return "".join(my_map)
+
+
+def points_in_circle_np(radius: int, x0: int = 0, y0: int = 0, ) -> list:
+    """Return a list of point in the circle"""
+    result = []
+    x_ = np.arange(x0 - radius - 1, x0 + radius + 1, dtype=int)
+    y_ = np.arange(y0 - radius - 1, y0 + radius + 1, dtype=int)
+    x, y = np.where((x_[:, np.newaxis] - x0) ** 2 + (y_ - y0) ** 2 <= radius ** 2)
+    for x, y in zip(x_[x], y_[y]):
+        if x >= 0 and y >= 0:
+            result.append(Vec(x, y))
+    return result
 
 
 if __name__ == "__main__":

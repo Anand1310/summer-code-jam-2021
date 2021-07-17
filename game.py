@@ -26,6 +26,7 @@ PLAY = 5
 LOSE = 6
 CREDITS = 7
 TITLE = 0
+INFINITE = 8
 
 term = blessed.Terminal()
 
@@ -76,7 +77,7 @@ class Game:
                     self.current_scene.reset()
                     self.current_scene_index += 1
                     # end game if scenes end
-                    if self.current_scene_index == len(self.scenes)-1:
+                    if self.current_scene_index == len(self.scenes) - 1:
                         break
                     else:
                         self.current_scene = self.scenes[self.current_scene_index]
