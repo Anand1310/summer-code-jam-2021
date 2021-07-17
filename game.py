@@ -30,6 +30,7 @@ TUTORIAL = 8
 END = 9
 LEADERBOARD = 9
 
+
 term = blessed.Terminal()
 
 render = Render()
