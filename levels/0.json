@@ -43,7 +43,15 @@
           ]
       },
       "dialogues":[
-                  [ [3,1], [-1,-2], "These are the boxes. You know what to do ;)"],
-                  [ [5,5], [-5,0], "Oops, I think you are trapped. Fortunately you have echo location"]]
+                  [ [3,1], [-2,0], "Wait for maze to disappear, then move."],
+                  [ [3,4], [-2,-1], "These are the boxes. You know what to do ;)"],
+                  [ [5,5], [-2,-4], "Oops, I think you are trapped. Move right to get some help."],
+                  [ [5,7], [-2,-6], "Fortunately you have echo location. Press 'e' to hear. Move more right"],
+                  [ [5,10], [-2,-2], "As you go closer to wall, echo can be heard louder."],
+                  [ [5,13], [-2,-2], "Here, you can hear the louder echo. Move up"],
+                  [ [4,13], [-2,-4], "Press 'e'. Echo will come from the direction you are going."],
+                  [ [3,13], [-2,-6], "This is the last box, where you can stay and think your next move."],
+                  [ [3,16], [-2,-7], "Tutorial is over, now its time to play real game. Reach & to finish."]
+      ]
 
 }
