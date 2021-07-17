@@ -343,8 +343,7 @@ class EndScene(Scene):
                 score_file.close()
                 return NEXT_SCENE
             elif inp.code == term.KEY_ESCAPE or inp == chr(3):
-                # don't save score
-                self.name = None
+                self.name = "No Stranger To Love"
                 return NEXT_SCENE
             elif not inp.is_sequence and len(self.name) < 50 and inp != ">":
                 self.name += inp
