@@ -1,6 +1,5 @@
 # type: ignore
 """Collection of utilities."""
-from types import GeneratorType
 from typing import Iterable, Union
 
 import numpy as np
@@ -66,13 +65,15 @@ class Boundary:
         return "".join(my_map)
 
 
-def points_in_circle_np(radius: int, x0: int = 0, y0: int = 0, ) -> GeneratorType:
+def points_in_circle_np(radius: int, x0: int = 0, y0: int = 0, ) -> list:
     """Return a list of point in the circle"""
+    result = []
     x_ = np.arange(x0 - radius - 1, x0 + radius + 1, dtype=int)
     y_ = np.arange(y0 - radius - 1, y0 + radius + 1, dtype=int)
     x, y = np.where((x_[:, np.newaxis] - x0) ** 2 + (y_ - y0) ** 2 <= radius ** 2)
     for x, y in zip(x_[x], y_[y]):
-        yield Vec(x, y)
+        result.append(Vec(x, y))
+    return result
 
 
 if __name__ == "__main__":
