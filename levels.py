@@ -1,5 +1,4 @@
 """Examples for designing levels."""
-import logging
 import time
 from threading import Thread
 from typing import Union
@@ -179,7 +178,7 @@ class EndScene(Scene):
         self.name = ""
         self.player: Player = None
 
-    def set_player(self, player: Player):
+    def set_player(self, player: Player) -> None:
         """Set player for getting their name after game is over."""
         self.player = player
 
@@ -287,28 +286,10 @@ class Leaderboard(Scene):
 
     def __init__(self) -> None:
         super().__init__()
-        txt1 = "Your name has been etched into the sands of time."
-        self.current_frame = term.yellow_on_firebrick + term.clear
+        txt1 = "Your name has been etched onto the sands of time."
+        self.current_frame = term.firebrick_on_lightgreen + term.clear
         self.current_frame += term.move_xy(x=(self.width - len(txt1)) // 2, y=3)
         self.current_frame += txt1
-
-        with open("leaderboard.txt", "r") as f:
-            players = f.read()
-            players_sorted = sorted(
-                [player.split(">") for player in players.split("\n")[:-1]],
-                key=lambda x: float(x[1]),
-                reverse=True,
-            )
-            scores = make_table(
-                rows=players_sorted, labels=["Name", "Score"], centered=True,
-            )
-
-            table_width = len(scores.split("\n")[0])
-            for n, line in enumerate(scores.split("\n")):
-                self.current_frame += term.move_xy(
-                    x=(self.width - table_width) // 2, y=n + 5,
-                )
-                self.current_frame += line
 
         self.first_frame = True
 
@@ -317,6 +298,23 @@ class Leaderboard(Scene):
         # no need to update the frame anymore
         if self.first_frame:
             self.first_frame = False
+            with open("leaderboard.txt", "r") as f:
+                players = f.read()
+                players_sorted = sorted(
+                    [player.split(">") for player in players.split("\n")[:-1]],
+                    key=lambda x: float(x[1]),
+                    reverse=True,
+                )
+                scores = make_table(
+                    rows=players_sorted, labels=["Name", "Persistence"], centered=True,
+                )
+
+                table_width = len(scores.split("\n")[0])
+                for n, line in enumerate(scores.split("\n")):
+                    self.current_frame += term.move_xy(
+                        x=(self.width - table_width) // 2, y=n + 5,
+                    )
+                    self.current_frame += line
             render(self.current_frame)
             # return self.current_frame
         elif str(val) == " " or val.name == "KEY_ENTER":
