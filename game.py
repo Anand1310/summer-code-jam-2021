@@ -28,7 +28,7 @@ LOSE = 6
 CREDITS = 7
 TUTORIAL = 8
 END = 9
-LEADERBOARD = 9
+LEADERBOARD = 10
 
 
 term = blessed.Terminal()
