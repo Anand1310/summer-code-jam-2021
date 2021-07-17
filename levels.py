@@ -198,10 +198,6 @@ class InfiniteLevel(Scene):
             self.end_loc = self.maze.mat2screen(self.maze.end)
             self.first_frame = True
             self.maze_is_visible = False
-            for box in self.maze.boxes:
-                # move to top-left corner of maze + scale and extend width
-                # + move to top-left corner of box
-                box.loc = self.maze.top_left_corner + box.loc * (2, 1) - (1, 1)
             self.t1 = Thread(target=self.remove_maze, daemon=True)
             type(self).instance = self
         else:

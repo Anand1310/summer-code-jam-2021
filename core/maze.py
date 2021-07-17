@@ -384,8 +384,6 @@ class Maze(object):
 
         self.get_random_start_end_position()
 
-        # data = {"start": [self.player], "end": [self.target]}
-
         return map_name
 
 
