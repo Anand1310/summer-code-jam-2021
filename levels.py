@@ -1,4 +1,5 @@
 """Examples for designing levels."""
+import logging
 import time
 from threading import Thread
 from typing import Union
@@ -10,6 +11,7 @@ from core.maze import Maze
 from core.player import Player
 from core.render import Render
 from core.sound import enter_game_sound, play_level_up_sound, stop_bgm
+from core.table import make_table
 from game import NEXT_SCENE, PAUSE, PLAY, QUIT, RESET, Scene
 from utils import Boundary  # type: ignore
 
@@ -158,24 +160,63 @@ class EndScene(Scene):
 
     def __init__(self):
         super().__init__()
-        txt = "You won :o"
-        self.current_frame = term.move_xy(
+        txt = "You won, what shall you be remembered as?"
+        txt2 = "Press enter when you've decided your name."
+        txt3 = "Press escape if you don't want to be remembered."
+        self.current_frame = term.clear + term.move_xy(
             x=(self.width - len(txt)) // 2, y=self.height // 2
         )
         self.current_frame += txt
+        self.current_frame += term.move_xy(
+            x=(self.width - len(txt2)) // 2, y=self.height // 2 + 4
+        )
+        self.current_frame += txt2
+        self.current_frame += term.move_xy(
+            x=(self.width - len(txt3)) // 2, y=self.height - 5
+        )
+        self.current_frame += txt3
         self.first_frame = True
+        self.name = ""
+        self.player: Player = None
+
+    def set_player(self, player: Player):
+        """Set player for getting their name after game is over."""
+        self.player = player
 
     def next_frame(self, val: Keystroke) -> Union[None, int]:
-        """Return next frame to render"""
-        # no need to update each frame
+        """Return next frame to render."""
         if self.first_frame:
             stop_bgm()
             self.first_frame = False
             render(self.current_frame)
             # return self.render(self.current_frame)
-        elif str(val) == " " or val.name == "KEY_ENTER":
+        elif val.lower() == "q":
             return NEXT_SCENE
-        return None
+        else:
+            inp = term.inkey()
+            if inp.code == term.KEY_ENTER:
+                # save score
+                with open("leaderboard.txt", "a") as score_file:
+                    score_file.write(f"{self.name}>{self.player.score.value:.2f}\n")
+
+                score_file.close()
+                return NEXT_SCENE
+            elif inp.code == term.KEY_ESCAPE or inp == chr(3):
+                # don't save score
+                self.name = None
+                return NEXT_SCENE
+            elif not inp.is_sequence and len(self.name) < 50 and inp != ">":
+                self.name += inp
+            elif inp.code in (term.KEY_BACKSPACE, term.KEY_DELETE):
+                self.name = self.name[:-1]
+                self.current_frame += term.move_left(1)
+                self.current_frame += " "
+
+            self.current_frame += term.move_xy(
+                x=self.width // 2, y=self.height // 2 + 1
+            )
+            self.current_frame += term.bold + self.name + term.normal
+            render(self.current_frame)
 
     def reset(self) -> None:
         """No use."""
@@ -183,7 +224,7 @@ class EndScene(Scene):
 
 
 class Pause(Scene):
-    """Pause Screen for the game"""
+    """Pause Screen for the game."""
 
     def __init__(self):
         super().__init__()
@@ -223,19 +264,65 @@ class Pause(Scene):
 
     def reset(self) -> None:
         """Reset current scene"""
-        self.txt = "This is the pause screen and we need to design it"
+        self.txt = "PAUSED"
         self.txt2 = "Hit p to play"
         self.txt3 = "Hit q again to exit"
-        self.current_frame = term.move_xy(
+        self.current_frame = term.clear + term.move_xy(
             x=(self.width - len(self.txt)) // 2, y=self.height // 2
         )
-        self.current_frame += self.txt
+        self.current_frame += term.bold + self.txt + term.normal
         self.current_frame += term.move_xy(
             x=(self.width - len(self.txt2)) // 2, y=self.height // 2 + 1
         )
         self.current_frame += self.txt2
         self.current_frame += term.move_xy(
-            x=(self.width - len(self.txt3)) // 2, y=self.height
+            x=(self.width - len(self.txt3)) // 2, y=self.height - 5
         )
         self.current_frame += self.txt3
         self.first_frame = True
+
+
+class Leaderboard(Scene):
+    """Example of a title scene."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        txt1 = "Your name has been etched into the sands of time."
+        self.current_frame = term.yellow_on_firebrick + term.clear
+        self.current_frame += term.move_xy(x=(self.width - len(txt1)) // 2, y=3)
+        self.current_frame += txt1
+
+        with open("leaderboard.txt", "r") as f:
+            players = f.read()
+            players_sorted = sorted(
+                [player.split(">") for player in players.split("\n")[:-1]],
+                key=lambda x: float(x[1]),
+                reverse=True,
+            )
+            scores = make_table(
+                rows=players_sorted, labels=["Name", "Score"], centered=True,
+            )
+
+            table_width = len(scores.split("\n")[0])
+            for n, line in enumerate(scores.split("\n")):
+                self.current_frame += term.move_xy(
+                    x=(self.width - table_width) // 2, y=n + 5,
+                )
+                self.current_frame += line
+
+        self.first_frame = True
+
+    def next_frame(self, val: Keystroke) -> Union[None, int]:
+        """Returns next frame to render"""
+        # no need to update the frame anymore
+        if self.first_frame:
+            self.first_frame = False
+            render(self.current_frame)
+            # return self.current_frame
+        elif str(val) == " " or val.name == "KEY_ENTER":
+            return NEXT_SCENE
+        return None
+        # return ""
+
+    def reset(self) -> None:
+        """Reset has no use for title scene."""
