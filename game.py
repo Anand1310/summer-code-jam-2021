@@ -4,8 +4,6 @@ import os
 from typing import List, Union
 
 import blessed
-import numpy as np
-import pytweening as pt
 from blessed.keyboard import Keystroke
 
 from core.player import Player
@@ -25,6 +23,9 @@ RESET = 2
 QUIT = 3
 PAUSE = 4
 PLAY = 5
+LOSE = 6
+CREDITS = 7
+TITLE = 0
 
 term = blessed.Terminal()
 
@@ -66,21 +67,16 @@ class Game:
         with term.cbreak():
             val = Keystroke()
             while True:
-                # player score
-                # if self.current_scene != self.pause and self.current_scene_index != 0:
-                #     self.player.score -= 0.05 * (1 + 10 * self.player.inside_box)
-                # txt = f"Score:{int(self.player.score)}"
-                # txt = term.home + term.move_x(term.width - len(txt)) + txt
-                # render(txt, col="black")
 
                 command = self.current_scene.next_frame(val)
                 # get all the frames and print
-                print(render.screen())
-
+                frame = render.screen()
+                print(frame)
                 if command == NEXT_SCENE:
+                    self.current_scene.reset()
                     self.current_scene_index += 1
                     # end game if scenes end
-                    if self.current_scene_index == len(self.scenes):
+                    if self.current_scene_index == len(self.scenes)-1:
                         break
                     else:
                         self.current_scene = self.scenes[self.current_scene_index]
@@ -95,74 +91,16 @@ class Game:
                 elif command == PLAY:
                     self.pause.reset()
                     self.current_scene = self.scenes[self.current_scene_index]
-                    self.current_scene.next_frame(Keystroke())
+                    self.current_scene.render(hard=True)
                     continue
-                elif command == QUIT:
+                elif command == CREDITS:
+                    self.current_scene.reset()
+                    self.current_scene = self.scenes[-1]
+                    self.current_scene.next_frame(Keystroke())
+                elif command == TITLE:
+                    self.current_scene.reset()
+                    self.current_scene = self.scenes[0]
+                    self.current_scene.next_frame(Keystroke())
+                elif command == QUIT or command == LOSE:
                     break
                 val = term.inkey(timeout=0.05)  # 20 fps
-
-
-class Camera:
-    """Main camera class. Can have multiple cameras in multiplayer."""
-
-    def __init__(
-        self,
-        game_map: np.ndarray,
-        cam_x: int = 0,
-        cam_y: int = 0,
-        camera_size: int = 100,
-        quickness: float = 0.0,
-    ) -> None:
-        """Initialize the camera.
-
-        :param cam_x: initial position of camera's x coordinates
-        :param cam_y: initial position of camera's y coordinates
-        :param camera_size: Pov size
-        :param game_map: The whole game map
-        :param quickness: how fast camera should transition from one point to another
-        """
-        self.game_map = game_map
-        self.cam_x = cam_x
-        self.cam_y = cam_y
-        self.camera_size = camera_size
-        self.quickness = quickness
-
-    def set_position_styled(self, x: int, y: int) -> List:
-        """
-        Transition coordinates.
-
-        :param x: x coordinate to move to
-        :param y: y coordinate to move to
-        :return: list of coordinates of animation
-        """
-        transition_length = int(1 / 0.1)
-        interval = 10
-        cx = self.cam_x
-        cy = self.cam_y
-        diff_x = x - cx
-        diff_y = y - cy
-        animation_coords = []
-        for i in range(transition_length):
-            cx = cx + pt.easeInOutSine((1 / interval) * i) * diff_x
-            cy = cy + pt.easeInOutSine((1 / interval) * i) * diff_y
-            animation_coords.append((cx, cy))
-        return animation_coords
-
-    def set_position(self, x: int, y: int) -> np.ndarray:
-        """
-        Set position function
-
-        :param x: x coordinate to move to
-        :param y: y coordinate to move to
-        :return: player vision
-        """
-
-        def clip(x: int, p: int, u: int) -> int:
-            return p if x < p else u if x > u else x
-
-        shape = np.shape(self.game_map)
-        y_min = clip(0, y, shape[0] - 1)
-        y_max = clip(0, y + self.camera_size, shape[0] - 1)
-        x_min = clip(0, y, shape[1] - 1)
-        x_max = clip(0, y + self.camera_size, shape[1] - 1)
-        return self.game_map[y_min:y_max, x_min:x_max]

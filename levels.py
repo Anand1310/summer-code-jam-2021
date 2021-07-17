@@ -1,56 +1,141 @@
 """Examples for designing levels."""
+import json
+import logging
 import time
+from copy import copy
 from threading import Thread
-from typing import Union
+from typing import Callable, Dict, List, Union
 
 import blessed
 from blessed.keyboard import Keystroke
 
 from core.maze import Maze
-from core.player import Player
+from core.player import MenuCursor, Player
 from core.render import Render
 from core.sound import enter_game_sound, play_level_up_sound, stop_bgm
-from game import NEXT_SCENE, PAUSE, PLAY, QUIT, RESET, Scene
-from utils import Boundary  # type: ignore
+from game import (
+    CREDITS, LOSE, NEXT_SCENE, PAUSE, PLAY, QUIT, RESET, TITLE, Scene
+)
+from utils import Boundary, Vec  # type: ignore
 
 term = blessed.Terminal()
 render = Render()
 
 
-class TitleScene(Scene):
+class Menu(Scene):
     """Example of a title scene."""
 
-    def __init__(self) -> None:
+    def __init__(
+        self, txt: List[str], choices: List[str], action_on_choice: Callable
+    ) -> None:
         super().__init__()
-        txt1 = "welcome to 'Game name' :)"
-        txt2 = "hit space to start"
+        self.txt = txt
+        self.choices = choices
+        self.action_on_choice = action_on_choice
+        # txt = []
+        # txt.append("welcome to 'Game name' :)")
+        # txt.append("")
+        # txt.append("Start")
+        # txt.append("Credits")
+        # txt.append("Quit")
         self.current_frame = term.black_on_peachpuff2 + term.clear
-        self.current_frame += term.move_xy(
-            x=(self.width - len(txt1)) // 2, y=self.height // 2
-        )
-        self.current_frame += txt1
-        self.current_frame += term.move_xy(
-            x=(self.width - len(txt1)) // 2, y=self.height // 2 + 1
-        )
-        self.current_frame += txt2
+        width = (self.width - max(len(s) for s in txt)) // 2
+        txt = self.txt + list(self.choices)
+        height = self.height // 2 - len(txt) // 2
+        for i in range(len(txt)):
+            self.current_frame += term.move_xy(x=width, y=height + i)
+            self.current_frame += txt[i]
         self.first_frame = True
 
-    def next_frame(self, val: Keystroke) -> Union[None, int]:
+        self.menu = MenuCursor(
+            Vec(width - 3, height + 2),
+            Vec(0, len(self.choices) - 1),
+            list(self.choices),
+        )
+
+    def next_frame(self, val: Keystroke) -> Union[str, int]:
         """Returns next frame to render"""
         # no need to update the frame anymore
         if self.first_frame:
             self.first_frame = False
             render(self.current_frame)
+            self.menu.render()
             # return self.current_frame
+        elif val.is_sequence and (257 < val.code < 262):
+            logging.info(self.menu.coords)
+            self.menu.move(val.name)
+            self.menu.render()
         elif str(val) == " " or val.name == "KEY_ENTER":
-            enter_game_sound()
-            return NEXT_SCENE
-        return None
+            choice = self.menu.options[self.menu.selected]
+            # if choice == "Start":
+            #     enter_game_sound()
+            #     return NEXT_SCENE
+            # elif choice == "Credits":
+            #     play_level_up_sound()
+            #     return CREDITS
+            # else:
+            #     return QUIT
+
+            play_level_up_sound()
+            logging.info("powla")
+            return self.action_on_choice(choice)
+        return ""
         # return ""
 
     def reset(self) -> None:
         """Reset has no use for title scene."""
-        pass
+        self.first_frame = True
+        self.menu.selected = 0
+        self.menu.coords = copy(self.menu.l_bounds)
+
+
+# class CreditsScene(Scene):
+#     """The class for the Credits"""
+
+#     def __init__(self) -> None:
+#         super().__init__()
+#         txt = []
+#         txt.append("Credits")
+#         txt.append("")
+#         txt.append("Anand")
+#         txt.append("Pritam Dey")
+#         txt.append("Jason Ho")
+#         txt.append("Himi")
+#         txt.append("Olivia")
+#         txt.append("Stone Steel")
+#         txt.append("")
+#         txt.append("Back")
+#         self.current_frame = term.black_on_peachpuff2 + term.clear
+#         width = (self.width - len(txt[0])) // 2
+#         height = self.height // 4
+#         for i in range(len(txt)):
+#             self.current_frame += term.move_xy(x=width, y=height + i)
+#             self.current_frame += txt[i]
+#         self.first_frame = True
+#         self.menu = MenuCursor(Vec(width - 3, height + 2), Vec(0, 7), txt[2:])
+
+#     def next_frame(self, val: Keystroke) -> Union[None, int]:
+#         """Returns next frame to render"""
+#         # no need to update the frame anymore
+#         if self.first_frame:
+#             self.first_frame = False
+#             render(self.current_frame)
+#             self.menu.render()
+#             # return self.current_frame
+#         elif val.is_sequence and (257 < val.code < 262):
+#             self.menu.move(val.name)
+#             self.menu.render()
+#         elif str(val) == " " or val.name == "KEY_ENTER":
+#             if self.menu.options[self.menu.selected] == "Back":
+#                 play_level_up_sound()
+#                 return TITLE
+#         return None
+
+# def reset(self) -> None:
+#     """Reset this level"""
+#     self.first_frame = True
+#     self.menu.selected = 0
+#     self.menu.coords = copy(self.menu.l_bounds)
 
 
 class Level(Scene):
@@ -58,7 +143,19 @@ class Level(Scene):
 
     def __init__(self, level: str = "1") -> None:
         super().__init__()
-        self.maze = Maze.load(level)
+
+        with open(f"levels/{level}.json", "r") as f:
+            data = json.load(f)
+
+        self.instructions: Dict = {}
+        self.dialogues = data.pop("dialogues", None)
+        if self.dialogues:
+            for dialogue in self.dialogues:
+                hit_point, coordinate, text = dialogue
+                self.instructions[tuple(hit_point)] = [coordinate, text]
+
+        self.maze = Maze.load(data=data)
+
         self.level_boundary = Boundary(
             len(self.maze.char_matrix[0]),
             len(self.maze.char_matrix),
@@ -66,33 +163,36 @@ class Level(Scene):
             term,
         )
 
-        self.end_loc = self.maze.mat2screen(self.maze.end)
-        self.first_frame = True
+        self.end_loc = self.maze.end
+        self.first_act = True  # set up what to do at the start of the level
+        self.show_level = 40  # number of frames to show the level
+        self.wait = self.show_level
         self.maze_is_visible = False
         self.reward_on_goal = 0
 
         self.player: Player = Player()
 
-    def build_level(self) -> None:
-        """Load current level specific attributes"""
-        self.player.start_loc = self.maze.mat2screen(mat=self.maze.start)
-        self.player.collision_count = 0
-        self.reward_on_goal = 200
-
         for box in self.maze.boxes:
             # move to top-left corner of maze + scale and extend width
             # + move to top-left corner of box
-            box.loc = self.maze.top_left_corner + box.loc * (2, 1) - (1, 1)
+            box.loc = self.maze.mat2screen(box.loc) - (1, 1)
             self.player.inside_box[box.col] = False
+
+    def build_level(self) -> None:
+        """Load current level specific attributes"""
+        self.player.start_loc = copy(self.maze.start)
+        self.player.collision_count = 0
+        self.reward_on_goal = 200
 
     def next_frame(self, val: Keystroke) -> Union[str, int]:
         """Draw next frame."""
-        if self.first_frame:
-            self.first_frame = False
+        if self.first_act:
+            self.first_act = False
+            self.show_level = 30
             self.build_level()
+
             play_level_up_sound()
-            # removes the main maze after 2 sec
-            Thread(target=self.remove_maze, daemon=True).start()
+            # show the maze for 1 sec
             frame = term.clear
             frame += self.level_boundary.map
             frame += self.maze.map
@@ -100,8 +200,16 @@ class Level(Scene):
             render(frame)
             for box in self.maze.boxes:
                 box.render(self.player)
-
             self.player.start()
+            return ""
+
+        elif self.wait > 0:
+            # block any actions from player and then remove maze
+            if self.instructions and self.wait == self.show_level:
+                Thread(target=self.instruct_player, daemon=True).start()
+            self.wait -= 1
+            if self.wait == 0:
+                self.remove_maze(0)
 
         elif val.is_sequence and (257 < val.code < 262):
             # update player
@@ -111,12 +219,9 @@ class Level(Scene):
                 self.player.score.value += self.reward_on_goal
                 return NEXT_SCENE
             # render boxes and mazes
-            render(self.level_boundary.map)
-            for box in self.maze.boxes:
-                box.render(self.player)
-            # render player
-            render(term.move_xy(*self.end_loc) + "&")
-            self.player.render()
+            if self.instructions:
+                Thread(target=self.instruct_player, daemon=True).start()
+            self.render()
         elif val.lower() == "e":
             self.player.player_movement_sound(maze=self.maze)
         elif val.lower() == "q":
@@ -131,11 +236,26 @@ class Level(Scene):
             else:
                 self.maze_is_visible = False
                 self.remove_maze(0)
-                return ""
 
         # things that should update on every frame goes here
-        self.player.score.update(player_inside_box=any(self.player.inside_box.values()))
+        if not self.wait > 0:
+            self.player.score.update(
+                player_inside_box=any(self.player.inside_box.values())
+            )
+        if self.player.score.value <= 0:
+            return LOSE
         return ""
+
+    def render(self, hard: bool = False) -> None:
+        """Refreshing the scene"""
+        if hard:
+            render(term.clear, bg_col="lightskyblue1")
+        for box in self.maze.boxes:
+            box.render(self.player)
+        render(self.level_boundary.map)
+        # render player
+        render(term.move_xy(*self.end_loc) + "&")
+        self.player.render()
 
     def remove_maze(self, sleep: float = 2) -> None:
         """Erase main maze"""
@@ -150,7 +270,29 @@ class Level(Scene):
         for box in self.maze.boxes:
             box.needs_cleaning = False
         self.player.start()
-        self.first_frame = True
+        self.first_act = True
+
+    global prev_text, prev_text_loc
+    prev_text = ""
+
+    def instruct_player(self) -> None:
+        """Instructions"""
+        global prev_text, prev_text_loc
+        player_loc = tuple(self.maze.screen2mat(self.player.avi.coords))
+        if player_loc not in self.instructions.keys():
+            return
+        if prev_text != "":
+            frame = term.move_xy(*prev_text_loc) + " " * len(prev_text)
+            render(frame)
+        coordinate, text = self.instructions.pop(player_loc)
+        text_loc = self.maze.mat2screen(coordinate)
+        frame = term.move_xy(*text_loc) + text
+        render(frame)
+        prev_text = text
+        prev_text_loc = text_loc
+        # time.sleep(2)
+        # frame = term.move_xy(*text_loc) + " " * len(text)
+        # render(frame)
 
 
 class EndScene(Scene):
@@ -239,3 +381,62 @@ class Pause(Scene):
         )
         self.current_frame += self.txt3
         self.first_frame = True
+
+
+def title_menu_action(choice: str) -> Union[int, None]:
+    """Actions for Title menu"""
+    logging.info("title")
+    if choice == "Start":
+        enter_game_sound()
+        return NEXT_SCENE
+    elif choice == "Credits":
+        return CREDITS
+    else:
+        return QUIT
+
+
+title_scene = Menu(
+    txt=["Welcome :)", ""],
+    choices=["Start", "Credits", "Quit"],
+    action_on_choice=title_menu_action,
+)
+
+
+def credit_menu_action(choice: str) -> Union[int, None]:
+    """Actions for Credit menu"""
+    logging.info("credit")
+    if choice == "Back":
+        return TITLE
+    return None
+
+
+credit_scene = Menu(
+    txt=["Creidts", ""],
+    choices=[
+        "Anand",
+        "Pritam Dey",
+        "Jason Ho",
+        "Himi",
+        "Olivia",
+        "StoneSteel",
+        "",
+        "Back",
+    ],
+    action_on_choice=credit_menu_action,
+)
+
+
+def pause_menu_action(choice: str) -> Union[int, None]:
+    """Actions for Pause menu"""
+    if choice == "Return":
+        return PLAY
+    elif choice == "Quit":
+        return QUIT
+    return None
+
+
+pause_menu = Menu(
+    txt=["Game Paused", ""],
+    choices=["Return", "Quit"],
+    action_on_choice=pause_menu_action,
+)
