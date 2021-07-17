@@ -71,7 +71,7 @@ class TitleScene(Scene):
         """Reset has no use for title scene."""
         self.first_frame = True
         self.menu.selected = 0
-        self.menu.coords = self.menu.l_bounds
+        self.menu.coords = copy(self.menu.l_bounds)
 
 
 class CreditsScene(Scene):
@@ -120,7 +120,7 @@ class CreditsScene(Scene):
         """Reset this level"""
         self.first_frame = True
         self.menu.selected = 0
-        self.menu.coords = self.menu.l_bounds
+        self.menu.coords = copy(self.menu.l_bounds)
 
 
 class Level(Scene):

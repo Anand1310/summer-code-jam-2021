@@ -75,6 +75,7 @@ class Game:
                 frame = render.screen()
                 print(frame)
                 if command == NEXT_SCENE:
+                    self.current_scene.reset()
                     self.current_scene_index += 1
                     # end game if scenes end
                     if self.current_scene_index == len(self.scenes)-1:

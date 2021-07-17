@@ -62,7 +62,6 @@ class Cursor:
         """Clears the rendered cursor"""
         frame = f"{self.term.move_xy(*self.prev_coords)}" + " " * len(self.fill)
         render(frame, bg_col=self.bg_col)
-        # return frame
 
     def render(self) -> None:
         """Renders the cursor"""
