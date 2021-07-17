@@ -401,7 +401,7 @@ class InfiniteLevel(Scene):
         elif val.lower() == "e":
             self.player.player_movement_sound(maze=self.maze)
         elif val.lower() == "q":
-            return PAUSE
+            return QUIT
         elif val.lower() == "r":
             return RESET
         elif val.lower() == "h":
