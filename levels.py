@@ -37,7 +37,7 @@ class Menu(Scene):
         super().__init__()
         self.txt = txt
         self.choices = choices
-        self.build_once = False
+        self.built_once = False
         self.action_on_choice = action_on_choice
         self.action_on_first_frame = action_on_first_frame
 
@@ -47,7 +47,8 @@ class Menu(Scene):
 
     def build(self) -> None:
         """Build self.txt"""
-        if self.action_on_first_frame and not self.build_once:
+        if self.action_on_first_frame and not self.built_once:
+            self.built_once = True
             self.choices = self.action_on_first_frame() + self.choices
         self.current_frame = term.black_on_peachpuff2 + term.clear
         width = (self.width - max(len(s) for s in self.txt)) // 2
