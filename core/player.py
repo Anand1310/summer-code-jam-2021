@@ -106,7 +106,6 @@ class Player:
     def __init__(self, location: Vec = Vec(1, 1)):
         if not Player.__monostate:
             Player.__monostate = self.__dict__
-            self.name = ""
             self.start_loc = location
             self.avi = Cursor(location, fill="█", speed=Vec(1, 1), bg_col="lightskyblue1")
             self.score: Score = Score()
