@@ -306,11 +306,9 @@ class Maze(object):
             logging.debug(f"starting pos: {self.start} {self.end}")
         else:
             while self.start is None or self.matrix[self.start.x][self.start.y] != AIR:
-                self.start = Vec(*reversed([random.randrange(0, self.height), 1]))
+                self.start = Vec(random.randrange(0, self.height), 1)
             while self.end is None or self.matrix[self.end.x][self.end.y] != AIR:
-                self.end = Vec(
-                    *reversed([random.randrange(0, self.height), self.width - 1])
-                )
+                self.end = Vec(random.randrange(0, self.height), self.width - 1)
             self.end = (self.end + 1) * 2 - 1
 
     @classmethod
@@ -447,7 +445,7 @@ class Box:
             return self.maze.map
         elif self.needs_cleaning:
             self.needs_cleaning = False
-            return self.maze.erase_map + self.image
+            return self.maze.erase_map
         else:
             return ""
 
@@ -474,7 +472,7 @@ class Box:
 
     def generate_map(self, maze: Maze, radius: int) -> None:
         """Generate the map of the box"""
-        pt_list = points_in_circle_np(radius, self.loc.x, self.loc.y)
+        pt_list = points_in_circle_np(radius, self.loc.y, self.loc.x)
         height, width = len(maze.matrix), len(maze.matrix[1])
         return_map = np.zeros(shape=(height, width))
         for i in pt_list:

@@ -72,7 +72,8 @@ def points_in_circle_np(radius: int, x0: int = 0, y0: int = 0, ) -> list:
     y_ = np.arange(y0 - radius - 1, y0 + radius + 1, dtype=int)
     x, y = np.where((x_[:, np.newaxis] - x0) ** 2 + (y_ - y0) ** 2 <= radius ** 2)
     for x, y in zip(x_[x], y_[y]):
-        result.append(Vec(x, y))
+        if x >= 0 and y >= 0:
+            result.append(Vec(x, y))
     return result
 
 
