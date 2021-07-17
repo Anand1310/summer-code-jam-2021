@@ -278,15 +278,20 @@ class Maze(object):
 
     def _get_random_position(self) -> Tuple[int, int]:
         """Returns a random position on the maze."""
-        return random.randrange(0, self.width * 2), random.randrange(0, self.height)
+        return random.randrange(0, self.height), random.randrange(0, self.width * 2)
 
     def get_random_start_end_position(self, random_pos: bool = False) -> None:
         """Return a array with start and end position"""
 
         def check() -> bool:
             """Return whether the player and target location are valid"""
-            if (self.start is None or all(self.start == self.end) or self.end is None
-                    or self.matrix[self.start.y][self.start.x] != AIR or self.matrix[self.end.y][self.end.x] != AIR):
+            if (
+                self.start is None
+                or all(self.start == self.end)
+                or self.end is None
+                or self.matrix[self.start.x][self.start.y] != AIR
+                or self.matrix[self.end.x][self.end.y] != AIR
+            ):
                 return False
             else:
                 distance = np.linalg.norm(self.start - self.end)
@@ -298,14 +303,15 @@ class Maze(object):
             while not check():
                 self.start = Vec(*self._get_random_position())
                 self.end = Vec(*self._get_random_position())
-            logging.debug("starting pos: {}".format(self.start))
+            self.end = self.mat2screen(self.end)
+            logging.debug(f"starting pos: {self.start} {self.end}")
         else:
-            while (
-                    self.start is None or self.matrix[self.start.y][self.start.x] != AIR
-            ):
+            while self.start is None or self.matrix[self.start.x][self.start.y] != AIR:
                 self.start = Vec(*reversed([random.randrange(0, self.height), 1]))
-            while self.end is None or self.matrix[self.end.y][self.end.x] != AIR:
-                self.end = Vec(*reversed([random.randrange(0, self.height), self.width - 1]))
+            while self.end is None or self.matrix[self.end.x][self.end.y] != AIR:
+                self.end = Vec(
+                    *reversed([random.randrange(0, self.height), self.width - 1])
+                )
             self.end = (self.end + 1) * 2 - 1
 
     @classmethod
@@ -336,6 +342,12 @@ class Maze(object):
             for x, char in enumerate(line):
                 char._location = self.top_left_corner + Vec(x, y)
 
+        erase_map = self.map
+        for chr in "┼├┴┬┌└─╶┤│┘┐╷╵╴":
+            if chr in erase_map:
+                erase_map = erase_map.replace(chr, " ")
+        self.erase_map = erase_map
+
     def set_top_left_corner(self, maze_shape: Vec) -> None:
         """Set location of the top left corner"""
         terminal_shape = Vec(term.width, term.height)
@@ -354,8 +366,7 @@ class Maze(object):
         # getting shape of the maze from string representation
         maze = str(obj).split("\n")
         maze_shape = Vec(len(maze[0]), len(maze))
-        terminal_shape = Vec(term.width, term.height)
-        obj.top_left_corner = (terminal_shape - maze_shape) // 2
+        obj.set_top_left_corner(maze_shape)
 
         start = data.pop("start", None)
         if start:
@@ -397,11 +408,11 @@ class Box:
     """Box where parts of maze become visible."""
 
     def __init__(
-            self,
-            location: Vec = Vec(1, 1),
-            maze: Maze = None,
-            shape: Vec = Vec(3, 3),
-            col: str = "black",
+        self,
+        location: Vec = Vec(1, 1),
+        maze: Maze = None,
+        shape: Vec = Vec(3, 3),
+        col: str = "black",
     ):
         self.maze = maze
         self.shape = shape
@@ -443,18 +454,7 @@ class Box:
 
     def player_in_box(self, player: Player) -> bool:
         """Return True if player in box"""
-        player_inside_box = None
-
-        for i in range(1, self.shape.x - 1):
-            for j in range(1, self.shape.y - 1):
-                p = self.loc + (i, j)
-                player_inside_box = all(player.avi.coords == p)
-
-                if player_inside_box:
-                    return True
-            if player_inside_box:
-                return True
-        return False
+        return all(self.loc + (1, 1) == player.avi.coords)
 
     @classmethod
     def load_from_dict(cls, data: dict, col: str) -> Box:
@@ -473,7 +473,7 @@ class Box:
 
         return obj
 
-    def generate_map(self, maze: Maze, radius: int) -> dict:
+    def generate_map(self, maze: Maze, radius: int) -> None:
         """Generate the map of the box"""
         pt_list = points_in_circle_np(radius, self.loc.x, self.loc.y)
         height, width = len(maze.matrix), len(maze.matrix[1])
@@ -495,8 +495,9 @@ class Box:
         new_maze = new_line.join(new_maze)  # type: ignore
         new_maze = new_maze.replace(" ", term.move_right(1))  # type: ignore
 
-        self.maze.map = term.move_xy(*self.maze.top_left_corner) + new_maze
+        self.maze.map = term.move_xy(*self.maze.top_left_corner) + new_maze  # type: ignore
         logging.debug(str(self.maze))
+        return None
 
     def generate_image(self) -> None:
         """Generate image for the box"""

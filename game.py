@@ -82,16 +82,6 @@ class Game:
                     else:
                         self.current_scene = self.scenes[self.current_scene_index]
                         continue
-                elif command == INFINITE:
-                    # TODO infinite level
-                    self.current_scene_index += 1
-                    if self.current_scene_index == len(self.scenes):
-                        break
-                    else:
-                        logging.info(self.current_scene_index)
-                        logging.info(len(self.scenes))
-                        self.current_scene = self.scenes[self.current_scene_index]
-                        continue
                 elif command == RESET:
                     self.current_scene.reset()
                     val = Keystroke()
