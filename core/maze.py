@@ -405,9 +405,6 @@ class Box:
 
     def render(self, player: Player) -> None:
         """Draw self"""
-        import logging
-
-        logging.info("whala")
         # box drawing
         frame = self.image
         # show maze if necessary

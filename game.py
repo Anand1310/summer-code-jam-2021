@@ -104,10 +104,6 @@ class Game:
                     self.current_scene = self.scenes[0]
                     self.current_scene.next_frame(Keystroke())
                 elif command == QUIT or command == LOSE:
-                    logging.info(type(command))
-                    logging.info(self.current_scene.__class__.__name__)
-                    logging.info(command == QUIT)
-                    logging.info(command == LOSE)
                     break
                 val = term.inkey(timeout=0.05)  # 20 fps
 

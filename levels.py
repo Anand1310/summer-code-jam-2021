@@ -1,6 +1,5 @@
 """Examples for designing levels."""
 import json
-import logging
 import time
 from copy import copy
 from threading import Thread
@@ -258,10 +257,6 @@ class Level(Scene):
     def instruct_player(self) -> None:
         """Instructions"""
         player_loc = tuple(self.maze.screen2mat(self.player.avi.coords))
-        logging.info("hit points")
-        logging.info(self.instructions.keys())
-        logging.info("player loc")
-        logging.info(player_loc)
         if player_loc not in self.instructions.keys():
             return
         coordinate, text = self.instructions.pop(player_loc)

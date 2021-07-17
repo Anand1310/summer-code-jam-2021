@@ -93,7 +93,7 @@ class Score:
 
     def render(self) -> None:
         """Render score"""
-        txt = f"Persistence: {int(self.value)}"
+        txt = f"Persistence: {str(int(self.value)).zfill(3)}"
         txt = term.home + term.move_x(term.width - 18) + txt
         render(txt, col="black")
 
@@ -108,7 +108,7 @@ class Player:
             Player.__monostate = self.__dict__
             self.name = ""
             self.start_loc = location
-            self.avi = Cursor(location, fill="█", speed=Vec(1, 1))
+            self.avi = Cursor(location, fill="█", speed=Vec(1, 1), bg_col="lightskyblue1")
             self.score: Score = Score()
             self.timer_start: float = None
             self.collision_count = 0
