@@ -423,7 +423,7 @@ class Box:
 
         for i in range(1, self.shape.x - 1):
             for j in range(1, self.shape.y - 1):
-                p = self.loc + (-i, -j)
+                p = self.loc + (i, j)
                 self.player_inside = all(player.avi.coords == p)
 
                 if self.player_inside:

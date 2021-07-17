@@ -1,6 +1,7 @@
 # type: ignore
 """Collection of utilities."""
-from typing import Generator, Iterable, Union
+from types import GeneratorType
+from typing import Iterable, Union
 
 import numpy as np
 from blessed.terminal import Terminal
@@ -65,7 +66,7 @@ class Boundary:
         return "".join(my_map)
 
 
-def points_in_circle_np(radius: int, x0: int = 0, y0: int = 0, ) -> Generator[Vec]:
+def points_in_circle_np(radius: int, x0: int = 0, y0: int = 0, ) -> GeneratorType:
     """Return a list of point in the circle"""
     x_ = np.arange(x0 - radius - 1, x0 + radius + 1, dtype=int)
     y_ = np.arange(y0 - radius - 1, y0 + radius + 1, dtype=int)
