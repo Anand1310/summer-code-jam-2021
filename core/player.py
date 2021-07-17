@@ -195,8 +195,8 @@ class Menu(Cursor):
     def __init__(self, coords: Vec, bounds: Vec, options: list, fill: str = "->",
                  col: str = "black", bg_col: str = "peachpuff2") -> None:
         super().__init__(coords, fill=fill, col=col, bg_col=bg_col)
-        self.l_bounds = coords
-        self.u_bounds = coords+bounds
+        self.l_bounds = copy(coords)
+        self.u_bounds = coords + bounds
         self.bounds = bounds
         self.options = options
         self.selected = 0
@@ -205,5 +205,7 @@ class Menu(Cursor):
         """A bounded move method"""
         super(Menu, self).move(direction)
         new_loc = self.coords
-        if all(self.l_bounds > new_loc) or all(new_loc > self.u_bounds):
+        if any(self.l_bounds > new_loc) or any(new_loc > self.u_bounds):
             self.stop()
+        else:
+            self.selected += self.directions[direction].y

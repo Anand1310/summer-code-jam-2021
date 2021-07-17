@@ -32,6 +32,7 @@ class TitleScene(Scene):
         txt.append("")
         txt.append("Start")
         txt.append("Credits")
+        txt.append("Quit")
         self.current_frame = term.black_on_peachpuff2 + term.clear
         width = (self.width - len(txt[0])) // 2
         height = self.height // 2
@@ -40,7 +41,7 @@ class TitleScene(Scene):
             self.current_frame += txt[i]
         self.first_frame = True
 
-        self.menu = Menu(Vec(width - 3, height+2), Vec(0, 1), txt[2:])
+        self.menu = Menu(Vec(width - 3, height + 2), Vec(0, 2), txt[2:])
 
     def next_frame(self, val: Keystroke) -> Union[str, int]:
         """Returns next frame to render"""
@@ -54,25 +55,23 @@ class TitleScene(Scene):
             self.menu.move(val.name)
             self.menu.render()
         elif str(val) == " " or val.name == "KEY_ENTER":
-            if self.menu.options[self.menu.selected] == "Start":
-                self.first_frame = True
-                self.menu.selected = 0
-                self.menu.coords = self.menu.l_bounds
+            choice = self.menu.options[self.menu.selected]
+            if choice == "Start":
                 enter_game_sound()
                 return NEXT_SCENE
-            else:
+            elif choice == "Credits":
                 play_level_up_sound()
-                self.first_frame = True
-                self.menu.selected = 0
-                self.menu.coords = self.menu.l_bounds
                 return CREDITS
-                # go to credits scene? how do we do that?
+            else:
+                return QUIT
         return ""
         # return ""
 
     def reset(self) -> None:
         """Reset has no use for title scene."""
-        pass
+        self.first_frame = True
+        self.menu.selected = 0
+        self.menu.coords = self.menu.l_bounds
 
 
 class CreditsScene(Scene):
@@ -98,7 +97,7 @@ class CreditsScene(Scene):
             self.current_frame += term.move_xy(x=width, y=height + i)
             self.current_frame += txt[i]
         self.first_frame = True
-        self.menu = Menu(Vec(width - 3, height+2), Vec(0, 7), txt[2:])
+        self.menu = Menu(Vec(width - 3, height + 2), Vec(0, 7), txt[2:])
 
     def next_frame(self, val: Keystroke) -> Union[None, int]:
         """Returns next frame to render"""
@@ -114,11 +113,14 @@ class CreditsScene(Scene):
         elif str(val) == " " or val.name == "KEY_ENTER":
             if self.menu.options[self.menu.selected] == "Back":
                 play_level_up_sound()
-                self.first_frame = True
-                self.menu.selected = 0
-                self.menu.coords = self.menu.l_bounds
                 return TITLE
         return None
+
+    def reset(self) -> None:
+        """Reset this level"""
+        self.first_frame = True
+        self.menu.selected = 0
+        self.menu.coords = self.menu.l_bounds
 
 
 class Level(Scene):
@@ -222,7 +224,9 @@ class Level(Scene):
 
         # things that should update on every frame goes here
         if not self.wait > 0:
-            self.player.score.update(player_inside_box=any(self.player.inside_box.values()))
+            self.player.score.update(
+                player_inside_box=any(self.player.inside_box.values())
+            )
         if self.player.score.value <= 0:
             return LOSE
         return ""

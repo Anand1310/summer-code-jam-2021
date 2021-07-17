@@ -95,9 +95,11 @@ class Game:
                     self.current_scene.render()
                     continue
                 elif command == CREDITS:
+                    self.current_scene.reset()
                     self.current_scene = self.scenes[-1]
                     self.current_scene.next_frame(Keystroke())
                 elif command == TITLE:
+                    self.current_scene.reset()
                     self.current_scene = self.scenes[0]
                     self.current_scene.next_frame(Keystroke())
                 elif command == QUIT or command == LOSE:
