@@ -1,4 +1,6 @@
 import copy
+import logging
+import time
 
 from openal import oalOpen
 
@@ -11,6 +13,9 @@ bgm = oalOpen("sound/bgm.wav")
 start_screen_music = oalOpen("sound/start.wav")
 wind_sound = oalOpen("sound/wind.wav")
 build_sound = oalOpen("sound/build.wav")
+
+echo = oalOpen("sound/first_echo.wav")
+echo_2 = oalOpen("sound/second_echo.wav")
 
 
 def play_enter_box_sound() -> None:
@@ -62,14 +67,28 @@ def enter_game_sound() -> None:
 
 
 def play_echo(direction: Vec, distance: int) -> None:
-    """Play echo sound effect"""
+    """Play first echo sound effect"""
     k = copy.copy(direction)
     if direction.x != 0:
         k.x += int(distance) * 1.5
     else:
         k.y += int(distance) * 1.5
-    wind_sound.set_position((k.x, 0, k.y))
-    wind_sound.play()
+    logging.info(f"{k.x}, {k.y}")
+    echo.play()
+    time.sleep(abs(distance) / 5)
+    play_echo_2(direction, distance)
+
+
+def play_echo_2(direction: Vec, distance: int) -> None:
+    """Play second echo sound effect"""
+    k = copy.copy(direction)
+    if direction.x != 0:
+        k.x += int(distance)
+    else:
+        k.y += int(distance)
+    logging.info(f"{k.x}, {k.y}")
+    echo_2.set_position((k.x, 0, k.y))
+    echo_2.play()
 
 
 def play_build_sound() -> None:

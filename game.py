@@ -18,6 +18,7 @@ handler.setFormatter(logging.Formatter("%(name)s %(message)s"))  # or whatever
 root_logger.addHandler(handler)
 logging.info("=" * 15)
 
+TITLE = 0
 NEXT_SCENE = 1
 RESET = 2
 QUIT = 3
@@ -25,8 +26,10 @@ PAUSE = 4
 PLAY = 5
 LOSE = 6
 CREDITS = 7
-TITLE = 0
-INFINITE = 8
+TUTORIAL = 8
+END = 9
+LEADERBOARD = 9
+
 
 term = blessed.Terminal()
 
@@ -56,10 +59,22 @@ class Scene:
 class Game:
     """Main game class. Should be initiated with a list of scenes."""
 
-    def __init__(self, scenes: List[Scene], pause: Scene) -> None:
+    def __init__(
+        self,
+        scenes: List[Scene],
+        pause: Scene,
+        tutorial: Scene,
+        leaderboard: Scene,
+        end_scene: Scene,
+        credit: Scene,
+    ) -> None:
         self.scenes = scenes
         self.current_scene_index: int = 0
         self.pause = pause
+        self.tutorial = tutorial
+        self.leaderboard = leaderboard
+        self.end = end_scene
+        self.credit = credit
         self.current_scene: Scene = self.scenes[self.current_scene_index]
         self.player = Player()
 
@@ -77,8 +92,9 @@ class Game:
                     self.current_scene.reset()
                     self.current_scene_index += 1
                     # end game if scenes end
-                    if self.current_scene_index == len(self.scenes) - 1:
-                        break
+                    if self.current_scene_index == len(self.scenes):
+                        self.current_scene = self.end
+                        continue
                     else:
                         self.current_scene = self.scenes[self.current_scene_index]
                         continue
@@ -96,12 +112,22 @@ class Game:
                     continue
                 elif command == CREDITS:
                     self.current_scene.reset()
-                    self.current_scene = self.scenes[-1]
+                    self.current_scene = self.credit
                     self.current_scene.next_frame(Keystroke())
                 elif command == TITLE:
+                    self.current_scene_index = 0
                     self.current_scene.reset()
                     self.current_scene = self.scenes[0]
                     self.current_scene.next_frame(Keystroke())
                 elif command == QUIT or command == LOSE:
                     break
+                elif command == LEADERBOARD:
+                    self.current_scene = self.leaderboard
+                    continue
+                elif command == TUTORIAL:
+                    self.current_scene = self.tutorial
+                    continue
+                elif command == END:
+                    self.current_scene = self.end
+                    continue
                 val = term.inkey(timeout=0.05)  # 20 fps
