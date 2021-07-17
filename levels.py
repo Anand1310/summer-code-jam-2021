@@ -365,9 +365,10 @@ class InfiniteLevel(Scene):
 
     def next_frame(self, val: Keystroke) -> Union[str, int]:
         """Draw next frame."""
-        if self.first_act:
-            self.first_act = False
-            self.show_level = 30
+        if self.instance.first_act:
+            self.instance.first_act = False
+            self.instance.show_level = 30
+            self.instance.wait = self.instance.show_level
             self.build_level()
 
             play_level_up_sound()
@@ -380,10 +381,10 @@ class InfiniteLevel(Scene):
             self.player.start()
             return ""
 
-        elif self.wait > 0:
+        elif self.instance.wait > 0:
             # block any actions from player and then remove maze
-            self.wait -= 1
-            if self.wait == 0:
+            self.instance.wait -= 1
+            if self.instance.wait == 0:
                 self.remove_maze(0)
 
         elif val.is_sequence and (257 < val.code < 262):
@@ -394,7 +395,7 @@ class InfiniteLevel(Scene):
                 self.player.score.value += self.reward_on_goal
                 self.instance.reset_cls()
                 self.instance.next_frame(Keystroke())
-                render(self.instance.maze.map)
+                return
             self.render()
         elif val.lower() == "e":
             self.player.player_movement_sound(maze=self.maze)
@@ -423,7 +424,6 @@ class InfiniteLevel(Scene):
 
     def render(self) -> None:
         """Refreshing the scene"""
-        render(term.clear)
         for box in self.instance.maze.boxes:
             box.render(self.instance.player)
         render(self.instance.level_boundary.map)
