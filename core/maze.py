@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import random
 import sys
@@ -13,7 +14,7 @@ import numpy as np
 
 from core.character import AnimatedCharacter
 from core.render import Render
-from utils import Vec  # type: ignore
+from utils import Vec, points_in_circle_np  # type: ignore
 
 if TYPE_CHECKING:
     from core.player import Player
@@ -112,7 +113,7 @@ class Maze(object):
         self.boxes: List[Box] = []
         self.start: Vec = None
         self.end: Vec = None
-        self.min_distance = np.linalg.norm(self.height - self.width)
+        self.min_distance = np.linalg.norm(self.height - self.width * 1.5)
 
         self.map: str = None
         self.erase_map: str = None
@@ -240,8 +241,11 @@ class Maze(object):
 
                 str_connections = "".join(sorted(connections))
                 # Note we are changing the matrix we are reading. We need to be
-                # careful as to not break the `wall_at` function implementation.
-                matrix[y][x] = copy(Maze.UNICODE_BY_CONNECTIONS[str_connections])
+                # careful as to not break the `wall_at` function implementation
+                if str_connections != "":
+                    matrix[y][x] = copy(Maze.UNICODE_BY_CONNECTIONS[str_connections])
+                elif str_connections == "":
+                    matrix[y][x] = AnimatedCharacter(" ")
                 # print(type(matrix[y][x]))
                 # print(type(Maze.UNICODE_BY_CONNECTIONS[str_connections]))
 
@@ -274,14 +278,15 @@ class Maze(object):
 
     def _get_random_position(self) -> Tuple[int, int]:
         """Returns a random position on the maze."""
-        return Vec(random.randrange(0, self.width), random.randrange(0, self.height))
+        return random.randrange(0, self.width * 2), random.randrange(0, self.height)
 
     def get_random_start_end_position(self, random_pos: bool = False) -> None:
         """Return a array with start and end position"""
 
         def check() -> bool:
             """Return whether the player and target location are valid"""
-            if self.start is None and all(self.start == self.end) and self.end is None:
+            if (self.start is None or all(self.start == self.end) or self.end is None
+                    or self.matrix[self.start.y][self.start.x] != AIR or self.matrix[self.end.y][self.end.x] != AIR):
                 return False
             else:
                 distance = np.linalg.norm(self.start - self.end)
@@ -291,28 +296,50 @@ class Maze(object):
 
         if random_pos:
             while not check():
-                self.start = self._get_random_position()
-                self.end = self._get_random_position()
+                self.start = Vec(*self._get_random_position())
+                self.end = Vec(*self._get_random_position())
+            logging.debug("starting pos: {}".format(self.start))
         else:
             while (
-                self.start is None or self.matrix[self.start[0]][self.start[1]] != AIR
+                    self.start is None or self.matrix[self.start.y][self.start.x] != AIR
             ):
-                self.start = Vec(random.randrange(0, self.height), 1)
-            while self.end is None or self.matrix[self.end[0]][self.end[1]] != AIR:
-                self.end = Vec(random.randrange(0, self.height), self.width * 2 - 1)
+                self.start = Vec(*reversed([random.randrange(0, self.height), 1]))
+            while self.end is None or self.matrix[self.end.y][self.end.x] != AIR:
+                self.end = Vec(*reversed([random.randrange(0, self.height), self.width - 1]))
+            self.end = (self.end + 1) * 2 - 1
 
     @classmethod
-    def generate(cls, width: int = 20, height: int = 10):
+    def generate(cls, width: int = 20, height: int = 10, *, random_pos: bool):
         """Returns a new random perfect maze with the given sizes."""
-        m = cls(width, height)
-        m.randomize()
-        return m
+        obj = cls(width, height)
+        obj.randomize()
+        obj.set_erase_map()
+        obj.get_random_start_end_position(random_pos)
+        return obj
 
     def set_map(self, m: List[List[int]]) -> None:
         """Set map for the maze"""
         self.matrix = np.array(m)
         self.width = self.matrix.shape[0] // 2
         self.height = self.matrix.shape[1] // 2
+
+    def set_erase_map(self) -> None:
+        """Set top_left_corner, map and erase map for the maze"""
+        maze = str(self).split("\n")
+        maze_shape = Vec(len(maze[0]), len(maze))
+        self.set_top_left_corner(maze_shape)
+        new_line = term.move_left(maze_shape.x) + term.move_down(1)
+        maze = new_line.join(maze)  # type: ignore
+        maze = maze.replace(" ", term.move_right(1))  # type: ignore
+        self.map = term.move_xy(*self.top_left_corner) + maze  # type: ignore
+        for y, line in enumerate(self.char_matrix):
+            for x, char in enumerate(line):
+                char._location = self.top_left_corner + Vec(x, y)
+
+    def set_top_left_corner(self, maze_shape: Vec) -> None:
+        """Set location of the top left corner"""
+        terminal_shape = Vec(term.width, term.height)
+        self.top_left_corner = (terminal_shape - maze_shape) // 2
 
     @classmethod
     def load(cls, fname: str = "", data: dict = None) -> Maze:
@@ -337,23 +364,9 @@ class Maze(object):
         if end:
             obj.end = obj.mat2screen(end)
 
-        # convreting maze in string form to image
-        new_line = term.move_left(maze_shape.x) + term.move_down(1)
-        maze = new_line.join(maze)  # type: ignore
-        maze = maze.replace(" ", term.move_right(1))  # type: ignore
-
-        obj.map = term.move_xy(*obj.top_left_corner) + maze  # type: ignore
-        for y, line in enumerate(obj.char_matrix):
-            for x, char in enumerate(line):
-                char._location = obj.top_left_corner + Vec(x, y)
-
-        erase_map = obj.map
-        for chr in "┼├┴┬┌└─╶┤│┘┐╷╵╴":
-            if chr in erase_map:
-                erase_map = erase_map.replace(chr, " ")
-        obj.erase_map = erase_map
+        obj.set_erase_map()
         for color, box_dict in data.items():
-            obj.boxes.append(Box.load(data=box_dict, col=color))
+            obj.boxes.append(Box.load_from_dict(data=box_dict, col=color))
 
         return obj
 
@@ -377,8 +390,6 @@ class Maze(object):
 
         self.get_random_start_end_position()
 
-        # data = {"start": [self.player], "end": [self.target]}
-
         return map_name
 
 
@@ -386,11 +397,11 @@ class Box:
     """Box where parts of maze become visible."""
 
     def __init__(
-        self,
-        location: Vec = Vec(1, 1),
-        maze: Maze = None,
-        shape: Vec = Vec(3, 3),
-        col: str = "black",
+            self,
+            location: Vec = Vec(1, 1),
+            maze: Maze = None,
+            shape: Vec = Vec(3, 3),
+            col: str = "black",
     ):
         self.maze = maze
         self.shape = shape
@@ -405,10 +416,10 @@ class Box:
 
     def render(self, player: Player) -> None:
         """Draw self"""
-        # box drawing
-        frame = self.image
         # show maze if necessary
-        frame += self.show_maze(player)
+        frame = self.show_maze(player)
+        # box drawing
+        frame += self.image
         render(frame, col=self.col)
 
     def show_maze(self, player: Player) -> str:
@@ -430,8 +441,23 @@ class Box:
         else:
             return ""
 
+    def player_in_box(self, player: Player) -> bool:
+        """Return True if player in box"""
+        player_inside_box = None
+
+        for i in range(1, self.shape.x - 1):
+            for j in range(1, self.shape.y - 1):
+                p = self.loc + (i, j)
+                player_inside_box = all(player.avi.coords == p)
+
+                if player_inside_box:
+                    return True
+            if player_inside_box:
+                return True
+        return False
+
     @classmethod
-    def load(cls, data: dict, col: str) -> Box:
+    def load_from_dict(cls, data: dict, col: str) -> Box:
         """Load box data from dictionary"""
         obj = cls()
         obj.col = col
@@ -446,6 +472,40 @@ class Box:
         obj.image = image
 
         return obj
+
+    def generate_map(self, maze: Maze, radius: int) -> dict:
+        """Generate the map of the box"""
+        pt_list = points_in_circle_np(radius, self.loc.x, self.loc.y)
+        height, width = len(maze.matrix), len(maze.matrix[1])
+        return_map = np.zeros(shape=(height, width))
+        for i in pt_list:
+            if i.x >= 0 and i.x < width and i.y >= 0 and i.y < height:
+                return_map[i.y][i.x] = maze.matrix[i.y][i.x]
+        self.maze = copy(maze)
+        self.maze.matrix = return_map
+        cells = copy(self.maze.cells)
+        for i in range(len(cells) // 2):
+            if not (pt_list - Vec(cells[i].x, cells[i].y)).any():
+                del cells[i]
+        self.maze.cells = cells
+        new_maze = str(self.maze).split("\n")
+        new_maze_shape = Vec(len(new_maze[0]), len(new_maze))
+        self.maze.set_top_left_corner(new_maze_shape)
+        new_line = term.move_left(new_maze_shape.x) + term.move_down(1)
+        new_maze = new_line.join(new_maze)  # type: ignore
+        new_maze = new_maze.replace(" ", term.move_right(1))  # type: ignore
+
+        self.maze.map = term.move_xy(*self.maze.top_left_corner) + new_maze
+        logging.debug(str(self.maze))
+
+    def generate_image(self) -> None:
+        """Generate image for the box"""
+        image = term.move_xy(*self.maze.mat2screen(self.loc) - (1, 1))
+        image += image + "┌" + " " * (self.shape.x - 2) + "┐"
+        image += term.move_down(self.shape.y - 1)  # type: ignore
+        image += term.move_left(self.shape.x)  # type: ignore
+        image += "└" + " " * (self.shape.x - 2) + "┘"
+        self.image = image
 
 
 if __name__ == "__main__":
