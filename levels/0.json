@@ -41,5 +41,9 @@
               [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
               [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
           ]
-      }
+      },
+      "dialogues":[ 
+                  [ [3,1], [-1,-2], "This is a box. You know what to do ;)"],
+                  [ [6,18], [-3,16], "Oops, I think you are trapped. Fortunately you have echo location"]]
+
 }

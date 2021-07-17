@@ -115,8 +115,10 @@ class Level(Scene):
             render(frame)
             for box in self.maze.boxes:
                 box.render(self.player)
-            if self.instructions:
-                self.instruct_player(*self.instructions[tuple(reversed(self.maze.start))])
+            # time.sleep(2)
+            print("t"*1000)
+            # if self.instructions:
+            #     self.instruct_player(*self.instructions[tuple(reversed(self.maze.start))])
             self.player.start()
 
         elif val.is_sequence and (257 < val.code < 262):
