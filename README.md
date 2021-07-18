@@ -2,7 +2,7 @@
 
 This game is developed by the team -  [**Benevolent-Bonobos**](#About-Us) , during the [sumer code jam 2021](https://pythondiscord.com/events/code-jams/8/) held by [python discord](https://discord.com/invite/python).
 
-Teams participated in the code jam had to create a TUI based on the theme "Think Inside the Box". 
+Teams participated in the code jam had to create a TUI based on the theme "Think Inside the Box".
 
 ## Contents
 - [How To Play](#How-To-Play)
@@ -31,8 +31,8 @@ Teams participated in the code jam had to create a TUI based on the theme "Think
     - Infinite: To play infinite mode.
     - Tutorial: To know how to play.
     - Credits
-    - Leaderboard 
-    - Quit 
+    - Leaderboard
+    - Quit
 2. Use `Arrow Keys` to move.
 3. At starting, a glimpse of whole maze will be shown. After it disappears, game will start.
 4. Player has to reach `&` with minimum collision with wall and in minimum time.
@@ -102,8 +102,8 @@ python3 main.py
 
 
   ##### Note: A player can visit `Tutorial` for better understanding of the game.
-  
-## Screenshots 
+
+## Screenshots
 
 ![First view](images/first_view.png)
 
