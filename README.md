@@ -5,6 +5,7 @@ This game is developed by the team -  [**Benevolent-Bonobos**](#About-Us) , duri
 Teams participated in the code jam had to create a TUI based on the theme "Think Inside the Box".
 
 ## Contents
+
 - [How To Play](#How-To-Play)
 - [Requirements](#Requirements)
 - [Installation](#Installation)
@@ -80,6 +81,7 @@ pip install -r dev-requirements.txt
 ```
 
 #### Linux
+
 ```sh
 apt-get install openal-soft
 pip3 install -r dev-requirements.txt
@@ -99,9 +101,7 @@ python main.py
 python3 main.py
 ```
 
-
-
-  ##### Note: A player can visit `Tutorial` for better understanding of the game.
+##### Note: A player can visit `Tutorial` for better understanding of the game
 
 ## Screenshots
 
@@ -118,12 +118,14 @@ python3 main.py
 ![Box view](images/gameplay.gif)
 
 ## Future Improvements
+
+
 - Reveal the map with animation at the start of the round.
 - Allow player to move during echo.
 - Fix bug: Hitting leaderboard in the main menu exits game.
 - Fix bug: Hitting Main menu in `end_scene` doesn't refresh the window.
 
-## About Us:
+## About Us
 
 
 <!--Add your own github link here-->
