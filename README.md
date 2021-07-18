@@ -70,6 +70,7 @@ Teams participated in the code jam had to create a TUI based on the theme "Think
 
 ```sh
 git clone https://github.com/Anand1310/summer-code-jam-2021.git
+cd summer-code-jam-2021
 ```
 
 ### 2. Install required dependency
@@ -122,17 +123,16 @@ python3 main.py
 
 - Reveal the map with animation at the start of the round.
 - Allow player to move during echo.
-- Fix bug: Hitting leaderboard in the main menu exits game.
-- Fix bug: Hitting Main menu in `end_scene` doesn't refresh the window.
+- Fix bug: Hitting leaderboard in the main menu exits game. (This can be fixed with [this](https://github.com/pritam-dey3/summer-code-jam-2021/commit/64eb2852514e91749fe706433363a8941d290d6c) change, we shall update the repo once the code jam finishes.)
 
 ## About Us
 
 
 <!--Add your own github link here-->
-- [Anand]()
+- [Anand](https://github.com/Anand1310)
 - [Pritam Dey](https://github.com/pritam-dey3)
-- [Himi]()
-- [Olivia]()
+- [Himi](https://github.com/hizv)
+- [Olivia](https://github.com/OliviaVespera)
 - [StoneSteel](https://github.com/StoneSteel27)
 - [Jason Ho](https://github.com/Jason11ookJJ)
 
