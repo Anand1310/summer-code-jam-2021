@@ -124,6 +124,8 @@ python3 main.py
 - Reveal the map with animation at the start of the round.
 - Allow player to move during echo.
 - Fix bug: Hitting leaderboard in the main menu exits game. (This can be fixed with [this](https://github.com/pritam-dey3/summer-code-jam-2021/commit/64eb2852514e91749fe706433363a8941d290d6c) change, we shall update the repo once the code jam finishes.)
+- Fix bug: Game background music does not start on tutorial. (This can also be fixed with [this](https://github.com/pritam-dey3/summer-code-jam-2021/commit/a010bab5a2360cf26d99b25f5f185ef5a578b67d) change.)
+- Add "Main menu" option in pause menu. ([This](https://github.com/pritam-dey3/summer-code-jam-2021/commit/3368968c668307b36278629b75b02433fca18592) will do it)
 
 ## About Us
 
