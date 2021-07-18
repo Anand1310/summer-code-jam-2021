@@ -1,16 +1,16 @@
 # Getting Inside The Box
 
-This game is developed by the team -  [**Benevolent-Bonobos**](##About-Us) , during the [sumer code jam 2021](https://pythondiscord.com/events/code-jams/8/) held by [python discord](https://discord.com/invite/python).
+This game is developed by the team -  [**Benevolent-Bonobos**](#About-Us) , during the [sumer code jam 2021](https://pythondiscord.com/events/code-jams/8/) held by [python discord](https://discord.com/invite/python).
 
 Teams participated in the code jam had to create a TUI based on the theme "Think Inside the Box". 
 
 ## Contents
-- [How To Play](##How-To-Play)
-- [Requirements](##Requirements)
-- [Installation](##Installation)
-- [Screenshots](##Screenshots)
-- [Future Improvements](##Future-Improvements)
-- [About Us](##About-Us)
+- [How To Play](#How-To-Play)
+- [Requirements](#Requirements)
+- [Installation](#Installation)
+- [Screenshots](#Screenshots)
+- [Future Improvements](#Future-Improvements)
+- [About Us](#About-Us)
 
 <!--- This can go now that How To Play covers everything
 ### Normal mode
