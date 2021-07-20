@@ -141,5 +141,3 @@ python3 main.py
 - [Olivia](https://github.com/OliviaVespera)
 - [StoneSteel](https://github.com/StoneSteel27)
 - [Jason Ho](https://github.com/Jason11ookJJ)
-
-
