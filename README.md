@@ -4,6 +4,10 @@ This game was developed by the team [**Benevolent Bonobos**](#About-Us), during 
 
 Teams that participated in the code jam had to create a TUI based on the theme _Think Inside the Box_.
 
+## Video
+
+[![Youtube Link](http://img.youtube.com/vi/ERME3fjnfFE/0.jpg)](http://www.youtube.com/watch?v=ERME3fjnfFE "Video Title")
+
 ## Contents
 - [How To Play](#how-to-play)
 - [Requirements](#requirements)
@@ -11,7 +15,7 @@ Teams that participated in the code jam had to create a TUI based on the theme _
 - [Screenshots](#screenshots)
 - [Future Improvements](#future-improvements)
 - [About Us](#about-us)
-- [Video](#video)
+
 
 <!--- This can go now that How To Play covers everything
 ### Normal mode
@@ -139,4 +143,4 @@ python3 main.py
 - [StoneSteel](https://github.com/StoneSteel27)
 - [Jason Ho](https://github.com/Jason11ookJJ)
 
-## Video
+
