@@ -4,7 +4,7 @@ This game was developed by the team [**Benevolent Bonobos**](#About-Us), during 
 
 Teams that participated in the code jam had to create a TUI based on the theme _Think Inside the Box_.
 
-[![Youtube Link](http://img.youtube.com/vi/ERME3fjnfFE/0.jpg)](http://www.youtube.com/watch?v=ERME3fjnfFE "Video Title")
+[![Youtube Link](http://img.youtube.com/vi/ERME3fjnfFE/0.jpg)](http://www.youtube.com/watch?v=ERME3fjnfFE "Getting Inside The Box")
 
 
 ## Contents
