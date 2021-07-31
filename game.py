@@ -109,6 +109,7 @@ class Game:
                     val = Keystroke()
                     continue
                 elif command == PAUSE:
+                    self.current_scene.reset()
                     self.current_scene = self.pause
                     continue
                 elif command == PLAY:
@@ -128,9 +129,11 @@ class Game:
                 elif command == QUIT or command == LOSE:
                     break
                 elif command == LEADERBOARD:
+                    self.current_scene.reset()
                     self.current_scene = self.leaderboard
                     continue
                 elif command == TUTORIAL:
+                    self.current_scene.reset()
                     self.current_scene = self.tutorial
                     continue
                 elif command == END:

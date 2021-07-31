@@ -659,7 +659,10 @@ def title_menu_action(choice: str) -> Union[int, None]:
     elif choice == "Credits":
         return CREDITS
     elif choice == "Tutorial":
+        enter_game_sound()
         return TUTORIAL
+    elif choice == "Leaderboard":
+        return LEADERBOARD
     else:
         return QUIT
 
@@ -701,12 +704,14 @@ def pause_menu_action(choice: str) -> Union[int, None]:
         return PLAY
     elif choice == "Quit":
         return QUIT
+    elif choice == "Main menu":
+        return TITLE
     return None
 
 
 pause_menu = Menu(
     txt=["Game Paused", ""],
-    choices=["Return", "Quit"],
+    choices=["Return", "Main menu", "Quit"],
     action_on_choice=pause_menu_action,
 )
 

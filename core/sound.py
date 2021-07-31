@@ -70,9 +70,9 @@ def play_echo(direction: Vec, distance: int) -> None:
     """Play first echo sound effect"""
     k = copy.copy(direction)
     if direction.x != 0:
-        k.x += int(distance) * 1.5
+        k.x += int(distance) * 0.7
     else:
-        k.y += int(distance) * 1.5
+        k.y += int(distance) * 0.7
     logging.info(f"{k.x}, {k.y}")
     echo.play()
     time.sleep(abs(distance) / 5)
