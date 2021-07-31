@@ -480,6 +480,7 @@ class EndScene(Scene):
         self.player = player
 
     def set_init_frame(self) -> None:
+        """Set current frame to init frame."""
         txt = "You won, what shall you be remembered as?"
         txt2 = "Press enter when you've decided your name."
         txt3 = "Press escape if you don't want to be remembered."
@@ -495,7 +496,7 @@ class EndScene(Scene):
             x=(self.width - len(txt3)) // 2, y=self.height - 5
         )
         self.current_frame += txt3
-      
+
     def next_frame(self, val: Keystroke) -> Union[None, int]:
         """Return next frame to render."""
         if self.first_frame:
