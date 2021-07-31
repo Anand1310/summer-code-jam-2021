@@ -275,16 +275,16 @@ class InfiniteLevel(Scene):
 
     instance = None
     random = None
+    first_enter = False
 
     def __init__(self, random_pos: bool) -> None:
         global random
         super().__init__()
         self.player: Player = Player()
-        self.player.score.value += term.width * term.height // 10
         if type(self).instance is None:
             self.maze = Maze.generate(term.width // 5, term.height // 3, random_pos=random_pos)
             random = random_pos
-            # self.maze = Maze.generate(7, 7, random_pos=random_pos)
+            self.maze = Maze.generate(7, 7, random_pos=random_pos)
             self.generate_boxes()
             self.level_boundary = Boundary(
                 len(self.maze.char_matrix[0]),
@@ -315,11 +315,14 @@ class InfiniteLevel(Scene):
         """Load current level specific attributes"""
         self.player.start_loc = self.maze.mat2screen(mat=self.maze.start)
         self.player.collision_count = 0
-        self.reward_on_goal = self.maze.width * self.maze.height // 10
+        self.instance.reward_on_goal = self.maze.width * self.maze.height
 
     def next_frame(self, val: Keystroke) -> Union[str, int]:
         """Draw next frame."""
         if self.instance.first_act:
+            if not self.first_enter:
+                self.player.score.value += self.maze.width * self.maze.height
+                self.first_enter = True
             self.instance.first_act = False
             self.instance.show_level = 30
             self.instance.wait = self.instance.show_level
