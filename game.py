@@ -104,6 +104,7 @@ class Game:
                 elif command == INFINITE:
                     self.current_scene.reset()
                     self.current_scene = self.infinite
+                    self.current_scene.render(hard=True)
                 elif command == RESET:
                     self.current_scene.reset()
                     val = Keystroke()
@@ -138,5 +139,6 @@ class Game:
                     continue
                 elif command == END:
                     self.current_scene = self.end
+                    self.current_scene.first_frame = True
                     continue
                 val = term.inkey(timeout=0.05)  # 20 fps
