@@ -260,6 +260,7 @@ class Level(Scene):
         # frame = term.move_xy(*text_loc) + " " * len(text)
         # render(frame)
 
+
 first_enter = True
 
 
@@ -305,9 +306,9 @@ class InfiniteLevel(Scene):
 
     def build_level(self) -> None:
         """Load current level specific attributes"""
-        self.player.start_loc = self.maze.mat2screen(mat=self.maze.start)
+        self.player.start_loc = self.maze.mat2screen(mat=self.instance.maze.start)
         self.player.collision_count = 0
-        self.instance.reward_on_goal = self.maze.width * self.maze.height
+        self.instance.reward_on_goal = self.instance.maze.width * self.instance.maze.height
 
     def next_frame(self, val: Keystroke) -> Union[str, int]:
         """Draw next frame."""
