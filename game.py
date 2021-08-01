@@ -132,6 +132,9 @@ class Game:
                 elif command == LEADERBOARD:
                     self.current_scene.reset()
                     self.current_scene = self.leaderboard
+                    # to refresh the leaderboard
+                    self.current_scene.first_frame = True
+                    self.current_scene.built_once = False
                     continue
                 elif command == TUTORIAL:
                     self.current_scene.reset()

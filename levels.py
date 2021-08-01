@@ -38,6 +38,7 @@ class Menu(Scene):
         super().__init__()
         self.txt = txt
         self.choices = choices
+        self.init_choices = choices
         self.built_once = False
         self.action_on_choice = action_on_choice
         self.action_on_first_frame = action_on_first_frame
@@ -50,7 +51,8 @@ class Menu(Scene):
         """Build self.txt"""
         if self.action_on_first_frame and not self.built_once:
             self.built_once = True
-            self.choices = self.action_on_first_frame() + self.choices
+            self.choices = ""
+            self.choices = self.action_on_first_frame() + self.init_choices
         self.current_frame = term.black_on_peachpuff2 + term.clear
         width = (self.width - max(len(s) for s in self.txt)) // 2
         txt = self.txt + list(self.choices)
@@ -78,7 +80,12 @@ class Menu(Scene):
             self.menu.move(val.name)
             self.menu.render()
         elif str(val) == " " or val.name == "KEY_ENTER":
-            choice = self.menu.options[self.menu.selected]
+            choose = 0
+            if self.menu.selected > len(self.menu.options):
+                choose = len(self.menu.options) - 1
+            else:
+                choose = self.menu.selected
+            choice = self.menu.options[choose]
 
             play_level_up_sound()
             return self.action_on_choice(choice)
@@ -318,7 +325,8 @@ class InfiniteLevel(Scene):
                 self.player.score.value += self.maze.width * self.maze.height
                 first_enter = False
             self.instance.first_act = False
-            self.instance.show_level = 30
+            time = self.maze.width * self.maze.height // 6.7
+            self.instance.show_level = time if time > 30 else 30
             self.instance.wait = self.instance.show_level
             self.build_level()
 
@@ -517,10 +525,10 @@ class EndScene(Scene):
                 return LEADERBOARD
             elif inp.code == term.KEY_ESCAPE or inp == chr(3):
                 # don't save score
-                self.name = ""
                 self.set_init_frame()
                 return LEADERBOARD
-            elif not inp.is_sequence and len(self.name) < 50 and inp != ">":
+            elif (not inp.is_sequence and len(self.name) < 50 and inp != ">"
+                    and not (len(self.name) == 0 and inp == " ")):
                 self.name += inp
             elif inp.code in (term.KEY_BACKSPACE, term.KEY_DELETE):
                 self.name = self.name[:-1]
@@ -598,7 +606,10 @@ class Pause(Scene):
 
 
 class Leaderboard(Scene):
-    """Example of a title scene."""
+    """Example of a title scene.
+
+    Not used
+    """
 
     def __init__(self) -> None:
         super().__init__()
