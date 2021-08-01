@@ -4,17 +4,16 @@ This game was developed by the team [**Benevolent Bonobos**](#About-Us), during 
 
 Teams that participated in the code jam had to create a TUI based on the theme _Think Inside the Box_.
 
-[![Youtube Link](images/thumbnail.png)](http://www.youtube.com/watch?v=ERME3fjnfFE "Getting Inside The Box")
-
+[![Youtube Link](https://github.com/Anand1310/summer-code-jam-2021/raw/main/images/thumbnail.png)](http://www.youtube.com/watch?v=ERME3fjnfFE "Getting Inside The Box")
 
 ## Contents
+
 - [How To Play](#how-to-play)
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Screenshots](#screenshots)
 - [Future Improvements](#future-improvements)
 - [About Us](#about-us)
-
 
 <!--- This can go now that How To Play covers everything
 ### Normal mode
@@ -69,6 +68,20 @@ Teams that participated in the code jam had to create a TUI based on the theme _
 
 ## Installation
 
+### Windows
+
+```sh
+pip install maze-gitb
+```
+
+### Linux
+
+```sh
+pip3 install maze-gitb
+```
+
+## Contribution
+
 ### 1. Clone the repository
 
 ```sh
@@ -104,26 +117,26 @@ python main.py
 ```sh
 python3 main.py
 ```
+
 | Note: |
 | :--- |
 |The player should visit the _tutorial_ for a hands-on understanding of the game.|
 
 ## Screenshots
 
-![First view](images/first_view.png)
+![First view](https://github.com/Anand1310/summer-code-jam-2021/blob/main/images/first_view.png?raw=true)
 
-![Box view](images/box_view.png)
+![Box view](https://github.com/Anand1310/summer-code-jam-2021/raw/main/images/box_view.png?raw=true)
 
-![Box view](images/box_view3.png)
+![Box view](https://github.com/Anand1310/summer-code-jam-2021/blob/main/images/box_view3.png?raw=true)
 
-![Without box view](images/without_box.png)
+![Without box view](https://github.com/Anand1310/summer-code-jam-2021/raw/main/images/without_box.png?raw=true)
 
-![Box view](images/box_view2.png)
+![Box view](https://github.com/Anand1310/summer-code-jam-2021/blob/main/images/box_view2.png?raw=true)
 
-![Box view](images/gameplay.gif)
+![Box view](https://github.com/Anand1310/summer-code-jam-2021/blob/main/images/gameplay.gif?raw=true)
 
 ## Future Improvements
-
 
 - Reveal the map with animation at the start of the level.
 - Allow player to move during echo.
@@ -132,7 +145,6 @@ python3 main.py
 - Add _Main menu_ option in pause menu. ([This](https://github.com/pritam-dey3/summer-code-jam-2021/commit/3368968c668307b36278629b75b02433fca18592) will do it)
 
 ## About Us
-
 
 <!--Add your own github link here-->
 - [Anand](https://github.com/Anand1310)
