@@ -104,6 +104,7 @@ class Game:
                 elif command == INFINITE:
                     self.current_scene.reset()
                     self.current_scene = self.infinite
+                    self.player.score.value += self.current_scene.maze.width * self.current_scene.maze.height
                     self.current_scene.render(hard=True)
                 elif command == RESET:
                     self.current_scene.reset()
@@ -126,6 +127,7 @@ class Game:
                     self.current_scene_index = 0
                     self.current_scene.reset()
                     self.current_scene = self.scenes[0]
+                    self.player.score.value = self.player.score.init_value
                     self.current_scene.next_frame(Keystroke())
                 elif command == QUIT or command == LOSE:
                     break

@@ -242,7 +242,7 @@ class Level(Scene):
         self.first_act = True
 
     global prev_text, prev_text_loc
-    prev_text = ""
+    prev_text, prev_text_loc = "", ""
 
     def instruct_player(self) -> None:
         """Instructions"""
@@ -266,9 +266,6 @@ class Level(Scene):
         # time.sleep(4)
         # frame = term.move_xy(*text_loc) + " " * len(text)
         # render(frame)
-
-
-first_enter = True
 
 
 class InfiniteLevel(Scene):
@@ -319,11 +316,7 @@ class InfiniteLevel(Scene):
 
     def next_frame(self, val: Keystroke) -> Union[str, int]:
         """Draw next frame."""
-        global first_enter
         if self.instance.first_act:
-            if first_enter:
-                self.player.score.value += self.maze.width * self.maze.height
-                first_enter = False
             self.instance.first_act = False
             time = self.maze.width * self.maze.height // 6.7
             self.instance.show_level = time if time > 30 else 30

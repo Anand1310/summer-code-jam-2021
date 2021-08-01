@@ -81,6 +81,7 @@ class Score:
 
     def __init__(self):
         self.value = 200
+        self.init_value = self.value
         self.penalty = 0.05
 
     def update(
