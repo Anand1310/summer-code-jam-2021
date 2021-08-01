@@ -1,0 +1,5 @@
+blessed ~= 1.8
+numpy ~= 1.21.0
+pyperclip~=1.8.2
+PyTweening==1.0.3
+PyOpenAL~=0.7.11a1
