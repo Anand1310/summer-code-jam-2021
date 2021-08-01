@@ -104,11 +104,14 @@ class Game:
                 elif command == INFINITE:
                     self.current_scene.reset()
                     self.current_scene = self.infinite
+                    self.player.score.value += self.current_scene.maze.width * self.current_scene.maze.height
+                    self.current_scene.render(hard=True)
                 elif command == RESET:
                     self.current_scene.reset()
                     val = Keystroke()
                     continue
                 elif command == PAUSE:
+                    self.current_scene.reset()
                     self.current_scene = self.pause
                     continue
                 elif command == PLAY:
@@ -124,16 +127,23 @@ class Game:
                     self.current_scene_index = 0
                     self.current_scene.reset()
                     self.current_scene = self.scenes[0]
+                    self.player.score.value = self.player.score.init_value
                     self.current_scene.next_frame(Keystroke())
                 elif command == QUIT or command == LOSE:
                     break
                 elif command == LEADERBOARD:
+                    self.current_scene.reset()
                     self.current_scene = self.leaderboard
+                    # to refresh the leaderboard
+                    self.current_scene.first_frame = True
+                    self.current_scene.built_once = False
                     continue
                 elif command == TUTORIAL:
+                    self.current_scene.reset()
                     self.current_scene = self.tutorial
                     continue
                 elif command == END:
                     self.current_scene = self.end
+                    self.current_scene.first_frame = True
                     continue
                 val = term.inkey(timeout=0.05)  # 20 fps
