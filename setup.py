@@ -7,7 +7,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="maze_gitb",  # temp name
-    version="0.1a8",
+    version="0.1a9",
     license="MIT",
     description="A maze game that required users to think inside the box to win",
     long_description=long_description,
