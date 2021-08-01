@@ -9,7 +9,7 @@ class Render(object):
     This class can be instantiated anywhere.
     Example:
         ```
-        from core.render import Render
+        from maze_gitb.core.render import Render
 
         render = Render()
         render("this text", col="black", bg_col="lightskyblue1")

@@ -1,21 +1,24 @@
 import copy
 import logging
+import os
 import time
 
 from openal import oalOpen
 
-from utils import Vec  # type: ignore
+from maze_gitb.utils import Vec  # type: ignore
 
-enter_box_sound = oalOpen("sound/enter_box.wav")
-hit_wall_sound = oalOpen("sound/hit_wall.wav")
-level_up_sound = oalOpen("sound/level_up.wav")
-bgm = oalOpen("sound/bgm.wav")
-start_screen_music = oalOpen("sound/start.wav")
-wind_sound = oalOpen("sound/wind.wav")
-build_sound = oalOpen("sound/build.wav")
+dirname = os.path.dirname(__file__)
 
-echo = oalOpen("sound/first_echo.wav")
-echo_2 = oalOpen("sound/second_echo.wav")
+enter_box_sound = oalOpen(os.path.join(dirname, "..", "sound/enter_box.wav"))
+hit_wall_sound = oalOpen(os.path.join(dirname, "..", "sound/hit_wall.wav"))
+level_up_sound = oalOpen(os.path.join(dirname, "..", "sound/level_up.wav"))
+bgm = oalOpen(os.path.join(dirname, "..", "sound/bgm.wav"))
+start_screen_music = oalOpen(os.path.join(dirname, "..", "sound/start.wav"))
+wind_sound = oalOpen(os.path.join(dirname, "..", "sound/wind.wav"))
+build_sound = oalOpen(os.path.join(dirname, "..", "sound/build.wav"))
+
+echo = oalOpen(os.path.join(dirname, "..", "sound/first_echo.wav"))
+echo_2 = oalOpen(os.path.join(dirname, "..", "sound/second_echo.wav"))
 
 
 def play_enter_box_sound() -> None:

@@ -6,8 +6,8 @@ from typing import List, Union
 import blessed
 from blessed.keyboard import Keystroke
 
-from core.player import Player
-from core.render import Render
+from maze_gitb.core.player import Player
+from maze_gitb.core.render import Render
 
 if "logs" not in os.listdir():
     os.mkdir("logs")

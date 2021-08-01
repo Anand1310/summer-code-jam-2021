@@ -1,6 +1,7 @@
 """Examples for designing levels."""
 import json
 import logging
+import os
 import time
 from copy import copy
 from random import randrange
@@ -10,16 +11,18 @@ from typing import Callable, Dict, List, Union
 import blessed
 from blessed.keyboard import Keystroke
 
-from core.maze import AIR, Box, Maze
-from core.player import MenuCursor, Player
-from core.render import Render
-from core.sound import enter_game_sound, play_level_up_sound, stop_bgm
-from core.table import make_table
-from game import (
+from maze_gitb.core.maze import AIR, Box, Maze
+from maze_gitb.core.player import MenuCursor, Player
+from maze_gitb.core.render import Render
+from maze_gitb.core.sound import (
+    enter_game_sound, play_level_up_sound, stop_bgm
+)
+from maze_gitb.core.table import make_table
+from maze_gitb.game import (
     CREDITS, END, INFINITE, LEADERBOARD, LOSE, NEXT_SCENE, PAUSE, PLAY, QUIT,
     RESET, TITLE, TUTORIAL, Scene
 )
-from utils import Boundary, Vec  # type: ignore
+from maze_gitb.utils import Boundary, Vec  # type: ignore
 
 term = blessed.Terminal()
 render = Render()
@@ -99,13 +102,16 @@ class Menu(Scene):
         self.menu.coords = copy(self.menu.l_bounds)
 
 
+dirname = os.path.dirname(__file__)
+
+
 class Level(Scene):
     """First basic game"""
 
     def __init__(self, level: str = "1") -> None:
         super().__init__()
 
-        with open(f"levels/{level}.json", "r") as f:
+        with open(os.path.join(dirname, f"levels/{level}.json"), "r") as f:
             data = json.load(f)
 
         self.instructions: Dict = {}
@@ -511,7 +517,7 @@ class EndScene(Scene):
             inp = term.inkey()
             if inp.code == term.KEY_ENTER:
                 # save score
-                with open("leaderboard.txt", "a") as score_file:
+                with open(os.path.join(dirname, "leaderboard.txt"), "a") as score_file:
                     score_file.write(f"{self.name}>{self.player.score.value:.2f}\n")
 
                 score_file.close()
@@ -544,6 +550,9 @@ class Pause(Scene):
 
     def __init__(self):
         super().__init__()
+        self.txt = "PAUSED"
+        self.txt2 = "Hit p to play"
+        self.txt3 = "Hit q again to exit"
         self.first_frame = True
         self.reset()
 
@@ -580,9 +589,6 @@ class Pause(Scene):
 
     def reset(self) -> None:
         """Reset current scene"""
-        self.txt = "PAUSED"
-        self.txt2 = "Hit p to play"
-        self.txt3 = "Hit q again to exit"
         self.current_frame = term.clear + term.move_xy(
             x=(self.width - len(self.txt)) // 2, y=self.height // 2
         )
@@ -727,7 +733,7 @@ def leaderboard_action(choice: str) -> Union[None, int]:
 
 def leaderboard_first_frame() -> List[str]:
     """First frame action for leaderboard"""
-    with open("leaderboard.txt", "r") as f:
+    with open(os.path.join(dirname, "leaderboard.txt"), "r") as f:
         players = f.read()
         players_sorted = sorted(
             [player.split(">") for player in players.split("\n")[:-1]],

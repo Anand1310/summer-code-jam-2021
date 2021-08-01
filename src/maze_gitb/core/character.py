@@ -1,7 +1,7 @@
 from blessed import Terminal
 
-from core.render import Render
-from utils import Vec  # type: ignore
+from maze_gitb.core.render import Render
+from maze_gitb.utils import Vec  # type: ignore
 
 render = Render()
 term = Terminal()

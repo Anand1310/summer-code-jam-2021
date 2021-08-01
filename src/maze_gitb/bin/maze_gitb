@@ -1,0 +1,4 @@
+import maze_gitb.main
+
+if __name__ == "__main__":
+    maze_gitb.main.main()

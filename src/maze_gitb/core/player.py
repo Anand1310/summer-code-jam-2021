@@ -5,14 +5,16 @@ from copy import copy
 from typing import TYPE_CHECKING, Dict
 
 if TYPE_CHECKING:
-    from core.maze import Maze
+    from maze_gitb.core.maze import Maze
 
 from blessed import Terminal
 from blessed.keyboard import Keystroke
 
-from core.render import Render
-from core.sound import play_echo, play_enter_box_sound, play_hit_wall_sound
-from utils import Vec  # type: ignore
+from maze_gitb.core.render import Render
+from maze_gitb.core.sound import (
+    play_echo, play_enter_box_sound, play_hit_wall_sound
+)
+from maze_gitb.utils import Vec  # type: ignore
 
 term = Terminal()
 render = Render()

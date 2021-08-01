@@ -12,12 +12,12 @@ from typing import TYPE_CHECKING, Dict, Iterator, List, Tuple
 import blessed
 import numpy as np
 
-from core.character import AnimatedCharacter
-from core.render import Render
-from utils import Vec, points_in_circle_np  # type: ignore
+from maze_gitb.core.character import AnimatedCharacter
+from maze_gitb.core.render import Render
+from maze_gitb.utils import Vec, points_in_circle_np  # type: ignore
 
 if TYPE_CHECKING:
-    from core.player import Player
+    from maze_gitb.core.player import Player
 
 render = Render()
 
