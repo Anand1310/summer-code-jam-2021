@@ -23,7 +23,6 @@ setup(
     install_requires=[
         'blessed',
         'numpy',
-        'pyperclip',
         'PyOpenAL',
     ],
     classifiers=[
