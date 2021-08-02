@@ -15,7 +15,6 @@ level_up_sound = oalOpen(os.path.join(dirname, "..", "sound/level_up.wav"))
 bgm = oalOpen(os.path.join(dirname, "..", "sound/bgm.wav"))
 start_screen_music = oalOpen(os.path.join(dirname, "..", "sound/start.wav"))
 wind_sound = oalOpen(os.path.join(dirname, "..", "sound/wind.wav"))
-build_sound = oalOpen(os.path.join(dirname, "..", "sound/build.wav"))
 
 echo = oalOpen(os.path.join(dirname, "..", "sound/first_echo.wav"))
 echo_2 = oalOpen(os.path.join(dirname, "..", "sound/second_echo.wav"))
@@ -92,9 +91,3 @@ def play_echo_2(direction: Vec, distance: int) -> None:
     logging.info(f"{k.x}, {k.y}")
     echo_2.set_position((k.x, 0, k.y))
     echo_2.play()
-
-
-def play_build_sound() -> None:
-    """Play sound effect for maze_generation once"""
-    # https://mixkit.co/free-sound-effects/
-    build_sound.play()
