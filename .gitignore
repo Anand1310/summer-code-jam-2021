@@ -31,3 +31,5 @@ build/
 .vscode/
 # MacOS
 .DS_Store
+
+src/maze_gitb.egg-info

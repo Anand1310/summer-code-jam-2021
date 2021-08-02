@@ -1,0 +1,69 @@
+{
+    "map":[
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1],
+      [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+      [1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1],
+      [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+      [1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    ],
+
+    "start": [3,1],
+    "end": [3,18],
+
+    "red":{
+        "location": [3,4],
+        "map": [
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+            [1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1],
+            [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+            [1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        ]
+    },
+    "brown4":{
+          "location": [3,13],
+          "map": [
+              [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+              [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+              [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1],
+              [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+              [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+              [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+              [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+              [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+              [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+          ]
+      },
+      "dialogues":[
+        [ [3,1], [-2,-7], "Wait for the maze to disappear, then move one step at a time to learn the game."],
+        [ [3,2], [-2,-9], "This is the maze and you have to reach '&' avoiding collisions with the walls"],
+        [ [3,3], [-2,-11], "At the top right corner, you can see 'Persistence' which decreases with time and collisions."],
+        [ [3,4], [-2,-9], "This is the box. You have to 'THINK INSIDE THE BOX' as it will show your path."],
+        [ [3,5], [-2,-9], "Did you notice? 'Persistence' decreases slower in the box. Go back and check."],
+        [ [4,5], [-2,-9], "Higher the persistence, the better it is. If it hits zero, the game will end."],
+        [ [5,5], [-2,-7], "Just remember, you will lose more and more persistence with each collision."],
+        [ [5,6], [-2,-16], "Now, let's use the power of echo. Press 'e' to hear. It will give you an idea about the location of walls. Move right."],
+        [ [5,7], [-2,-9], "In top left corner, it shows the number of collisions you have in each level."],
+        [ [5,8], [-2,-5], "If not, make a collision by moving down."],
+        [ [5,9], [-2,-6], "What will you do if you are not sure where the wall is now?"],
+        [ [5,10], [-2,-5], "Will you go back to the box? Or will you hear an echo?"],
+        [ [5,11], [-2,-11], "Press 'e' and you can hear a louder echo. As the wall approaches, the echo will become louder."],
+        [ [5,12], [-2,-12], "Did you notice, an echo is coming from right? Yes, echo's direction depends on your last move."],
+        [ [5,13], [-2,-12], "Press 'e'. Here you will hear the loudest echo from the right. That means, there is a wall to your right."],
+        [ [4,13], [-2,-15], "By pressing 'q', you can pause the game. With 'p', you can start playing again and with 'q', it all ends."],
+        [ [3,13], [-2,-8], "This is the last box where you can stay and think your next moves."],
+        [ [3,14], [-2,-16], "Your persistence will decrease at a lower rate inside the box. So, give it some thought."],
+        [ [3,15], [-2,-1], "Now you know the rules. And so do I, of course."],
+        [ [3,16], [-2,-14], "Use echoes wisely, make minimum collisions and think 'INSIDE THE BOX'"],
+        [ [3,17], [-2,-6], "The real game approaches you. Reach & to finish the tutorial."]
+      ]
+
+}
