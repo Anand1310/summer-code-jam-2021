@@ -287,7 +287,7 @@ class InfiniteLevel(Scene):
         if type(self).instance is None:
             self.maze = Maze.generate(term.width // 5, term.height // 3, random_pos=random_pos)
             random = random_pos
-            self.maze = Maze.generate(7, 7, random_pos=random_pos)
+            # self.maze = Maze.generate(7, 7, random_pos=random_pos)
             self.generate_boxes()
             self.level_boundary = Boundary(
                 len(self.maze.char_matrix[0]),
