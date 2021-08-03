@@ -7,7 +7,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="maze_gitb",  # temp name
-    version="1.0.0",
+    version="1.0.1",
     license="MIT",
     description="A maze game that required users to think inside the box to win",
     long_description=long_description,
@@ -18,7 +18,7 @@ setup(
     project_urls={
         "Bug Tracker": "https://github.com/Anand1310/summer-code-jam-2021/issues",
     },
-    download_url="https://github.com/Anand1310/summer-code-jam-2021/archive/v1_0.tar.gz",
+    download_url="https://github.com/Anand1310/summer-code-jam-2021/archive/v1.0.1.tar.gz",
     keywords=["game", "maze", "box", "think inside the box", "sound", "3d-sound"],
     install_requires=[
         'blessed',
