@@ -6,7 +6,7 @@
         {
             "label": "build",
             "type": "shell",
-            "command": "pip install ."
+            "command": "python3 setup.py install --user"
         }
     ]
 }
