@@ -18,7 +18,7 @@ setup(
     project_urls={
         "Bug Tracker": "https://github.com/Anand1310/summer-code-jam-2021/issues",
     },
-    download_url="https://github.com/Anand1310/summer-code-jam-2021/archive/v1.0.1.tar.gz",
+    download_url="https://github.com/Anand1310/summer-code-jam-2021/archive/v1.0.2.tar.gz",
     keywords=["game", "maze", "box", "think inside the box", "sound", "3d-sound"],
     install_requires=[
         'blessed',
